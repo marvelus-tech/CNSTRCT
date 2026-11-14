@@ -4,10 +4,10 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HERO_BUSINESS_SLIDES, HERO_CROSSHAIR_COORDS } from "@/lib/hero-business-slides";
 
-const MOVE_MS = 1050;
-const HOLD_MS = 420;
-const DISPLAY_MS = 2200;
-const HIDE_MS = 280;
+const FADE_MS = 380;
+const MOVE_MS = 1100;
+const HOLD_MS = 320;
+const DISPLAY_MS = 2400;
 const VOID_HALF_VB = 5.2;
 
 function clampCoord(value: number) {
@@ -51,25 +51,27 @@ export function HeroCrosshairShowcase() {
   const runCycle = useCallback(() => {
     clearTimeouts();
     setImageVisible(false);
-    setLinesMoving(true);
 
     const nextCoord = (coordIndexRef.current + 1) % HERO_CROSSHAIR_COORDS.length;
     const nextSlide = (slideIndexRef.current + 1) % HERO_BUSINESS_SLIDES.length;
-    coordIndexRef.current = nextCoord;
-    slideIndexRef.current = nextSlide;
-    setCoordIndex(nextCoord);
 
     schedule(() => {
-      setLinesMoving(false);
-      setSlideIndex(nextSlide);
+      coordIndexRef.current = nextCoord;
+      slideIndexRef.current = nextSlide;
+      setLinesMoving(true);
+      setCoordIndex(nextCoord);
+
       schedule(() => {
-        setImageVisible(true);
+        setLinesMoving(false);
+        setSlideIndex(nextSlide);
         schedule(() => {
-          setImageVisible(false);
-          schedule(() => runCycleRef.current(), HIDE_MS);
-        }, DISPLAY_MS);
-      }, HOLD_MS);
-    }, MOVE_MS);
+          setImageVisible(true);
+          schedule(() => {
+            runCycleRef.current();
+          }, DISPLAY_MS);
+        }, HOLD_MS);
+      }, MOVE_MS);
+    }, FADE_MS);
   }, [clearTimeouts, schedule]);
 
   useEffect(() => {
@@ -87,24 +89,25 @@ export function HeroCrosshairShowcase() {
 
   const x = clampCoord(coord.x);
   const y = clampCoord(coord.y);
+  const moveTransition = reducedMotion
+    ? undefined
+    : `left ${MOVE_MS}ms cubic-bezier(0.4, 0, 0.15, 1), top ${MOVE_MS}ms cubic-bezier(0.4, 0, 0.15, 1)`;
 
   return (
     <div
-      className="hero-crosshair-panel relative min-h-[360px] w-full overflow-hidden rounded-2xl border border-border bg-card md:min-h-[480px]"
+      className="hero-crosshair-panel relative min-h-[360px] w-full md:min-h-[480px]"
       role="region"
       aria-label="Business types CNSTRCT can spin up"
     >
-      <div className="hero-grain pointer-events-none absolute inset-0" aria-hidden />
-
       <svg
-        className="absolute inset-0 h-full w-full text-foreground/22"
+        className="pointer-events-none absolute inset-0 h-full w-full text-foreground/22"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
         aria-hidden
       >
         <g
           style={{
-            transition: linesMoving ? `all ${MOVE_MS}ms cubic-bezier(0.45, 0, 0.2, 1)` : undefined,
+            transition: linesMoving && !reducedMotion ? `all ${MOVE_MS}ms cubic-bezier(0.4, 0, 0.15, 1)` : undefined,
           }}
         >
           <line x1={0} y1={y} x2={Math.max(0, x - VOID_HALF_VB)} y2={y} stroke="currentColor" strokeWidth={0.35} vectorEffect="non-scaling-stroke" />
@@ -115,24 +118,22 @@ export function HeroCrosshairShowcase() {
       </svg>
 
       <div
-        className="hero-crosshair-void absolute"
+        className="pointer-events-none absolute flex flex-col items-center"
         style={{
           left: `${x}%`,
           top: `${y}%`,
-          width: "var(--hero-void-size, 5.5rem)",
-          height: "var(--hero-void-size, 5.5rem)",
           transform: "translate(-50%, -50%)",
-          transition:
-            reducedMotion || !linesMoving
-              ? undefined
-              : `left ${MOVE_MS}ms cubic-bezier(0.45, 0, 0.2, 1), top ${MOVE_MS}ms cubic-bezier(0.45, 0, 0.2, 1)`,
+          transition: linesMoving ? moveTransition : undefined,
         }}
       >
         <div
-          className={`relative h-full w-full overflow-hidden bg-background ring-1 ring-border ${
-            imageVisible ? "opacity-100" : "opacity-0"
-          }`}
-          style={{ transition: reducedMotion ? undefined : "opacity 0.35s ease" }}
+          className="relative shrink-0 overflow-hidden bg-background"
+          style={{
+            width: "var(--hero-void-size, 5.5rem)",
+            height: "var(--hero-void-size, 5.5rem)",
+            opacity: imageVisible ? 1 : 0,
+            transition: reducedMotion ? undefined : "opacity 0.38s ease",
+          }}
         >
           <Image
             src={slide.src}
@@ -143,9 +144,16 @@ export function HeroCrosshairShowcase() {
             priority={slideIndex === 0}
           />
         </div>
+        <p
+          className="mt-2 max-w-[11rem] text-center text-[11px] font-medium leading-snug tracking-wide text-muted"
+          style={{
+            opacity: imageVisible ? 1 : 0,
+            transition: reducedMotion ? undefined : "opacity 0.38s ease",
+          }}
+        >
+          {slide.label}
+        </p>
       </div>
-
-      <p className="absolute bottom-4 left-4 right-4 text-center text-xs font-medium tracking-wide text-muted">{slide.label}</p>
     </div>
   );
 }
