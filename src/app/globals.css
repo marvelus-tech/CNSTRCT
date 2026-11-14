@@ -178,20 +178,17 @@ h4 {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .dotted-arrow-back__glyph circle:nth-child(4) {
-    animation: dotted-arrow-pulse 2.4s ease-in-out infinite;
-  }
-  .dotted-arrow-back:hover .dotted-arrow-back__glyph circle {
-    opacity: 1;
+  .dotted-arrow-back__trail {
+    animation: dotted-arrow-trail 2.2s ease-in-out infinite;
   }
 }
 
-@keyframes dotted-arrow-pulse {
+@keyframes dotted-arrow-trail {
   0%,
   100% {
-    opacity: 0.75;
+    opacity: 0.15;
   }
   50% {
-    opacity: 1;
+    opacity: 0.55;
   }
 }
