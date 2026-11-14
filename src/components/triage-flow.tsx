@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Wordmark } from "@/components/wordmark";
 import { QUESTIONS } from "@/lib/questions";
+import { cn } from "@/lib/utils";
 
 type Draft = Record<string, string>;
 
@@ -117,7 +118,10 @@ export function TriageFlow() {
                     key={option.value}
                     type="button"
                     onClick={() => setDraft({ ...draft, [question.id]: option.value })}
-                    className={`min-h-12 rounded-none border px-4 text-left ${draft[question.id] === option.value ? "border-accent bg-accent-soft" : "border-border bg-card"}`}
+                    className={cn(
+                      "choice-tile rounded-none",
+                      draft[question.id] === option.value && "choice-tile--selected",
+                    )}
                   >
                     {option.label}
                   </button>
@@ -130,7 +134,7 @@ export function TriageFlow() {
                     key={value}
                     type="button"
                     onClick={() => setDraft({ ...draft, hasIdea: value })}
-                    className={`min-h-12 rounded-none border px-4 text-left ${draft.hasIdea === value ? "border-accent bg-accent-soft" : "border-border bg-card"}`}
+                    className={cn("choice-tile rounded-none", draft.hasIdea === value && "choice-tile--selected")}
                   >
                     {value === "yes" ? "Yes, I have one" : "Not yet"}
                   </button>

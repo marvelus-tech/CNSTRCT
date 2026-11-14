@@ -79,7 +79,7 @@ function CommandCenterInner() {
               <li
                 key={business.id}
                 ref={highlight ? highlightRef : undefined}
-                className={`flex flex-col rounded-none border p-5 ${highlight ? "border-accent bg-card ring-1 ring-accent/30" : "border-border bg-white/80"}`}
+                className={`flex flex-col rounded-none border p-5 ${highlight ? "border-accent bg-card ring-1 ring-accent/30" : "border-border bg-card/90"}`}
               >
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">{business.templateTitle}</p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-tight">{business.name}</h2>
