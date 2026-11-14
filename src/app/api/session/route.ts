@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
+
 import { loadDesk } from "@/lib/desk";
-import { ensureDemoUser } from "@/lib/session";
+import { currentUser } from "@/lib/session";
+import { getBusinessForUser } from "@/lib/store";
 
 export const runtime = "nodejs";
 
-export async function POST() {
-  const user = await ensureDemoUser();
-  return NextResponse.json({ user, desk: loadDesk(user.id) });
-}
-
 export async function GET() {
-  const user = await ensureDemoUser();
-  return NextResponse.json({ user, desk: loadDesk(user.id) });
+  const user = await currentUser();
+  if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  const business = getBusinessForUser(user.id);
+  return NextResponse.json({
+    user,
+    desk: business ? loadDesk(user.id, business.id) : loadDesk(user.id),
+  });
 }

@@ -147,6 +147,20 @@ export function getBusinessForUser(userId: string): Business | null {
   return row ? mapBusiness(row) : null;
 }
 
+export function getBusinessForUserAndTemplate(userId: string, templateId: string): Business | null {
+  const row = asRecord(
+    db().prepare("SELECT * FROM businesses WHERE user_id = ? AND template_id = ? LIMIT 1").get(userId, templateId),
+  );
+  return row ? mapBusiness(row) : null;
+}
+
+export function listBusinessesForUser(userId: string): Business[] {
+  return db()
+    .prepare("SELECT * FROM businesses WHERE user_id = ? ORDER BY created_at DESC")
+    .all()
+    .map((row) => mapBusiness(asRecord(row)!));
+}
+
 export function getBusiness(id: string): Business | null {
   const row = asRecord(db().prepare("SELECT * FROM businesses WHERE id = ?").get(id));
   return row ? mapBusiness(row) : null;

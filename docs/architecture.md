@@ -65,12 +65,15 @@ Sqlite lives in `data/cnstrct.db` (or `CNSTRCT_DATA_DIR`). There is no hosted da
 
 ## Product flow
 
-1. `/` explains the product and links to triage and the sample desk.
-2. `/triage` asks eight questions, one at a time, and stores a profile.
-3. `/opportunities` shows three cards from `src/lib/templates.ts`. Home services is live and the copy comes from the profile. Mobile detailing and estate clearance are coming soon.
-4. Opening the live card creates the business, the site, Mara, Jules, an example lead, and runs both routines.
-5. `/dashboard` shows chat, the approval card, the computer, routines, leads, and the token and computer-hour meters (50,000 tokens and 2 hours, hardcoded).
-6. `/b/[slug]` is the public site: hero, how it works, lead form, about, contact, link back to the dashboard.
+1. `/` explains the product and links to `/login` (fake sign-in) and the sample desk.
+2. Middleware requires `cnstrct_sid` for `/triage`, `/opportunities`, `/constructing`, `/command-center`, and `/workspace/*`.
+3. `/triage` asks eight questions, one at a time, and stores a profile.
+4. `/opportunities` shows three cards from `src/lib/templates.ts`. Home services is live and the copy comes from the profile. Mobile detailing and estate clearance are coming soon.
+5. The live card sends the user to `/constructing`, which calls `POST /api/business` and shows a short progress UI before landing on `/command-center`.
+6. `/command-center` lists the user's businesses (`GET /api/businesses`). Each row links to `/workspace/[businessId]` and `/b/[slug]`.
+7. `/workspace/[businessId]` is the per-business Grok-style shell: chat, approval card, computer, routines, leads, and usage meters (50,000 tokens and 2 hours, hardcoded). `/api/desk?businessId=` scopes data loading.
+8. `/dashboard` redirects to the latest workspace or the command center when empty.
+9. `/b/[slug]` is the public site: hero, how it works, lead form, about, contact, link back to the owner workspace.
 
 ## Adding a business type
 

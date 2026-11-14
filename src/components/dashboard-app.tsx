@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Wordmark } from "@/components/wordmark";
 import type { DeskPayload } from "@/lib/desk";
 
-export function DashboardApp() {
+export function DashboardApp({ businessId }: { businessId: string }) {
   const router = useRouter();
   const [desk, setDesk] = useState<DeskPayload | null>(null);
   const [error, setError] = useState("");
@@ -20,7 +20,7 @@ export function DashboardApp() {
   const [confirmReset, setConfirmReset] = useState(false);
 
   async function reload() {
-    const response = await fetch("/api/desk");
+    const response = await fetch(`/api/desk?businessId=${encodeURIComponent(businessId)}`);
     if (!response.ok) {
       setError("Could not load your workspace.");
       return;
@@ -31,10 +31,10 @@ export function DashboardApp() {
   }
 
   useEffect(() => {
-    void fetch("/api/session", { method: "POST" }).then(() => reload());
+    void reload();
     const timer = setInterval(() => void reload(), 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [businessId]);
 
   const agent = desk?.agents.find((item) => item.id === agentId) ?? desk?.agents[0];
 
@@ -122,8 +122,8 @@ export function DashboardApp() {
         <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted">
           <Badge>{desk.modelMode === "mock" ? "Mock model" : desk.modelMode === "xai" ? "Grok" : "OpenAI"}</Badge>
           <span>{desk.composioConfigured ? "Composio key is set, but sends stay local in this MVP." : "No Composio key. Sends stay on this machine."}</span>
-          <Link href="/opportunities" className="underline">
-            All paths
+          <Link href="/command-center" className="underline">
+            Command center
           </Link>
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">

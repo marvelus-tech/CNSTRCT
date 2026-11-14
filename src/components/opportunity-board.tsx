@@ -40,17 +40,10 @@ export function OpportunityBoard() {
     })();
   }, []);
 
-  async function openLive() {
+  function openLive() {
     setOpening(true);
     setError("");
-    const response = await fetch("/api/business", { method: "POST" });
-    const json = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setOpening(false);
-      setError(json.error || "Could not start this business.");
-      return;
-    }
-    router.push("/dashboard");
+    router.push("/constructing?template=home-services");
   }
 
   return (

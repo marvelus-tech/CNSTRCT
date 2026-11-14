@@ -29,5 +29,12 @@ export default async function BusinessPage({ params }: { params: Promise<{ slug:
   if (!business) notFound();
   const profile = getProfile(business.userId);
   if (!profile) notFound();
-  return <DeskSite name={business.name} slug={business.slug} copy={siteCopy(profile, business.name, business.city)} />;
+  return (
+    <DeskSite
+      name={business.name}
+      slug={business.slug}
+      workspacePath={`/workspace/${business.id}`}
+      copy={siteCopy(profile, business.name, business.city)}
+    />
+  );
 }

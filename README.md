@@ -30,12 +30,15 @@ The first request creates `data/cnstrct.db` and a sample public desk at `/b/harb
 
 ## Demo
 
-1. Start at `/` and open Start.
-2. Answer the eight questions. City becomes the business name (`Austin` becomes Austin Tradie Desk).
+1. Start at `/` and choose **Start** or **Log in** (one tap demo sign-in at `/login`).
+2. Answer the eight questions. City becomes the business name (`Austin` becomes Austin Home Match).
 3. The board shows three cards. Open the live one. Mobile detailing and estate clearance stay coming soon.
-4. `/dashboard` shows Mara (tradie scout) and Jules (lead matcher). Each routine has already drafted an approval card and written notes on its computer.
-5. Approve or reject. Approve writes `outbox/outreach.json` or `outbox/matches.json` inside that agent's sandbox. Reject does not.
-6. Open the public site from the dashboard, or visit `/b/harbor-tradie-desk`. The lead form saves a request on the desk. It does not text or email anyone.
+4. **Constructing** runs for a few seconds, then you land in the **command center** (`/command-center`).
+5. Open **workspace** for your business (`/workspace/[businessId]`). Mara (tradie scout) and Jules (lead matcher) each have approval cards and notes on their computer.
+6. Approve or reject. Approve writes `outbox/outreach.json` or `outbox/matches.json` inside that agent's sandbox. Reject does not.
+7. Open the public site from the workspace or visit `/b/harbor-tradie-desk`. The lead form saves a request on the desk. It does not text or email anyone.
+
+`/dashboard` redirects to your latest workspace or the command center.
 
 A new chat message closes an approval that is still open. Approve or reject before you type.
 
@@ -44,7 +47,7 @@ A new chat message closes an approval that is still open. Approve or reject befo
 | Piece | Behavior |
 | --- | --- |
 | Triage, cards, site, leads | Stored in local sqlite |
-| Auth | Demo session cookie (`cnstrct_sid`) |
+| Auth | Fake login at `/login` sets demo session cookie (`cnstrct_sid`) |
 | Agent chat and routines | Scripted model driving the real tool loop |
 | Computer | A folder per agent under `data/sandboxes` |
 | Outreach, match, spend | Approval card, then a local outbox file. No network |

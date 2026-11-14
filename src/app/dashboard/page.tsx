@@ -1,14 +1,11 @@
-import type { Metadata } from "next";
-import { DashboardApp } from "@/components/dashboard-app";
-import { DASHBOARD_DESCRIPTION, DASHBOARD_TITLE } from "@/lib/seo";
+import { redirect } from "next/navigation";
+import { currentUser } from "@/lib/session";
+import { getBusinessForUser } from "@/lib/store";
 
-export const metadata: Metadata = {
-  title: { absolute: DASHBOARD_TITLE },
-  description: DASHBOARD_DESCRIPTION,
-  alternates: { canonical: "/dashboard" },
-  robots: { index: false, follow: false },
-};
-
-export default function DashboardPage() {
-  return <DashboardApp />;
+export default async function DashboardPage() {
+  const user = await currentUser();
+  if (!user) redirect("/login?next=/dashboard");
+  const business = getBusinessForUser(user.id);
+  if (!business) redirect("/command-center");
+  redirect(`/workspace/${business.id}`);
 }

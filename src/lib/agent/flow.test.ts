@@ -78,3 +78,19 @@ test("desk sweep asks before send and can be refused", async () => {
   assert.equal(blocked.exitCode, 126);
   assert.match(blocked.output, /blocked/i);
 });
+
+test("openDesk is idempotent per user and template", async () => {
+  const { createUser, getBusinessForUserAndTemplate, saveProfile } = await import("../store");
+  const { openDesk } = await import("./provision");
+
+  const user = createUser({ email: "idempotent@cnstrct.local", name: "Idem" });
+  const local = { ...profile, userId: user.id };
+  saveProfile(local);
+
+  const first = await openDesk(user.id, local, "home-services");
+  const again = await openDesk(user.id, local, "home-services");
+
+  assert.equal(first.business.id, again.business.id);
+  assert.equal(first.agents.length, again.agents.length);
+  assert.equal(getBusinessForUserAndTemplate(user.id, "home-services")?.id, first.business.id);
+});

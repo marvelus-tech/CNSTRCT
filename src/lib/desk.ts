@@ -1,13 +1,20 @@
 import { computerSnapshot } from "./agent/sandbox";
 import { COMPUTER_LIMIT_SECONDS, TOKEN_LIMIT } from "./agent/limits";
 import { modelMode } from "./agent/model";
-import { getBusinessForUser, getProfile, getUser, listAgents, listLeads, listRoutines, listRows } from "./store";
+import { getBusiness, getBusinessForUser, getProfile, getUser, listAgents, listLeads, listRoutines, listRows } from "./store";
 
-export function loadDesk(userId: string) {
+export function loadDesk(userId: string, businessId?: string) {
   const user = getUser(userId);
   if (!user) return null;
   const profile = getProfile(userId);
-  const business = getBusinessForUser(userId);
+  const business = businessId
+    ? (() => {
+        const row = getBusiness(businessId);
+        if (!row || row.userId !== userId) return null;
+        return row;
+      })()
+  : getBusinessForUser(userId);
+  if (businessId && !business) return null;
   const agents = business
     ? listAgents(business.id).map((agent) => ({
         ...agent,

@@ -9,18 +9,20 @@ type Copy = ReturnType<typeof siteCopy>;
 export function DeskSite({
   name,
   slug,
+  workspacePath = "/command-center",
   copy,
 }: {
   name: string;
   slug: string;
+  workspacePath?: string;
   copy: Copy;
 }) {
   return (
     <div className="min-h-full bg-background">
       <header className="flex items-center justify-between px-5 py-4 md:px-10">
         <Wordmark />
-        <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
-          Owner dashboard
+        <Link href={workspacePath} className="text-sm text-muted hover:text-foreground">
+          Owner workspace
         </Link>
       </header>
       <main>

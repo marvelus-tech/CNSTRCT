@@ -40,9 +40,14 @@ export default function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="flex items-center justify-between px-5 py-4 md:px-10">
         <Wordmark />
-        <Link href="/triage" className="text-sm font-medium">
-          Start
-        </Link>
+        <nav className="flex items-center gap-4 text-sm">
+          <Link href="/login" className="text-muted">
+            Log in
+          </Link>
+          <Link href="/login?next=/triage" className="font-medium">
+            Start
+          </Link>
+        </nav>
       </header>
       <main>
         <section className="px-5 pb-16 pt-8 md:px-10 md:pt-16">
@@ -52,7 +57,7 @@ export default function HomePage() {
                 Spin up a real business from almost nothing.
               </h1>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/triage" className="inline-flex h-12 items-center justify-center rounded-none bg-accent px-6 text-white">
+                <Link href="/login?next=/triage" className="inline-flex h-12 items-center justify-center rounded-none bg-accent px-6 text-white">
                   See what fits you
                 </Link>
                 <Link href="/b/harbor-tradie-desk" className="inline-flex h-12 items-center justify-center rounded-none border border-border bg-card px-6">

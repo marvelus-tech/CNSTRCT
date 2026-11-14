@@ -1,6 +1,16 @@
 import { businessName, cityOf } from "../copy";
 import { newId } from "../ids";
-import { getAgent, getBusinessForUser, insertAgent, insertBusiness, insertLead, insertRoutine, listAgents, slugTaken, upsertComputer } from "../store";
+import {
+  getAgent,
+  getBusinessForUserAndTemplate,
+  insertAgent,
+  insertBusiness,
+  insertLead,
+  insertRoutine,
+  listAgents,
+  slugTaken,
+  upsertComputer,
+} from "../store";
 import type { Agent, Business, Profile } from "../types";
 import { configuredProvider, ensureWorkspace, providerNote } from "./sandbox";
 import { runRoutine } from "./scheduler";
@@ -31,15 +41,19 @@ function matcherInstructions(city: string) {
   return `Read homeowner leads for ${city}. Save a short match note. Draft one introduction to a tradie and wait for approval. Example leads are not real customers.`;
 }
 
-export async function openDesk(userId: string, profile: Profile): Promise<{ business: Business; agents: Agent[] }> {
-  const existing = getBusinessForUser(userId);
+export async function openDesk(
+  userId: string,
+  profile: Profile,
+  templateId = "home-services",
+): Promise<{ business: Business; agents: Agent[] }> {
+  const existing = getBusinessForUserAndTemplate(userId, templateId);
   if (existing) return { business: existing, agents: listAgents(existing.id) };
 
   const city = cityOf(profile.location);
   const name = businessName(profile);
   const business = insertBusiness({
     userId,
-    templateId: "home-services",
+    templateId,
     name,
     slug: uniqueSlug(name),
     city,
