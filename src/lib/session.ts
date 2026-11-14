@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import type { NextResponse } from "next/server";
 import { AUTH_FLAG_COOKIE, SESSION_COOKIE } from "./auth-constants";
 import { newId } from "./ids";
 import { createSession, createUser, userForSession } from "./store";
@@ -31,6 +32,26 @@ export async function ensureDemoUser(): Promise<User> {
 
 export async function requireUser(): Promise<User | null> {
   return currentUser();
+}
+
+const sessionCookieOptions = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: 60 * 60 * 24 * 30,
+};
+
+export function writeSessionCookie(response: NextResponse, sessionId: string) {
+  response.cookies.set(SESSION_COOKIE, sessionId, sessionCookieOptions);
+}
+
+/** Demo sign-in: returns the user and session id; mirror sid on NextResponse so the browser gets Set-Cookie. */
+export async function ensureDemoSession(): Promise<{ user: User; sessionId: string }> {
+  const user = await ensureDemoUser();
+  const jar = await cookies();
+  const sessionId = jar.get(SESSION_COOKIE)?.value;
+  if (!sessionId) throw new Error("Session missing after ensureDemoUser");
+  return { user, sessionId };
 }
 
 export async function startSession(user: User) {

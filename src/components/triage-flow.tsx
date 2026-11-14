@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,10 @@ export function TriageFlow() {
   const [magicNote, setMagicNote] = useState("");
   const [saving, setSaving] = useState(false);
   const question = QUESTIONS[step]!;
+
+  useEffect(() => {
+    void fetch("/api/auth/demo", { method: "POST", credentials: "same-origin" });
+  }, []);
 
   function buttonLabel() {
     if (saving) return "Saving";
