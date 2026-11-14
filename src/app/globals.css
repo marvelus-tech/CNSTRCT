@@ -176,19 +176,3 @@ h4 {
 .hud-btn-frame--plain .hud-corner {
   display: none;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .dotted-arrow-back__trail {
-    animation: dotted-arrow-trail 2.2s ease-in-out infinite;
-  }
-}
-
-@keyframes dotted-arrow-trail {
-  0%,
-  100% {
-    opacity: 0.15;
-  }
-  50% {
-    opacity: 0.55;
-  }
-}
