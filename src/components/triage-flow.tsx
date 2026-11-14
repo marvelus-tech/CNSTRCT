@@ -146,8 +146,10 @@ export function TriageFlow() {
             ) : null}
           </div>
           {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
-          <div className="mt-8 flex items-center justify-between gap-6">
-            <DottedArrowBack type="button" disabled={step === 0} onClick={() => setStep((current) => current - 1)} />
+          <div className="mt-8 flex items-center gap-3">
+            <span className="inline-flex items-center p-[6px]">
+              <DottedArrowBack type="button" disabled={step === 0} onClick={() => setStep((current) => current - 1)} />
+            </span>
             <Button type="button" onClick={() => void next()} disabled={saving}>
               {buttonLabel()}
             </Button>

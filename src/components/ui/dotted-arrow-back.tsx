@@ -182,6 +182,9 @@ function wordSize(word: string) {
 
 export type DotMatrixWord = "BACK" | "PREVIOUS";
 
+/** Matches `Button` default `h-11` + `hud-btn-frame` 6px padding (tailwind h-11 = 2.75rem). */
+export const DOT_MATRIX_ACTION_HEIGHT_CLASS = "h-11";
+
 export function DottedArrowBack({
   className,
   label,
@@ -200,7 +203,7 @@ export function DottedArrowBack({
       type="button"
       aria-label={aria}
       className={cn(
-        "dotted-arrow-back group inline-flex items-center border-0 bg-transparent p-1 shadow-none",
+        "dotted-arrow-back group inline-flex h-11 items-center justify-center border-0 bg-transparent px-6 shadow-none",
         "text-foreground/75 transition-colors hover:text-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:pointer-events-none disabled:opacity-30",
@@ -209,11 +212,13 @@ export function DottedArrowBack({
       {...props}
     >
       <svg
-        className="dotted-arrow-back__glyph block shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5"
-        width={width}
-        height={height}
+        className={cn(
+          DOT_MATRIX_ACTION_HEIGHT_CLASS,
+          "dotted-arrow-back__glyph w-auto shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5",
+        )}
         viewBox={`0 0 ${width} ${height}`}
         fill="currentColor"
+        preserveAspectRatio="xMidYMid meet"
         aria-hidden
       >
         {dots.map((d, i) => (
