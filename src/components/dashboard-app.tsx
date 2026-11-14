@@ -137,7 +137,7 @@ export function DashboardApp() {
             key={item.id}
             type="button"
             onClick={() => setAgentId(item.id)}
-            className={`rounded-full border px-4 py-2 text-sm ${item.id === agent.id ? "border-accent bg-accent-soft" : "border-border bg-card"}`}
+            className={`rounded-none border px-4 py-2 text-sm ${item.id === agent.id ? "border-accent bg-accent-soft" : "border-border bg-card"}`}
           >
             {item.name}
             <span className="ml-2 text-muted">{item.title}</span>
@@ -146,7 +146,7 @@ export function DashboardApp() {
       </div>
       <div className="flex gap-2 px-4 md:hidden">
         {(["chat", "computer", "leads"] as const).map((item) => (
-          <button key={item} type="button" className={`rounded-full px-3 py-1 text-sm ${tab === item ? "bg-foreground text-white" : "bg-card"}`} onClick={() => setTab(item)}>
+          <button key={item} type="button" className={`rounded-none px-3 py-1 text-sm ${tab === item ? "bg-foreground text-white" : "bg-card"}`} onClick={() => setTab(item)}>
             {item}
           </button>
         ))}
@@ -260,7 +260,7 @@ function Empty({ title, body, href, label }: { title: string; body: string; href
         <Wordmark />
         <h1 className="mt-6 font-serif text-4xl">{title}</h1>
         <p className="mt-3 text-muted">{body}</p>
-        <Link href={href} className="mt-6 inline-flex h-11 items-center rounded-full bg-accent px-5 text-white">
+        <Link href={href} className="mt-6 inline-flex h-11 items-center rounded-none bg-accent px-5 text-white">
           {label}
         </Link>
       </div>

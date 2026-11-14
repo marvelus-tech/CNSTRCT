@@ -29,7 +29,7 @@ export function DeskSite({
             <p className="text-sm font-medium text-accent">{copy.eyebrow}</p>
             <h1 className="mt-3 font-serif text-4xl leading-tight tracking-tight md:text-6xl">{copy.hero}</h1>
             <p className="mt-5 max-w-2xl text-lg text-muted">{copy.sub}</p>
-            <a href="#lead" className="mt-8 inline-flex h-12 items-center rounded-full bg-accent px-6 text-white">
+            <a href="#lead" className="mt-8 inline-flex h-12 items-center rounded-none bg-accent px-6 text-white">
               Describe the job
             </a>
           </div>

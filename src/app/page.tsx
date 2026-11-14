@@ -56,10 +56,10 @@ export default function HomePage() {
                 CNSTRCT turns what you already have into a small business you can run this week. The first desk connects homeowners with local tradies. You keep a margin. You do not buy a van.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/triage" className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-6 text-white">
+                <Link href="/triage" className="inline-flex h-12 items-center justify-center rounded-none bg-accent px-6 text-white">
                   See what fits you
                 </Link>
-                <Link href="/b/harbor-tradie-desk" className="inline-flex h-12 items-center justify-center rounded-full border border-border bg-card px-6">
+                <Link href="/b/harbor-tradie-desk" className="inline-flex h-12 items-center justify-center rounded-none border border-border bg-card px-6">
                   View a sample desk
                 </Link>
               </div>
