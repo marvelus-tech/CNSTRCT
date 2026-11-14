@@ -29,6 +29,8 @@ export function HeroCrosshairShowcase() {
   const slideIndexRef = useRef(0);
   const coordIndexRef = useRef(0);
   const runCycleRef = useRef<() => void>(() => {});
+  const slideReadyRef = useRef(true);
+  const pendingRevealRef = useRef<(() => void) | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [voidHalfPct, setVoidHalfPct] = useState({ w: 0, h: 0 });
@@ -56,6 +58,21 @@ export function HeroCrosshairShowcase() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
+  const tryRevealAfterSwap = useCallback(() => {
+    const reveal = () => {
+      pendingRevealRef.current = null;
+      setImageVisible(true);
+      schedule(() => {
+        runCycleRef.current();
+      }, DISPLAY_MS);
+    };
+    if (slideReadyRef.current) {
+      reveal();
+    } else {
+      pendingRevealRef.current = reveal;
+    }
+  }, [schedule]);
+
   const runCycle = useCallback(() => {
     clearTimeouts();
     setImageVisible(false);
@@ -65,20 +82,16 @@ export function HeroCrosshairShowcase() {
 
     schedule(() => {
       coordIndexRef.current = nextCoord;
+      slideIndexRef.current = nextSlide;
       setCoordIndex(nextCoord);
+      slideReadyRef.current = false;
+      setSlideIndex(nextSlide);
 
       schedule(() => {
-        slideIndexRef.current = nextSlide;
-        setSlideIndex(nextSlide);
-        schedule(() => {
-          setImageVisible(true);
-          schedule(() => {
-            runCycleRef.current();
-          }, DISPLAY_MS);
-        }, HOLD_MS);
+        schedule(tryRevealAfterSwap, HOLD_MS);
       }, MOVE_MS);
     }, FADE_MS);
-  }, [clearTimeouts, schedule]);
+  }, [clearTimeouts, schedule, tryRevealAfterSwap]);
 
   useEffect(() => {
     runCycleRef.current = runCycle;
@@ -228,6 +241,7 @@ export function HeroCrosshairShowcase() {
             width: "var(--hero-void-size, 5.5rem)",
             height: "var(--hero-void-size, 5.5rem)",
             opacity: imageVisible ? 1 : 0,
+            visibility: imageVisible ? "visible" : "hidden",
             transition: reducedMotion ? undefined : "opacity 0.38s ease",
           }}
         >
@@ -238,12 +252,17 @@ export function HeroCrosshairShowcase() {
             sizes="120px"
             className="object-cover"
             priority={slideIndex === 0}
+            onLoad={() => {
+              slideReadyRef.current = true;
+              pendingRevealRef.current?.();
+            }}
           />
         </div>
         <p
           className="mt-2 max-w-[11rem] text-center text-[11px] font-medium leading-snug tracking-wide text-muted"
           style={{
             opacity: imageVisible ? 1 : 0,
+            visibility: imageVisible ? "visible" : "hidden",
             transition: reducedMotion ? undefined : "opacity 0.38s ease",
           }}
         >
