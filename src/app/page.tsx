@@ -73,7 +73,7 @@ export default function HomePage() {
                 "A short triage on your skills, resources, and what you want to explore.",
               ],
               [
-                "A custom engine matches and presents suitable business ideas",
+                "Custom engine matches and presents suitable business ideas",
                 "CNSTRCT surfaces paths that fit you—not a one-size-fits-all template.",
               ],
               [
