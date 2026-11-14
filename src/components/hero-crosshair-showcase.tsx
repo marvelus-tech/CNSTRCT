@@ -8,8 +8,10 @@ const FADE_MS = 380;
 const MOVE_MS = 1100;
 const HOLD_MS = 320;
 const DISPLAY_MS = 2400;
-/** Percent gap between line ends and void center (matches former viewBox void half). */
+/** Fallback half-extent (percent of panel) until content is measured. */
 const VOID_GAP_PCT = 5.2;
+/** Extra clearance between line ends and measured content box (each side). */
+const VOID_PADDING_PX = 4;
 
 const MOVE_EASE = "cubic-bezier(0.4, 0, 0.15, 1)";
 const POSITION_TRANSITION = `left ${MOVE_MS}ms ${MOVE_EASE}, top ${MOVE_MS}ms ${MOVE_EASE}, width ${MOVE_MS}ms ${MOVE_EASE}, height ${MOVE_MS}ms ${MOVE_EASE}`;
@@ -27,6 +29,9 @@ export function HeroCrosshairShowcase() {
   const slideIndexRef = useRef(0);
   const coordIndexRef = useRef(0);
   const runCycleRef = useRef<() => void>(() => {});
+  const panelRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [voidHalfPct, setVoidHalfPct] = useState({ w: 0, h: 0 });
 
   const slide = HERO_BUSINESS_SLIDES[slideIndex] ?? HERO_BUSINESS_SLIDES[0];
   const coord = reducedMotion
@@ -88,15 +93,64 @@ export function HeroCrosshairShowcase() {
     return () => clearTimeouts();
   }, [reducedMotion, clearTimeouts, runCycle, schedule]);
 
+  const measureVoid = useCallback(() => {
+    const panel = panelRef.current;
+    const content = contentRef.current;
+    if (!panel || !content) return;
+
+    const panelWidth = panel.clientWidth;
+    const panelHeight = panel.clientHeight;
+    const contentWidth = content.offsetWidth;
+    const contentHeight = content.offsetHeight;
+
+    if (panelWidth <= 0 || panelHeight <= 0 || contentWidth <= 0 || contentHeight <= 0) {
+      return;
+    }
+
+    const paddedW = contentWidth + VOID_PADDING_PX * 2;
+    const paddedH = contentHeight + VOID_PADDING_PX * 2;
+
+    setVoidHalfPct({
+      w: (paddedW / 2 / panelWidth) * 100,
+      h: (paddedH / 2 / panelHeight) * 100,
+    });
+  }, []);
+
+  useEffect(() => {
+    measureVoid();
+
+    const panel = panelRef.current;
+    const content = contentRef.current;
+    if (!panel || !content) return;
+
+    const ro = new ResizeObserver(() => measureVoid());
+    ro.observe(panel);
+    ro.observe(content);
+
+    const onWindowResize = () => measureVoid();
+    window.addEventListener("resize", onWindowResize);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onWindowResize);
+    };
+  }, [measureVoid, slideIndex]);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => measureVoid());
+    return () => cancelAnimationFrame(id);
+  }, [slideIndex, imageVisible, measureVoid]);
+
   const x = clampCoord(coord.x);
   const y = clampCoord(coord.y);
-  const gap = VOID_GAP_PCT;
+  const halfWpct = voidHalfPct.w > 0 ? voidHalfPct.w : VOID_GAP_PCT;
+  const halfHpct = voidHalfPct.h > 0 ? voidHalfPct.h : VOID_GAP_PCT;
 
-  const leftHWidth = Math.max(0, x - gap);
-  const rightHLeft = Math.min(100, x + gap);
+  const leftHWidth = Math.max(0, x - halfWpct);
+  const rightHLeft = Math.min(100, x + halfWpct);
   const rightHWidth = Math.max(0, 100 - rightHLeft);
-  const topVHeight = Math.max(0, y - gap);
-  const bottomVTop = Math.min(100, y + gap);
+  const topVHeight = Math.max(0, y - halfHpct);
+  const bottomVTop = Math.min(100, y + halfHpct);
   const bottomVHeight = Math.max(0, 100 - bottomVTop);
 
   const lineMotionStyle = reducedMotion ? undefined : { transition: POSITION_TRANSITION };
@@ -110,6 +164,7 @@ export function HeroCrosshairShowcase() {
 
   return (
     <div
+      ref={panelRef}
       className="hero-crosshair-panel relative min-h-[360px] w-full md:min-h-[480px]"
       role="region"
       aria-label="Business types CNSTRCT can spin up"
@@ -158,6 +213,7 @@ export function HeroCrosshairShowcase() {
       />
 
       <div
+        ref={contentRef}
         className="pointer-events-none absolute flex flex-col items-center"
         style={{
           left: `${x}%`,
