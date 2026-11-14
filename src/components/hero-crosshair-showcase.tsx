@@ -8,6 +8,8 @@ const FADE_MS = 380;
 const MOVE_MS = 1100;
 const HOLD_MS = 320;
 const DISPLAY_MS = 2400;
+/** Crosshair-only beat on first paint before image/caption mount. */
+const INITIAL_EMPTY_MS = 650;
 /** Fallback half-extent (percent of panel) until content is measured. */
 const VOID_GAP_PCT = 5.2;
 /** Extra clearance between line ends and measured content box (each side). */
@@ -25,7 +27,9 @@ export function HeroCrosshairShowcase() {
   const [slideIndex, setSlideIndex] = useState(0);
   const [coordIndex, setCoordIndex] = useState(0);
   const [imageVisible, setImageVisible] = useState(false);
+  const [contentMounted, setContentMounted] = useState(false);
   const timeoutsRef = useRef<number[]>([]);
+  const initialRevealAfterRef = useRef(0);
   const slideIndexRef = useRef(0);
   const coordIndexRef = useRef(0);
   const runCycleRef = useRef<() => void>(() => {});
@@ -58,20 +62,33 @@ export function HeroCrosshairShowcase() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
+  const revealWhenAllowed = useCallback(
+    (reveal: () => void) => {
+      const delay = Math.max(0, initialRevealAfterRef.current - Date.now());
+      if (delay > 0) {
+        schedule(reveal, delay);
+        return;
+      }
+      reveal();
+    },
+    [schedule],
+  );
+
   const tryRevealAfterSwap = useCallback(() => {
     const reveal = () => {
       pendingRevealRef.current = null;
+      setContentMounted(true);
       setImageVisible(true);
       schedule(() => {
         runCycleRef.current();
       }, DISPLAY_MS);
     };
     if (slideReadyRef.current) {
-      reveal();
+      revealWhenAllowed(reveal);
     } else {
-      pendingRevealRef.current = reveal;
+      pendingRevealRef.current = () => revealWhenAllowed(reveal);
     }
-  }, [schedule]);
+  }, [revealWhenAllowed, schedule]);
 
   const runCycle = useCallback(() => {
     clearTimeouts();
@@ -100,17 +117,36 @@ export function HeroCrosshairShowcase() {
   const revealFirstSlide = useCallback(() => {
     const reveal = () => {
       pendingRevealRef.current = null;
+      setContentMounted(true);
       setImageVisible(true);
       if (!reducedMotion) {
         schedule(() => runCycle(), DISPLAY_MS);
       }
     };
     if (slideReadyRef.current) {
-      reveal();
+      revealWhenAllowed(reveal);
     } else {
-      pendingRevealRef.current = reveal;
+      pendingRevealRef.current = () => revealWhenAllowed(reveal);
     }
-  }, [reducedMotion, schedule, runCycle]);
+  }, [reducedMotion, revealWhenAllowed, schedule, runCycle]);
+
+  useEffect(() => {
+    initialRevealAfterRef.current = Date.now() + INITIAL_EMPTY_MS;
+    slideReadyRef.current = false;
+    const firstSrc = HERO_BUSINESS_SLIDES[0]?.src;
+    if (!firstSrc) return;
+    const preload = new window.Image();
+    preload.src = firstSrc;
+    const onReady = () => {
+      slideReadyRef.current = true;
+      pendingRevealRef.current?.();
+    };
+    preload.onload = onReady;
+    if (preload.complete) onReady();
+    return () => {
+      preload.onload = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (reducedMotion) {
@@ -162,7 +198,7 @@ export function HeroCrosshairShowcase() {
       ro.disconnect();
       window.removeEventListener("resize", onWindowResize);
     };
-  }, [measureVoid, slideIndex]);
+  }, [measureVoid, slideIndex, contentMounted]);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => measureVoid());
@@ -250,39 +286,43 @@ export function HeroCrosshairShowcase() {
           ...anchorMotionStyle,
         }}
       >
-        <div
-          className="relative shrink-0 overflow-hidden bg-background"
-          style={{
-            width: "var(--hero-void-size, 5.5rem)",
-            height: "var(--hero-void-size, 5.5rem)",
-            opacity: imageVisible ? 1 : 0,
-            visibility: imageVisible ? "visible" : "hidden",
-            transition: reducedMotion ? undefined : "opacity 0.38s ease",
-          }}
-        >
-          <Image
-            src={slide.src}
-            alt={slide.alt}
-            fill
-            sizes="(max-width: 768px) 56px, 88px"
-            className="object-cover"
-            priority={slideIndex === 0}
-            onLoad={() => {
-              slideReadyRef.current = true;
-              pendingRevealRef.current?.();
-            }}
-          />
-        </div>
-        <p
-          className="mt-2 max-w-[11rem] text-center text-[11px] font-medium leading-snug tracking-wide text-muted"
-          style={{
-            opacity: imageVisible ? 1 : 0,
-            visibility: imageVisible ? "visible" : "hidden",
-            transition: reducedMotion ? undefined : "opacity 0.38s ease",
-          }}
-        >
-          {slide.label}
-        </p>
+        {contentMounted ? (
+          <>
+            <div
+              className="relative shrink-0 overflow-hidden bg-background"
+              style={{
+                width: "var(--hero-void-size, 5.5rem)",
+                height: "var(--hero-void-size, 5.5rem)",
+                opacity: imageVisible ? 1 : 0,
+                visibility: imageVisible ? "visible" : "hidden",
+                transition: reducedMotion ? undefined : "opacity 0.38s ease",
+              }}
+            >
+              <Image
+                src={slide.src}
+                alt={slide.alt}
+                fill
+                sizes="(max-width: 768px) 56px, 88px"
+                className="object-cover"
+                priority={slideIndex === 0 && imageVisible}
+                onLoad={() => {
+                  slideReadyRef.current = true;
+                  pendingRevealRef.current?.();
+                }}
+              />
+            </div>
+            <p
+              className="mt-2 max-w-[11rem] text-center text-[11px] font-medium leading-snug tracking-wide text-muted"
+              style={{
+                opacity: imageVisible ? 1 : 0,
+                visibility: imageVisible ? "visible" : "hidden",
+                transition: reducedMotion ? undefined : "opacity 0.38s ease",
+              }}
+            >
+              {slide.label}
+            </p>
+          </>
+        ) : null}
       </div>
     </div>
   );
