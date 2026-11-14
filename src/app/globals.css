@@ -65,3 +65,37 @@ body {
   background-image: radial-gradient(circle at 20% 20%, rgba(28, 25, 21, 0.04), transparent 55%),
     radial-gradient(circle at 80% 60%, rgba(194, 65, 12, 0.05), transparent 45%);
 }
+
+/* Opportunities: SpaceX-adjacent cards on light theme */
+.opportunity-card {
+  border-radius: 12px;
+  background: transparent;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.opportunity-card--soon {
+  border: 1px solid var(--border);
+  background: rgba(255, 252, 248, 0.45);
+}
+
+.opportunity-card--soon:hover {
+  border-color: rgba(28, 25, 21, 0.22);
+}
+
+.opportunity-card--live {
+  border: 1px solid rgba(28, 25, 21, 0.18);
+  background: linear-gradient(
+    145deg,
+    rgba(227, 237, 245, 0.95) 0%,
+    rgba(243, 237, 228, 0.92) 42%,
+    rgba(255, 252, 248, 0.88) 100%
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 12px 40px rgba(28, 25, 21, 0.06);
+}
+
+.opportunity-card--live:hover {
+  border-color: rgba(194, 65, 12, 0.35);
+  transform: translateY(-2px);
+}

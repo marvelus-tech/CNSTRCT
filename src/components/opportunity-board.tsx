@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
+import { OpportunitySpaceField } from "@/components/opportunity-space-field";
 import Link from "next/link";
 
 interface Card {
@@ -14,6 +14,48 @@ interface Card {
   pitch: string;
   name?: string;
   summary?: string;
+}
+
+const CARD_ICONS: Record<string, string> = {
+  "home-services": "homeServices",
+  "mobile-detailing": "detailing",
+  "estate-clearance": "estate",
+};
+
+function CardIcon({ kind }: { kind: string }) {
+  const stroke = "currentColor";
+  if (kind === "homeServices") {
+    return (
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden className="text-foreground/80">
+        <path d="M24 8L40 20V40H32V28H16V40H8V20L24 8Z" stroke={stroke} strokeWidth="1.25" />
+        <path d="M20 40V32H28V40" stroke={stroke} strokeWidth="1.25" />
+      </svg>
+    );
+  }
+  if (kind === "detailing") {
+    return (
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden className="text-foreground/55">
+        <circle cx="24" cy="24" r="14" stroke={stroke} strokeWidth="1.25" />
+        <ellipse cx="24" cy="24" rx="14" ry="5" stroke={stroke} strokeWidth="1" />
+        <path d="M24 10V38" stroke={stroke} strokeWidth="1" />
+        <path d="M10 24H38" stroke={stroke} strokeWidth="1" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden className="text-foreground/55">
+      <rect x="12" y="10" width="24" height="28" rx="2" stroke={stroke} strokeWidth="1.25" />
+      <path d="M16 18H32M16 24H28M16 30H24" stroke={stroke} strokeWidth="1" />
+    </svg>
+  );
+}
+
+function ArrowLink({ className }: { className?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={className} aria-hidden>
+      <path d="M5 15L15 5M15 5H8M15 5V12" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 export function OpportunityBoard() {
@@ -48,17 +90,20 @@ export function OpportunityBoard() {
 
   return (
     <div className="min-h-full bg-background">
-      <header className="flex items-center justify-between px-5 py-4 md:px-10">
+      <header className="relative z-10 flex items-center justify-between px-5 py-4 md:px-10">
         <Wordmark />
         <Link href="/triage" className="text-sm text-muted">
           Edit answers
         </Link>
       </header>
-      <main className="mx-auto max-w-5xl px-5 pb-16 pt-8">
-        <h1 className="max-w-2xl font-serif text-4xl leading-tight md:text-5xl">Three ways to start. One is open today.</h1>
-        <p className="mt-3 max-w-xl text-muted">The live path is personalized from your answers. The other two stay closed until a later template.</p>
+      <main className="relative mx-auto max-w-6xl px-5 pb-16 pt-8">
+        <div className="relative z-10">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">Matched paths</p>
+          <h1 className="mt-2 max-w-2xl font-serif text-4xl leading-tight md:text-5xl">Three ways to start. One is open today.</h1>
+          <p className="mt-3 max-w-xl text-muted">The live path is personalized from your answers. The other two stay closed until a later template.</p>
+        </div>
         {error ? (
-          <p className="mt-6 text-sm text-danger">
+          <p className="relative z-10 mt-6 text-sm text-danger">
             {error}{" "}
             {error.includes("triage") ? (
               <Link href="/triage" className="underline">
@@ -67,23 +112,57 @@ export function OpportunityBoard() {
             ) : null}
           </p>
         ) : null}
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {(cards ?? []).map((card) => (
-            <article key={card.id} className={`rise flex flex-col rounded-[28px] border p-5 ${card.live ? "border-accent bg-card" : "border-border bg-white/60"}`}>
-              <Badge tone={card.live ? "live" : "soon"}>{card.live ? "Live" : "Coming soon"}</Badge>
-              <h2 className="mt-4 font-serif text-2xl">{card.name || card.title}</h2>
-              <p className="mt-3 flex-1 text-sm leading-6 text-muted">{card.summary || card.pitch}</p>
-              {card.live ? (
-                <Button className="mt-6" onClick={() => void openLive()} disabled={opening}>
-                  {opening ? "Starting up…" : "Start this business"}
-                </Button>
-              ) : (
-                <p className="mt-6 text-sm text-muted">Not selectable yet.</p>
-              )}
-            </article>
-          ))}
+
+        <div className="relative mt-10 min-h-[420px] md:min-h-[380px]">
+          <OpportunitySpaceField />
+          <div className="relative z-10 grid gap-5 md:grid-cols-3">
+            {(cards ?? []).map((card, index) => {
+              const iconKey = CARD_ICONS[card.id] ?? "estate";
+              const isLive = card.live;
+              return (
+                <article
+                  key={card.id}
+                  className={`opportunity-card rise flex min-h-[320px] flex-col border p-6 md:p-7 ${
+                    isLive ? "opportunity-card--live" : "opportunity-card--soon"
+                  }`}
+                  style={{ animationDelay: `${index * 80}ms` }}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <CardIcon kind={iconKey} />
+                    <span
+                      className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${
+                        isLive ? "text-accent" : "text-muted"
+                      }`}
+                    >
+                      {isLive ? "Live" : "Soon"}
+                    </span>
+                  </div>
+                  <div className="mt-8 flex flex-1 flex-col">
+                    <h2 className="text-sm font-semibold uppercase leading-snug tracking-[0.12em] text-foreground">
+                      {card.name || card.title}
+                    </h2>
+                    <div
+                      className={`mt-3 h-px w-full ${isLive ? "bg-foreground/15" : "bg-border"}`}
+                      aria-hidden
+                    />
+                    <p className="mt-4 flex-1 text-sm leading-6 text-muted">{card.summary || card.pitch}</p>
+                  </div>
+                  <div className="mt-6 flex items-end justify-between gap-3">
+                    {isLive ? (
+                      <Button className="rounded-none" onClick={() => void openLive()} disabled={opening}>
+                        {opening ? "Starting up…" : "Start this business"}
+                      </Button>
+                    ) : (
+                      <p className="text-xs uppercase tracking-wide text-muted">Not selectable yet</p>
+                    )}
+                    {isLive ? <ArrowLink className="shrink-0 text-accent" /> : <ArrowLink className="shrink-0 text-muted/40" />}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
-        {cards === null ? <p className="mt-8 text-muted">Loading your three paths.</p> : null}
+        {cards === null ? <p className="relative z-10 mt-8 text-muted">Loading your three paths.</p> : null}
       </main>
     </div>
   );
