@@ -4,6 +4,14 @@ CNSTRCT spins up a real micro-business from almost nothing. You answer a short t
 
 This app adapts the agent loop from [grokbot-clone](https://github.com/nickvasilescu/grokbot-clone) (MIT). Why that base, and how to add the next business type, is in [docs/architecture.md](docs/architecture.md). The MIT notice is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+## Deploy (Vercel)
+
+**Stable production URL (after one-time GitHub import):** `https://cnstrct-app.vercel.app`
+
+Step-by-step import, env vars, and why `https://cnstrct.vercel.app` shows another app's login page: [docs/DEPLOY.md](docs/DEPLOY.md).
+
+Until that import finishes, use the latest anonymous demo from the claim/deploy notes in DEPLOY.md or run locally.
+
 ## Run
 
 ```bash
