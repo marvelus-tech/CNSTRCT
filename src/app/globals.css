@@ -170,3 +170,22 @@ h4 {
 .hud-btn-frame--plain .hud-corner {
   display: none;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .dotted-arrow-back__glyph circle:nth-child(4) {
+    animation: dotted-arrow-pulse 2.4s ease-in-out infinite;
+  }
+  .dotted-arrow-back:hover .dotted-arrow-back__glyph circle {
+    opacity: 1;
+  }
+}
+
+@keyframes dotted-arrow-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { DottedArrowBack } from "@/components/ui/dotted-arrow-back";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Wordmark } from "@/components/wordmark";
@@ -145,10 +146,8 @@ export function TriageFlow() {
             ) : null}
           </div>
           {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
-          <div className="mt-8 flex gap-3">
-            <Button type="button" variant="outline" disabled={step === 0} onClick={() => setStep((current) => current - 1)}>
-              Back
-            </Button>
+          <div className="mt-8 flex items-center justify-between gap-6">
+            <DottedArrowBack type="button" disabled={step === 0} onClick={() => setStep((current) => current - 1)} />
             <Button type="button" onClick={() => void next()} disabled={saving}>
               {buttonLabel()}
             </Button>
