@@ -3,28 +3,149 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/** 5×7 dot-matrix glyphs (1 = lit). */
-const GLYPH_5X7: Record<string, string[]> = {
-  A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
-  B: ["11110", "10001", "10001", "11110", "10001", "10001", "11110"],
-  C: ["01111", "10000", "10000", "10000", "10000", "10000", "01111"],
-  E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
-  I: ["11111", "00100", "00100", "00100", "00100", "00100", "11111"],
-  K: ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
-  O: ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
-  P: ["11110", "10001", "10001", "11110", "10000", "10000", "10000"],
-  R: ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
-  S: ["01111", "10000", "10000", "01110", "00001", "00001", "11110"],
-  U: ["10001", "10001", "10001", "10001", "10001", "10001", "01110"],
-  V: ["10001", "10001", "10001", "10001", "10001", "01010", "00100"],
+/** 7×9 dot-matrix-glyphs (1 = lit). Wider grid reads better at display size. */
+const GLYPH_7X9: Record<string, string[]> = {
+  A: [
+    "0111110",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1111111",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+  ],
+  B: [
+    "1111110",
+    "1000001",
+    "1000001",
+    "1111110",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1111110",
+  ],
+  C: [
+    "0111111",
+    "1000000",
+    "1000000",
+    "1000000",
+    "1000000",
+    "1000000",
+    "1000000",
+    "1000000",
+    "0111111",
+  ],
+  E: [
+    "1111111",
+    "1000000",
+    "1000000",
+    "1111110",
+    "1000000",
+    "1000000",
+    "1000000",
+    "1000000",
+    "1111111",
+  ],
+  I: [
+    "1111111",
+    "0001000",
+    "0001000",
+    "0001000",
+    "0001000",
+    "0001000",
+    "0001000",
+    "0001000",
+    "1111111",
+  ],
+  K: [
+    "1000010",
+    "1000100",
+    "1001000",
+    "1010000",
+    "1100000",
+    "1010000",
+    "1001000",
+    "1000100",
+    "1000010",
+  ],
+  O: [
+    "0111110",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "0111110",
+  ],
+  P: [
+    "1111110",
+    "1000001",
+    "1000001",
+    "1111110",
+    "1000000",
+    "1000000",
+    "1000000",
+    "1000000",
+    "1000000",
+  ],
+  R: [
+    "1111110",
+    "1000001",
+    "1000001",
+    "1111110",
+    "1001000",
+    "1000100",
+    "1000010",
+    "1000010",
+    "1000010",
+  ],
+  S: [
+    "0111111",
+    "1000000",
+    "1000000",
+    "0111110",
+    "0000001",
+    "0000001",
+    "0000001",
+    "0000001",
+    "1111110",
+  ],
+  U: [
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "0111110",
+  ],
+  V: [
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "1000001",
+    "0100010",
+    "0010100",
+    "0001000",
+  ],
 };
 
-const CHAR_W = 5;
-const CHAR_H = 7;
-const CHAR_GAP = 2;
+const CHAR_W = 7;
+const CHAR_H = 9;
+const CHAR_GAP = 3;
 
-const PITCH = 6.75;
-const DOT_R = 2.05;
+/** Slightly smaller dots vs pitch so glyphs don’t melt together */
+const PITCH = 5.4;
+const DOT_R = 1.72;
 
 function wordToDots(word: string): { x: number; y: number }[] {
   const upper = word.toUpperCase().replace(/[^A-Z]/g, "");
@@ -32,7 +153,7 @@ function wordToDots(word: string): { x: number; y: number }[] {
   let cursor = 0;
 
   for (const ch of upper) {
-    const rows = GLYPH_5X7[ch];
+    const rows = GLYPH_7X9[ch];
     if (!rows) continue;
     for (let ry = 0; ry < rows.length; ry++) {
       const row = rows[ry];
@@ -67,7 +188,6 @@ export function DottedArrowBack({
   word = "BACK",
   ...props
 }: React.ComponentProps<"button"> & {
-  /** Visible word rendered as dot matrix. */
   word?: DotMatrixWord;
   label?: string;
 }) {
@@ -81,7 +201,7 @@ export function DottedArrowBack({
       aria-label={aria}
       className={cn(
         "dotted-arrow-back group inline-flex items-center border-0 bg-transparent p-1 shadow-none",
-        "text-foreground/70 transition-colors hover:text-foreground",
+        "text-foreground/75 transition-colors hover:text-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:pointer-events-none disabled:opacity-30",
         className,
@@ -102,7 +222,7 @@ export function DottedArrowBack({
             cx={DOT_R + d.x * PITCH}
             cy={DOT_R + d.y * PITCH}
             r={DOT_R}
-            className="opacity-[0.88] transition-opacity group-hover:opacity-100"
+            className="opacity-90 transition-opacity group-hover:opacity-100"
           />
         ))}
       </svg>
