@@ -117,7 +117,7 @@ export function TriageFlow() {
                     key={option.value}
                     type="button"
                     onClick={() => setDraft({ ...draft, [question.id]: option.value })}
-                    className={`min-h-12 rounded-2xl border px-4 text-left ${draft[question.id] === option.value ? "border-accent bg-accent-soft" : "border-border bg-card"}`}
+                    className={`min-h-12 rounded-none border px-4 text-left ${draft[question.id] === option.value ? "border-accent bg-accent-soft" : "border-border bg-card"}`}
                   >
                     {option.label}
                   </button>
@@ -130,7 +130,7 @@ export function TriageFlow() {
                     key={value}
                     type="button"
                     onClick={() => setDraft({ ...draft, hasIdea: value })}
-                    className={`min-h-12 rounded-2xl border px-4 text-left ${draft.hasIdea === value ? "border-accent bg-accent-soft" : "border-border bg-card"}`}
+                    className={`min-h-12 rounded-none border px-4 text-left ${draft.hasIdea === value ? "border-accent bg-accent-soft" : "border-border bg-card"}`}
                   >
                     {value === "yes" ? "Yes, I have one" : "Not yet"}
                   </button>

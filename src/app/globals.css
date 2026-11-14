@@ -29,6 +29,12 @@ body {
   font-family: var(--font-sans);
 }
 
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  border-radius: 0;
+}
+
 h1,
 h2,
 h3,
