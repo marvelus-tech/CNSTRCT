@@ -32,7 +32,7 @@ export function LeadForm({ slug }: { slug: string }) {
       return;
     }
     setStatus("saved");
-    setMessage("Saved on this desk. Nobody was texted or emailed.");
+    setMessage("Request saved. Nobody was texted or emailed in this demo.");
     formEl.reset();
   }
 

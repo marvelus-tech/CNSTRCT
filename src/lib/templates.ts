@@ -9,19 +9,19 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "home-services",
     live: true,
-    title: "Home services lead desk",
+    title: "Home services leads",
     pitch: "Connect homeowners who need work with local tradies, and keep a margin. No van, no inventory.",
   },
   {
     id: "mobile-detailing",
     live: false,
-    title: "Mobile detailing booking desk",
+    title: "Mobile detailing bookings",
     pitch: "Take driveway bookings and hand them to detailers who already have the gear. You keep the booking margin.",
   },
   {
     id: "estate-clearance",
     live: false,
-    title: "Estate-clearance resale desk",
+    title: "Estate-clearance resale",
     pitch: "Collect house-clearance leads, draft pickup notes, and list items only after the owner approves.",
   },
 ];

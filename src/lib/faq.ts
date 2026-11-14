@@ -2,12 +2,12 @@ export const FAQS = [
   {
     question: "What is CNSTRCT?",
     answer:
-      "CNSTRCT turns a few facts about you into a small business: a public site, and agents that draft the work. The first live path is a home-services desk that introduces homeowners to local tradies.",
+      "CNSTRCT turns a few facts about you into a small business: a public site, and agents that draft the work. The first live path matches homeowners with local tradies for home repairs.",
   },
   {
     question: "Do I need startup cash?",
     answer:
-      "No. The live desk does not ask you to buy inventory, a van, or ads. You earn a margin when a job is booked. The triage still asks what you can spend, including basically none.",
+      "No. The live home-services path does not ask you to buy inventory, a van, or ads. You earn a margin when a job is booked. The triage still asks what you can spend, including basically none.",
   },
   {
     question: "Can an agent email someone on its own?",

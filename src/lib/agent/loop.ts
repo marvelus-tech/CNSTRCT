@@ -83,7 +83,7 @@ async function runTurn(agentId: string, trigger: Trigger) {
     if (fresh.tokensUsed >= TOKEN_LIMIT) {
       appendRow(agentId, "notice", {
         tone: "error",
-        text: "Demo token budget is used up (50,000). This desk stops model calls at the cap.",
+        text: "Demo token budget is used up (50,000). Model calls stop at the cap until you reset.",
       });
       return;
     }

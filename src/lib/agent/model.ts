@@ -117,7 +117,7 @@ function matcherPlan(input: ModelInput): ModelResult {
   if (!looked) return { text: "", calls: [{ name: "screenshot", arguments: {} }], tokens: TOKENS_PER_MOCK_TURN };
   if (last?.body.status === "denied") {
     return {
-      text: "I will not introduce them. The lead stays on the desk until you say otherwise.",
+      text: "I will not introduce them. The lead stays in your queue until you say otherwise.",
       calls: [],
       tokens: TOKENS_PER_MOCK_TURN,
     };
@@ -133,7 +133,7 @@ function matcherPlan(input: ModelInput): ModelResult {
             to: tradie.contact,
             leadName: lead.name,
             tradieName: tradie.name,
-            body: `${lead.name} in ${input.business.city} needs ${lead.service} at ${lead.address}. Phone ${lead.phone}. This is a CNSTRCT demo lead. Do not contact them outside this desk.`,
+            body: `${lead.name} in ${input.business.city} needs ${lead.service} at ${lead.address}. Phone ${lead.phone}. This is a CNSTRCT demo lead. Do not contact them outside this demo.`,
           },
         },
       ],

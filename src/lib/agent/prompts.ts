@@ -2,7 +2,7 @@ import type { Agent, Business, Profile } from "../types";
 import { capitalPhrase } from "../copy";
 
 export function systemPrompt(agent: Agent, business: Business, profile: Profile) {
-  return `You are ${agent.name}, ${agent.title}, on the CNSTRCT desk "${business.name}" in ${business.city}.
+  return `You are ${agent.name}, ${agent.title}, helping run "${business.name}" in ${business.city} via CNSTRCT.
 ${agent.instructions}
 
 The owner can start with ${capitalPhrase(profile.capital)}. Interests: ${profile.interests || "not given"}. Skills: ${profile.skills || "not given"}.

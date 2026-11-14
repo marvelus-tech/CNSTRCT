@@ -8,7 +8,7 @@ export interface HeroBusinessSlide {
 export const HERO_BUSINESS_SLIDES: HeroBusinessSlide[] = [
   {
     id: "home-services",
-    label: "Home services lead desk",
+    label: "Home services leads",
     src: "/hero/home-services.webp",
     alt: "Tradesperson working on a home repair job",
   },
@@ -32,13 +32,13 @@ export const HERO_BUSINESS_SLIDES: HeroBusinessSlide[] = [
   },
   {
     id: "local-cleaning",
-    label: "Local cleaning desk",
+    label: "Local cleaning service",
     src: "/hero/local-cleaning.webp",
     alt: "Professional cleaning supplies ready for a job",
   },
   {
     id: "fitness-coaching",
-    label: "Fitness coaching desk",
+    label: "Fitness coaching",
     src: "/hero/fitness-coaching.webp",
     alt: "Trainer coaching a client in a gym",
   },

@@ -47,7 +47,7 @@ export function OpportunityBoard() {
     const json = (await response.json()) as { error?: string };
     if (!response.ok) {
       setOpening(false);
-      setError(json.error || "Could not open the desk.");
+      setError(json.error || "Could not start this business.");
       return;
     }
     router.push("/dashboard");
@@ -63,7 +63,7 @@ export function OpportunityBoard() {
       </header>
       <main className="mx-auto max-w-5xl px-5 pb-16 pt-8">
         <h1 className="max-w-2xl font-serif text-4xl leading-tight md:text-5xl">Three ways to start. One is open today.</h1>
-        <p className="mt-3 max-w-xl text-muted">The live desk is personalized from your answers. The other two stay closed until a later template.</p>
+        <p className="mt-3 max-w-xl text-muted">The live path is personalized from your answers. The other two stay closed until a later template.</p>
         {error ? (
           <p className="mt-6 text-sm text-danger">
             {error}{" "}
@@ -82,7 +82,7 @@ export function OpportunityBoard() {
               <p className="mt-3 flex-1 text-sm leading-6 text-muted">{card.summary || card.pitch}</p>
               {card.live ? (
                 <Button className="mt-6" onClick={() => void openLive()} disabled={opening}>
-                  {opening ? "Opening the desk" : "Open this desk"}
+                  {opening ? "Starting up…" : "Start this business"}
                 </Button>
               ) : (
                 <p className="mt-6 text-sm text-muted">Not selectable yet.</p>

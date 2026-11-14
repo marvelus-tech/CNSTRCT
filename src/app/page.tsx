@@ -56,7 +56,7 @@ export default function HomePage() {
                   See what fits you
                 </Link>
                 <Link href="/b/harbor-tradie-desk" className="inline-flex h-12 items-center justify-center rounded-none border border-border bg-card px-6">
-                  View a sample desk
+                  See a sample business
                 </Link>
               </div>
             </div>
@@ -78,7 +78,7 @@ export default function HomePage() {
               ],
               [
                 "Build it and start your business journey",
-                "Open your desk, approve agent drafts, and launch when you are ready.",
+                "Set up your business, approve what the agents draft, and launch when you are ready.",
               ],
             ].map(([title, body], index) => (
               <li key={title}>

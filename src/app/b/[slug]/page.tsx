@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DeskSite } from "@/components/desk-site";
 import { siteCopy } from "@/lib/copy";
-import { businessDescription, businessTitle } from "@/lib/seo";
+import { NOT_FOUND_TITLE, businessDescription, businessTitle } from "@/lib/seo";
 import { getBusinessBySlug, getProfile } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const business = getBusinessBySlug(slug);
   if (!business) {
-    return { title: { absolute: "CNSTRCT missing page | This desk was not found here" }, robots: { index: false, follow: false } };
+    return { title: { absolute: NOT_FOUND_TITLE }, robots: { index: false, follow: false } };
   }
   const title = businessTitle(business.name, business.city);
   const description = businessDescription(business.name, business.city);

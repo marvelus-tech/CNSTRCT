@@ -10,7 +10,7 @@ export function SiteFooter() {
             Start
           </Link>
           <Link href="/b/harbor-tradie-desk" className="hover:text-foreground">
-            Sample desk
+            Sample business
           </Link>
         </nav>
       </div>

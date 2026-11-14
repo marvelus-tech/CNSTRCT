@@ -22,7 +22,7 @@ export function DashboardApp() {
   async function reload() {
     const response = await fetch("/api/desk");
     if (!response.ok) {
-      setError("Could not load the desk.");
+      setError("Could not load your workspace.");
       return;
     }
     const json = (await response.json()) as DeskPayload;
@@ -86,20 +86,20 @@ export function DashboardApp() {
   if (!desk) {
     return (
       <div className="grid min-h-full place-items-center text-muted">
-        {error || "Loading your desk."}
+        {error || "Loading your workspace."}
       </div>
     );
   }
 
   if (!desk.profile) {
     return (
-      <Empty title="No answers yet" body="The triage is how CNSTRCT picks a desk." href="/triage" label="Start the questions" />
+      <Empty title="No answers yet" body="The triage is how CNSTRCT learns what fits you." href="/triage" label="Start the questions" />
     );
   }
 
   if (!desk.business || !agent) {
     return (
-      <Empty title="No desk open" body="Pick the live home-services path to generate a site and wake the agents." href="/opportunities" label="See the three paths" />
+      <Empty title="No business yet" body="Pick the live home-services path to generate a site and wake the agents." href="/opportunities" label="See the three paths" />
     );
   }
 
@@ -233,7 +233,7 @@ export function DashboardApp() {
       {error ? <p className="px-8 pb-4 text-sm text-danger">{error}</p> : null}
       <div className="px-4 pb-8 md:px-8">
         <Button type="button" variant="ghost" onClick={() => void reset()}>
-          {confirmReset ? "Click again to clear this desk" : "Start over"}
+          {confirmReset ? "Click again to clear and start over" : "Start over"}
         </Button>
       </div>
     </div>

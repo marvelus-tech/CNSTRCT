@@ -156,7 +156,7 @@ function seedSample() {
   );
   db.prepare(
     "INSERT INTO businesses (id, user_id, template_id, name, slug, city, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-  ).run("biz_sample", "user_sample", "home-services", "Harbor Tradie Desk", "harbor-tradie-desk", "Harbor", now);
+  ).run("biz_sample", "user_sample", "home-services", "Harbor Home Match", "harbor-tradie-desk", "Harbor", now);
 }
 
 export function closeDb() {

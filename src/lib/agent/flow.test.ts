@@ -39,7 +39,7 @@ test("desk sweep asks before send and can be refused", async () => {
   assert.match(card.summary, /cookie stand/);
 
   const desk = await openDesk(user.id, profile);
-  assert.equal(desk.business.name, "Austin Tradie Desk");
+  assert.equal(desk.business.name, "Austin Home Match");
   assert.equal(desk.business.city, "Austin");
   assert.equal(desk.agents.length, 2);
 

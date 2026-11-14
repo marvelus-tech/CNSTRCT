@@ -34,7 +34,7 @@ export const QUESTIONS = [
   {
     id: "capital",
     prompt: "How much can you put toward startup costs?",
-    hint: "This desk is built for a small number. Be honest.",
+    hint: "We match paths to small budgets. Be honest.",
     kind: "choice" as const,
     options: [
       { value: "none", label: "Basically none" },
@@ -57,7 +57,7 @@ export const QUESTIONS = [
   {
     id: "location",
     prompt: "Where are you?",
-    hint: "City or region. The desk and the tradie list use this.",
+    hint: "City or region. Your site and local tradie list use this.",
     kind: "text" as const,
     placeholder: "Austin, TX",
   },

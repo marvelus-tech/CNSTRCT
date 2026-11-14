@@ -28,7 +28,7 @@ export function TriageFlow() {
     if (saving) return "Saving";
     const optionalEmpty = "optional" in question && question.optional && !(draft[question.id] ?? "").trim();
     if (optionalEmpty) return "Skip";
-    if (step === QUESTIONS.length - 1) return "See the desks";
+    if (step === QUESTIONS.length - 1) return "See your options";
     return "Continue";
   }
 
