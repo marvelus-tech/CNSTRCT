@@ -8,7 +8,11 @@ const FADE_MS = 380;
 const MOVE_MS = 1100;
 const HOLD_MS = 320;
 const DISPLAY_MS = 2400;
-const VOID_HALF_VB = 5.2;
+/** Percent gap between line ends and void center (matches former viewBox void half). */
+const VOID_GAP_PCT = 5.2;
+
+const MOVE_EASE = "cubic-bezier(0.4, 0, 0.15, 1)";
+const POSITION_TRANSITION = `left ${MOVE_MS}ms ${MOVE_EASE}, top ${MOVE_MS}ms ${MOVE_EASE}, width ${MOVE_MS}ms ${MOVE_EASE}, height ${MOVE_MS}ms ${MOVE_EASE}`;
 
 function clampCoord(value: number) {
   return Math.min(88, Math.max(12, value));
@@ -19,7 +23,6 @@ export function HeroCrosshairShowcase() {
   const [slideIndex, setSlideIndex] = useState(0);
   const [coordIndex, setCoordIndex] = useState(0);
   const [imageVisible, setImageVisible] = useState(true);
-  const [linesMoving, setLinesMoving] = useState(false);
   const timeoutsRef = useRef<number[]>([]);
   const slideIndexRef = useRef(0);
   const coordIndexRef = useRef(0);
@@ -57,12 +60,10 @@ export function HeroCrosshairShowcase() {
 
     schedule(() => {
       coordIndexRef.current = nextCoord;
-      slideIndexRef.current = nextSlide;
-      setLinesMoving(true);
       setCoordIndex(nextCoord);
 
       schedule(() => {
-        setLinesMoving(false);
+        slideIndexRef.current = nextSlide;
         setSlideIndex(nextSlide);
         schedule(() => {
           setImageVisible(true);
@@ -89,9 +90,23 @@ export function HeroCrosshairShowcase() {
 
   const x = clampCoord(coord.x);
   const y = clampCoord(coord.y);
-  const moveTransition = reducedMotion
+  const gap = VOID_GAP_PCT;
+
+  const leftHWidth = Math.max(0, x - gap);
+  const rightHLeft = Math.min(100, x + gap);
+  const rightHWidth = Math.max(0, 100 - rightHLeft);
+  const topVHeight = Math.max(0, y - gap);
+  const bottomVTop = Math.min(100, y + gap);
+  const bottomVHeight = Math.max(0, 100 - bottomVTop);
+
+  const lineMotionStyle = reducedMotion ? undefined : { transition: POSITION_TRANSITION };
+  const anchorMotionStyle = reducedMotion
     ? undefined
-    : `left ${MOVE_MS}ms cubic-bezier(0.4, 0, 0.15, 1), top ${MOVE_MS}ms cubic-bezier(0.4, 0, 0.15, 1)`;
+  : {
+      transition: `left ${MOVE_MS}ms ${MOVE_EASE}, top ${MOVE_MS}ms ${MOVE_EASE}`,
+    };
+
+  const lineBase = "pointer-events-none absolute bg-foreground/22";
 
   return (
     <div
@@ -99,23 +114,48 @@ export function HeroCrosshairShowcase() {
       role="region"
       aria-label="Business types CNSTRCT can spin up"
     >
-      <svg
-        className="pointer-events-none absolute inset-0 h-full w-full text-foreground/22"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
+      <span
         aria-hidden
-      >
-        <g
-          style={{
-            transition: linesMoving && !reducedMotion ? `all ${MOVE_MS}ms cubic-bezier(0.4, 0, 0.15, 1)` : undefined,
-          }}
-        >
-          <line x1={0} y1={y} x2={Math.max(0, x - VOID_HALF_VB)} y2={y} stroke="currentColor" strokeWidth={0.35} vectorEffect="non-scaling-stroke" />
-          <line x1={Math.min(100, x + VOID_HALF_VB)} y1={y} x2={100} y2={y} stroke="currentColor" strokeWidth={0.35} vectorEffect="non-scaling-stroke" />
-          <line x1={x} y1={0} x2={x} y2={Math.max(0, y - VOID_HALF_VB)} stroke="currentColor" strokeWidth={0.35} vectorEffect="non-scaling-stroke" />
-          <line x1={x} y1={Math.min(100, y + VOID_HALF_VB)} x2={x} y2={100} stroke="currentColor" strokeWidth={0.35} vectorEffect="non-scaling-stroke" />
-        </g>
-      </svg>
+        className={`${lineBase} left-0 h-px`}
+        style={{
+          top: `${y}%`,
+          width: `${leftHWidth}%`,
+          transform: "translateY(-50%)",
+          ...lineMotionStyle,
+        }}
+      />
+      <span
+        aria-hidden
+        className={`${lineBase} h-px`}
+        style={{
+          left: `${rightHLeft}%`,
+          top: `${y}%`,
+          width: `${rightHWidth}%`,
+          transform: "translateY(-50%)",
+          ...lineMotionStyle,
+        }}
+      />
+      <span
+        aria-hidden
+        className={`${lineBase} top-0 w-px`}
+        style={{
+          left: `${x}%`,
+          height: `${topVHeight}%`,
+          transform: "translateX(-50%)",
+          ...lineMotionStyle,
+        }}
+      />
+      <span
+        aria-hidden
+        className={`${lineBase} w-px`}
+        style={{
+          left: `${x}%`,
+          top: `${bottomVTop}%`,
+          height: `${bottomVHeight}%`,
+          transform: "translateX(-50%)",
+          ...lineMotionStyle,
+        }}
+      />
 
       <div
         className="pointer-events-none absolute flex flex-col items-center"
@@ -123,7 +163,7 @@ export function HeroCrosshairShowcase() {
           left: `${x}%`,
           top: `${y}%`,
           transform: "translate(-50%, -50%)",
-          transition: linesMoving ? moveTransition : undefined,
+          ...anchorMotionStyle,
         }}
       >
         <div
