@@ -24,12 +24,12 @@ export function HeroCrosshairShowcase() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
   const [coordIndex, setCoordIndex] = useState(0);
-  const [imageVisible, setImageVisible] = useState(true);
+  const [imageVisible, setImageVisible] = useState(false);
   const timeoutsRef = useRef<number[]>([]);
   const slideIndexRef = useRef(0);
   const coordIndexRef = useRef(0);
   const runCycleRef = useRef<() => void>(() => {});
-  const slideReadyRef = useRef(true);
+  const slideReadyRef = useRef(false);
   const pendingRevealRef = useRef<(() => void) | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -97,14 +97,29 @@ export function HeroCrosshairShowcase() {
     runCycleRef.current = runCycle;
   }, [runCycle]);
 
+  const revealFirstSlide = useCallback(() => {
+    const reveal = () => {
+      pendingRevealRef.current = null;
+      setImageVisible(true);
+      if (!reducedMotion) {
+        schedule(() => runCycle(), DISPLAY_MS);
+      }
+    };
+    if (slideReadyRef.current) {
+      reveal();
+    } else {
+      pendingRevealRef.current = reveal;
+    }
+  }, [reducedMotion, schedule, runCycle]);
+
   useEffect(() => {
     if (reducedMotion) {
-      clearTimeouts();
-      return;
+      revealFirstSlide();
+      return () => clearTimeouts();
     }
-    schedule(() => runCycle(), DISPLAY_MS);
+    revealFirstSlide();
     return () => clearTimeouts();
-  }, [reducedMotion, clearTimeouts, runCycle, schedule]);
+  }, [reducedMotion, clearTimeouts, revealFirstSlide]);
 
   const measureVoid = useCallback(() => {
     const panel = panelRef.current;
