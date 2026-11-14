@@ -258,11 +258,13 @@ function Empty({ title, body, href, label }: { title: string; body: string; href
     <div className="grid min-h-full place-items-center px-6">
       <div className="max-w-md text-center">
         <Wordmark />
-        <h1 className="mt-6 font-serif text-4xl">{title}</h1>
+        <h1 className="mt-6 text-4xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-3 text-muted">{body}</p>
-        <Link href={href} className="mt-6 inline-flex h-11 items-center rounded-none bg-accent px-5 text-white">
-          {label}
-        </Link>
+        <div className="mt-6">
+          <Button asChild>
+            <Link href={href}>{label}</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

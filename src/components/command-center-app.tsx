@@ -55,7 +55,7 @@ function CommandCenterInner() {
         </Link>
       </header>
       <main className="mx-auto max-w-5xl px-5 pb-16 pt-8">
-        <h1 className="font-serif text-4xl leading-tight md:text-5xl">Command center</h1>
+        <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl">Command center</h1>
         <p className="mt-3 max-w-xl text-muted">Every business you construct lives here. Open one to chat with its agents.</p>
         {error ? <p className="mt-6 text-sm text-danger">{error}</p> : null}
         {businesses === null ? <p className="mt-8 text-muted">Loading your businesses.</p> : null}
@@ -82,15 +82,15 @@ function CommandCenterInner() {
                 className={`flex flex-col rounded-none border p-5 ${highlight ? "border-accent bg-card ring-1 ring-accent/30" : "border-border bg-white/80"}`}
               >
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">{business.templateTitle}</p>
-                <h2 className="mt-2 font-serif text-2xl">{business.name}</h2>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight">{business.name}</h2>
                 <p className="mt-1 text-sm text-muted">{business.city}</p>
                 <div className="mt-6 flex flex-wrap gap-2">
                   <Link href={`/workspace/${business.id}`}>
                     <Button>Open workspace</Button>
                   </Link>
-                  <Link href={business.sitePath} className="inline-flex h-10 items-center justify-center rounded-none border border-border px-4 text-sm">
-                    Public site
-                  </Link>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={business.sitePath}>Public site</Link>
+                  </Button>
                 </div>
               </li>
             );

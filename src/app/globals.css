@@ -21,7 +21,6 @@
   --color-border: var(--border);
   --color-danger: var(--danger);
   --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
 }
 
 body {
@@ -30,8 +29,13 @@ body {
   font-family: var(--font-sans);
 }
 
-.font-serif {
-  font-family: var(--font-serif);
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -98,4 +102,71 @@ body {
 .opportunity-card--live:hover {
   border-color: rgba(194, 65, 12, 0.35);
   transform: translateY(-2px);
+}
+
+/* HUD buttons — corner brackets (primary / secondary) */
+.hud-btn-frame {
+  position: relative;
+  display: inline-flex;
+  padding: 6px;
+}
+
+.hud-btn-frame.w-full {
+  display: flex;
+  width: 100%;
+}
+
+.hud-btn-frame.w-full .hud-btn__inner {
+  width: 100%;
+}
+
+.hud-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.hud-corner--tl {
+  top: 0;
+  left: 0;
+  border-top: 1px solid rgba(111, 105, 95, 0.65);
+  border-left: 1px solid rgba(111, 105, 95, 0.65);
+}
+
+.hud-corner--tr {
+  top: 0;
+  right: 0;
+  border-top: 1px solid rgba(111, 105, 95, 0.65);
+  border-right: 1px solid rgba(111, 105, 95, 0.65);
+}
+
+.hud-corner--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid rgba(111, 105, 95, 0.65);
+  border-left: 1px solid rgba(111, 105, 95, 0.65);
+}
+
+.hud-corner--br {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid rgba(111, 105, 95, 0.65);
+  border-right: 1px solid rgba(111, 105, 95, 0.65);
+}
+
+.hud-btn-frame--primary .hud-corner {
+  border-color: rgba(111, 105, 95, 0.75);
+}
+
+.hud-btn-frame--secondary .hud-corner {
+  border-color: rgba(28, 25, 21, 0.35);
+}
+
+.hud-btn-frame--plain {
+  padding: 0;
+}
+
+.hud-btn-frame--plain .hud-corner {
+  display: none;
 }

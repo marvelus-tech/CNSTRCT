@@ -99,7 +99,7 @@ export function OpportunityBoard() {
       <main className="relative mx-auto max-w-6xl px-5 pb-16 pt-8">
         <div className="relative z-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">Matched paths</p>
-          <h1 className="mt-2 max-w-2xl font-serif text-4xl leading-tight md:text-5xl">Three ways to start. One is open today.</h1>
+          <h1 className="mt-2 max-w-2xl text-4xl font-semibold leading-tight tracking-tight md:text-5xl">Three ways to start. One is open today.</h1>
           <p className="mt-3 max-w-xl text-muted">The live path is personalized from your answers. The other two stay closed until a later template.</p>
         </div>
         {error ? (
@@ -149,7 +149,7 @@ export function OpportunityBoard() {
                   </div>
                   <div className="mt-6 flex items-end justify-between gap-3">
                     {isLive ? (
-                      <Button className="rounded-none" onClick={() => void openLive()} disabled={opening}>
+                      <Button onClick={() => void openLive()} disabled={opening}>
                         {opening ? "Starting up…" : "Start this business"}
                       </Button>
                     ) : (

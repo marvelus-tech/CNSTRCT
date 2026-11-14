@@ -63,7 +63,7 @@ function ConstructingInner() {
       </header>
       <main className="mx-auto max-w-lg px-5 pb-16 pt-16 text-center">
         <p className="text-sm font-medium text-accent">Constructing</p>
-        <h1 className="mt-3 font-serif text-4xl leading-tight">Your business is taking shape</h1>
+        <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight">Your business is taking shape</h1>
         <p className="mt-3 text-sm text-muted">This usually takes a few seconds. Then you land in your command center.</p>
         <ul className="mt-12 space-y-4 text-left text-sm">
           {STEPS.map((label, index) => {

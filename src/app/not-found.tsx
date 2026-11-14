@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <main className="mx-auto max-w-xl px-5 py-20">
-      <h1 className="font-serif text-4xl">This page is not here.</h1>
+      <h1 className="text-4xl font-semibold tracking-tight">This page is not here.</h1>
       <p className="mt-4 text-muted">The link may be old. Home, the sample business, and a new triage are all open.</p>
       <nav className="mt-6 flex flex-col gap-3 text-sm">
         <Link href="/" className="underline">

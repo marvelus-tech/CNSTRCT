@@ -35,11 +35,11 @@ function LoginForm() {
         </Link>
       </header>
       <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-5 pb-16">
-        <h1 className="font-serif text-4xl leading-tight">Sign in to build</h1>
+        <h1 className="text-4xl font-semibold leading-tight tracking-tight">Sign in to build</h1>
         <p className="mt-3 text-sm leading-6 text-muted">
           CNSTRCT is Lovable for real businesses. For this demo, one tap creates a session. No password yet.
         </p>
-        <Button className="mt-10 w-full" onClick={() => void logIn()} disabled={busy}>
+        <Button className="mt-10 w-full" size="lg" onClick={() => void logIn()} disabled={busy}>
           {busy ? "Signing in…" : "Log in"}
         </Button>
         {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}

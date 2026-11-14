@@ -31,7 +31,7 @@ function CallbackInner() {
   return (
     <main className="mx-auto max-w-xl px-5 py-16">
       <Wordmark />
-      <h1 className="mt-8 font-serif text-4xl">Magic link</h1>
+      <h1 className="mt-8 text-4xl font-semibold tracking-tight">Magic link</h1>
       <p className="mt-4 text-muted">
         Supabase can email a sign-in link when NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set. The email template should send people here with token_hash and type. Without those keys, use the demo session from Start.
       </p>

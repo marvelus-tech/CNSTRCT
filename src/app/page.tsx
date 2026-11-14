@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroCrosshairShowcase } from "@/components/hero-crosshair-showcase";
+import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { Wordmark } from "@/components/wordmark";
 import { FAQS } from "@/lib/faq";
@@ -56,13 +57,13 @@ export default function HomePage() {
               <h1 className="max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-foreground md:text-6xl md:leading-[1.05]">
                 Spin up a real business from almost nothing.
               </h1>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/login?next=/triage" className="inline-flex h-12 items-center justify-center rounded-none bg-accent px-6 text-white">
-                  See what fits you
-                </Link>
-                <Link href="/b/harbor-tradie-desk" className="inline-flex h-12 items-center justify-center rounded-none border border-border bg-card px-6">
-                  See a sample business
-                </Link>
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-start">
+                <Button size="lg" asChild>
+                  <Link href="/login?next=/triage">See what fits you</Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/b/harbor-tradie-desk">See a sample business</Link>
+                </Button>
               </div>
             </div>
             <div className="rise w-full md:justify-self-end">

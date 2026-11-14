@@ -100,7 +100,7 @@ export function TriageFlow() {
       </header>
       <main className="mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-5 pb-16">
         <div className="rise">
-          <h1 className="font-serif text-4xl leading-tight">{question.prompt}</h1>
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight">{question.prompt}</h1>
           <p className="mt-3 text-muted">{question.hint}</p>
           <div className="mt-8 grid gap-3">
             {question.kind === "text" ? (

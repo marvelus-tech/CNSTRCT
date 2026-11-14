@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -8,11 +9,13 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   }, [error]);
   return (
     <main className="mx-auto max-w-xl px-5 py-20">
-      <h1 className="font-serif text-4xl">Something broke on this page.</h1>
+      <h1 className="text-4xl font-semibold tracking-tight">Something broke on this page.</h1>
       <p className="mt-4 text-muted">Your data is still saved. Try the page again, or go back home.</p>
-      <button type="button" className="mt-6 h-11 rounded-none bg-accent px-5 text-white" onClick={() => reset()}>
-        Try again
-      </button>
+      <div className="mt-6">
+        <Button type="button" onClick={() => reset()}>
+          Try again
+        </Button>
+      </div>
     </main>
   );
 }
