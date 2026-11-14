@@ -264,7 +264,7 @@ export function HeroCrosshairShowcase() {
             src={slide.src}
             alt={slide.alt}
             fill
-            sizes="120px"
+            sizes="(max-width: 768px) 56px, 88px"
             className="object-cover"
             priority={slideIndex === 0}
             onLoad={() => {
