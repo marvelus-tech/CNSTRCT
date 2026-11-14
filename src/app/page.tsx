@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HeroCrosshairShowcase } from "@/components/hero-crosshair-showcase";
 import { SiteFooter } from "@/components/site-footer";
 import { Wordmark } from "@/components/wordmark";
 import { FAQS } from "@/lib/faq";
@@ -44,20 +45,27 @@ export default function HomePage() {
         </Link>
       </header>
       <main>
-        <section className="px-5 pb-16 pt-10 md:px-10 md:pt-20">
-          <div className="mx-auto max-w-5xl">
-            <p className="text-sm font-medium text-accent">For people starting with almost nothing</p>
-            <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[1.05] tracking-tight md:text-7xl">Spin up a real business from almost nothing.</h1>
-            <p className="mt-6 max-w-xl text-lg text-muted">
-              CNSTRCT turns what you already have into a small business you can run this week. The first desk connects homeowners with local tradies. You keep a margin. You do not buy a van.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/triage" className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-6 text-white">
-                See what fits you
-              </Link>
-              <Link href="/b/harbor-tradie-desk" className="inline-flex h-12 items-center justify-center rounded-full border border-border bg-card px-6">
-                View a sample desk
-              </Link>
+        <section className="px-5 pb-16 pt-8 md:px-10 md:pt-16">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-12">
+            <div className="rise">
+              <p className="text-sm font-medium tracking-wide text-accent">For people starting with almost nothing</p>
+              <h1 className="mt-4 max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-foreground md:text-6xl md:leading-[1.05]">
+                Spin up a real business from almost nothing.
+              </h1>
+              <p className="mt-6 max-w-md text-lg leading-relaxed text-muted">
+                CNSTRCT turns what you already have into a small business you can run this week. The first desk connects homeowners with local tradies. You keep a margin. You do not buy a van.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href="/triage" className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-6 text-white">
+                  See what fits you
+                </Link>
+                <Link href="/b/harbor-tradie-desk" className="inline-flex h-12 items-center justify-center rounded-full border border-border bg-card px-6">
+                  View a sample desk
+                </Link>
+              </div>
+            </div>
+            <div className="rise w-full md:justify-self-end">
+              <HeroCrosshairShowcase />
             </div>
           </div>
         </section>
@@ -69,8 +77,8 @@ export default function HomePage() {
               ["Approve the work", "Agents draft outreach on their own computer. Nothing is sent until you say yes."],
             ].map(([title, body], index) => (
               <li key={title}>
-                <p className="text-sm text-accent">0{index + 1}</p>
-                <h2 className="mt-2 font-serif text-2xl">{title}</h2>
+                <p className="text-sm font-medium text-accent">0{index + 1}</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight">{title}</h2>
                 <p className="mt-2 text-muted">{body}</p>
               </li>
             ))}
@@ -78,7 +86,7 @@ export default function HomePage() {
         </section>
         <section className="px-5 py-16 md:px-10">
           <div className="mx-auto max-w-3xl">
-            <h2 className="font-serif text-4xl">Questions people ask first</h2>
+            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Questions people ask first</h2>
             <div className="mt-8 divide-y divide-border">
               {FAQS.map((item) => (
                 <article key={item.question} className="py-5">

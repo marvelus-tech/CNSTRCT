@@ -50,3 +50,18 @@ body {
     transform: none;
   }
 }
+
+:root {
+  --hero-void-size: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --hero-void-size: 5.5rem;
+  }
+}
+
+.hero-grain {
+  background-image: radial-gradient(circle at 20% 20%, rgba(28, 25, 21, 0.04), transparent 55%),
+    radial-gradient(circle at 80% 60%, rgba(194, 65, 12, 0.05), transparent 45%);
+}
