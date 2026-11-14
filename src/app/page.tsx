@@ -48,13 +48,9 @@ export default function HomePage() {
         <section className="px-5 pb-16 pt-8 md:px-10 md:pt-16">
           <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-12">
             <div className="rise">
-              <p className="text-sm font-medium tracking-wide text-accent">For people starting with almost nothing</p>
-              <h1 className="mt-4 max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-foreground md:text-6xl md:leading-[1.05]">
+              <h1 className="max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-foreground md:text-6xl md:leading-[1.05]">
                 Spin up a real business from almost nothing.
               </h1>
-              <p className="mt-6 max-w-md text-lg leading-relaxed text-muted">
-                CNSTRCT turns what you already have into a small business you can run this week. The first desk connects homeowners with local tradies. You keep a margin. You do not buy a van.
-              </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/triage" className="inline-flex h-12 items-center justify-center rounded-none bg-accent px-6 text-white">
                   See what fits you
@@ -72,9 +68,18 @@ export default function HomePage() {
         <section className="border-y border-border bg-card px-5 py-14 md:px-10">
           <ol className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
             {[
-              ["Tell us what you have", "Eight short questions. Skills, space, cash, and city. One at a time."],
-              ["Pick the live desk", "Three cards. Two are coming soon. One opens a home-services business."],
-              ["Approve the work", "Agents draft outreach on their own computer. Nothing is sent until you say yes."],
+              [
+                "Tell us your interest and situation",
+                "A short triage on your skills, resources, and what you want to explore.",
+              ],
+              [
+                "A custom engine matches and presents suitable business ideas",
+                "CNSTRCT surfaces paths that fit you—not a one-size-fits-all template.",
+              ],
+              [
+                "Build it and start your business journey",
+                "Open your desk, approve agent drafts, and launch when you are ready.",
+              ],
             ].map(([title, body], index) => (
               <li key={title}>
                 <p className="text-sm font-medium text-accent">0{index + 1}</p>
