@@ -31,6 +31,22 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Matches triage step counter (“3 of 7”) — tabular digital readout */
+.hud-readout {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 640px) {
+  .hud-readout {
+    font-size: 0.875rem;
+  }
+}
+
 input:not([type="checkbox"]):not([type="radio"]),
 textarea,
 select {

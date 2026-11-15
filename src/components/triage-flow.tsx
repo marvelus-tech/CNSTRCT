@@ -96,7 +96,7 @@ export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: bo
     <div className="min-h-full bg-background">
       <header className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
         <Wordmark />
-        <p className="shrink-0 text-xs tabular-nums text-muted sm:text-sm">
+        <p className="hud-readout shrink-0 text-muted">
           {step + 1} of {QUESTIONS.length}
         </p>
       </header>
