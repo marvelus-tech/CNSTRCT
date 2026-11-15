@@ -5,8 +5,27 @@ import { cn } from "@/lib/utils";
 
 export const DOT_MATRIX_ACTION_HEIGHT_CLASS = "h-11";
 
+/** Thin line chevron — same 1px crosshair language as the landing hero void. */
+function HudLineChevron({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn("relative inline-block h-[0.875rem] w-[0.875rem] shrink-0 sm:h-4 sm:w-4", className)}
+      aria-hidden
+    >
+      <span
+        className="absolute right-[8%] top-[22%] h-px w-[88%] origin-right -rotate-[54deg] bg-current opacity-[0.72]"
+        aria-hidden
+      />
+      <span
+        className="absolute right-[8%] bottom-[22%] h-px w-[88%] origin-right rotate-[54deg] bg-current opacity-[0.72]"
+        aria-hidden
+      />
+    </span>
+  );
+}
+
 /**
- * Back control styled like the triage step readout (tabular sans “countdown”).
+ * Back control: HUD tabular type (triage “3 of 7” readout) + crosshair line arrow.
  */
 export function DottedArrowBack({
   className,
@@ -23,7 +42,7 @@ export function DottedArrowBack({
       aria-label={label}
       className={cn(
         DOT_MATRIX_ACTION_HEIGHT_CLASS,
-        "hud-readout group inline-flex items-center gap-2 border-0 bg-transparent px-3 shadow-none sm:gap-2.5 sm:px-6",
+        "hud-readout group inline-flex items-center gap-2.5 border-0 bg-transparent px-3 shadow-none sm:gap-3 sm:px-6",
         "text-muted transition-colors hover:text-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:pointer-events-none disabled:opacity-30",
@@ -31,12 +50,7 @@ export function DottedArrowBack({
       )}
       {...props}
     >
-      <span
-        aria-hidden
-        className="inline-block translate-y-px text-[1.35rem] font-medium leading-none tracking-[0.2em] text-foreground/65 transition-transform duration-200 group-hover:-translate-x-0.5 group-hover:text-foreground"
-      >
-        ‹
-      </span>
+      <HudLineChevron className="text-foreground/70 transition-[transform,color] duration-200 group-hover:-translate-x-0.5 group-hover:text-foreground" />
       {showLabel ? <span>{label}</span> : null}
     </button>
   );

@@ -31,12 +31,13 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Matches triage step counter (“3 of 7”) — tabular digital readout */
+/* Tabular HUD readout — triage step counter (“3 of 7”) and back control */
 .hud-readout {
   font-family: var(--font-sans);
   font-size: 0.6875rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
