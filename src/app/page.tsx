@@ -39,7 +39,7 @@ export default function HomePage() {
   return (
     <div className="min-h-full">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <header className="flex items-center justify-between px-5 py-4 md:px-10">
+      <header className="flex items-center justify-between px-4 py-4 sm:px-5 md:px-10">
         <Wordmark />
         <nav className="flex items-center gap-4 text-sm">
           <Link href="/login" className="text-muted">
@@ -51,10 +51,10 @@ export default function HomePage() {
         </nav>
       </header>
       <main>
-        <section className="px-5 pb-16 pt-8 md:px-10 md:pt-16">
+        <section className="px-4 pb-12 pt-6 sm:px-5 sm:pb-16 sm:pt-8 md:px-10 md:pt-16">
           <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-12">
             <div className="rise">
-              <h1 className="max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-foreground md:text-6xl md:leading-[1.05]">
+              <h1 className="max-w-xl text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-foreground sm:text-4xl sm:leading-[1.08] md:text-6xl md:leading-[1.05]">
                 Spin up a real business from almost nothing.
               </h1>
               <div className="mt-8">

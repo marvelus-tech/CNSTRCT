@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 type Draft = Record<string, string>;
 
-export function TriageFlow() {
+export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>({});
@@ -94,16 +94,18 @@ export function TriageFlow() {
 
   return (
     <div className="min-h-full bg-background">
-      <header className="flex items-center justify-between px-5 py-4">
+      <header className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
         <Wordmark />
-        <p className="text-sm text-muted">
+        <p className="shrink-0 text-xs tabular-nums text-muted sm:text-sm">
           {step + 1} of {QUESTIONS.length}
         </p>
       </header>
-      <main className="mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-5 pb-16">
+      <main className="mx-auto flex w-full max-w-xl flex-col justify-start px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-2 sm:min-h-[70vh] sm:justify-center sm:px-5 sm:pb-16 sm:pt-0">
         <div className="rise">
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight">{question.prompt}</h1>
-          <p className="mt-3 text-muted">{question.hint}</p>
+          <h1 className="text-[1.65rem] font-semibold leading-snug tracking-tight sm:text-4xl sm:leading-tight">
+            {question.prompt}
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">{question.hint}</p>
           <div className="mt-8 grid gap-3">
             {question.kind === "text" ? (
               <Textarea
@@ -150,30 +152,42 @@ export function TriageFlow() {
             ) : null}
           </div>
           {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
-          <div className="mt-8 flex items-center gap-3">
-            <span className="inline-flex items-center p-[6px]">
-              <DottedArrowBack type="button" disabled={step === 0} onClick={() => setStep((current) => current - 1)} />
+          <div className="mt-8 flex w-full items-center justify-between gap-3">
+            <span className="inline-flex shrink-0 items-center p-[6px]">
+              <DottedArrowBack
+                type="button"
+                className="!px-2 sm:!px-6"
+                disabled={step === 0}
+                onClick={() => setStep((current) => current - 1)}
+              />
             </span>
-            <Button type="button" onClick={() => void next()} disabled={saving}>
+            <Button type="button" className="min-w-0 shrink" onClick={() => void next()} disabled={saving}>
               {buttonLabel()}
             </Button>
           </div>
         </div>
-        <form onSubmit={sendMagic} className="mt-16 grid gap-2 border-t border-border pt-6 text-sm text-muted">
-          <p>
-            Email magic links need Supabase keys. Otherwise this browser keeps a demo session.{" "}
-            <a className="underline" href="/auth/callback">
-              Magic link help
-            </a>
-          </p>
-          <div className="flex gap-2">
-            <Input type="email" value={magic} placeholder="you@example.com" onChange={(event) => setMagic(event.target.value)} required />
-            <Button type="submit" variant="outline">
-              Email me
-            </Button>
-          </div>
-          {magicNote ? <p role="status">{magicNote}</p> : null}
-        </form>
+        {magicLinkEnabled ? (
+          <form
+            onSubmit={sendMagic}
+            className="mt-12 grid gap-3 border-t border-border pt-6 text-sm text-muted sm:mt-16"
+          >
+            <p>Sign in with a one-time link sent to your email.</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+              <Input
+                type="email"
+                value={magic}
+                placeholder="you@example.com"
+                className="w-full min-w-0"
+                onChange={(event) => setMagic(event.target.value)}
+                required
+              />
+              <Button type="submit" variant="outline" className="w-full shrink-0 sm:w-auto">
+                Email me
+              </Button>
+            </div>
+            {magicNote ? <p role="status">{magicNote}</p> : null}
+          </form>
+        ) : null}
       </main>
     </div>
   );

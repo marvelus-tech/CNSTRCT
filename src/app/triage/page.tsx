@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { TriageFlow } from "@/components/triage-flow";
 import { TRIAGE_DESCRIPTION, TRIAGE_TITLE } from "@/lib/seo";
+import { supabaseConfigured } from "@/lib/supabase";
 
 export const metadata: Metadata = {
   title: { absolute: TRIAGE_TITLE },
@@ -10,5 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function TriagePage() {
-  return <TriageFlow />;
+  return <TriageFlow magicLinkEnabled={supabaseConfigured()} />;
 }

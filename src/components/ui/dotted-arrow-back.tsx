@@ -43,7 +43,7 @@ export function DottedArrowBack({
       type="button"
       aria-label={label}
       className={cn(
-        "dotted-arrow-back group inline-flex h-11 items-center gap-3 border-0 bg-transparent px-6 shadow-none",
+        "dotted-arrow-back group inline-flex h-11 items-center gap-2 border-0 bg-transparent px-3 shadow-none sm:gap-3 sm:px-6",
         "text-muted transition-colors hover:text-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:pointer-events-none disabled:opacity-30",
