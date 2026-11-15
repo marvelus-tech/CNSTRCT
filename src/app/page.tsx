@@ -57,12 +57,9 @@ export default function HomePage() {
               <h1 className="max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-foreground md:text-6xl md:leading-[1.05]">
                 Spin up a real business from almost nothing.
               </h1>
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div className="mt-8">
                 <Button size="lg" asChild>
                   <Link href="/login?next=/triage">See what fits you</Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link href="/b/harbor-tradie-desk">See a sample business</Link>
                 </Button>
               </div>
             </div>
