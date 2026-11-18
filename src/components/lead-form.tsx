@@ -4,7 +4,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function LeadForm({ slug }: { slug: string }) {
+export function LeadForm({
+  slug,
+  submitLabel = "Request a tradie",
+  servicePlaceholder = "Leaking kitchen faucet",
+}: {
+  slug: string;
+  submitLabel?: string;
+  servicePlaceholder?: string;
+}) {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -52,10 +60,10 @@ export function LeadForm({ slug }: { slug: string }) {
       </label>
       <label className="grid gap-1 text-sm">
         Service needed
-        <Input name="service" required placeholder="Leaking kitchen faucet" />
+        <Input name="service" required placeholder={servicePlaceholder} />
       </label>
       <Button type="submit" disabled={status === "saving"}>
-        {status === "saving" ? "Saving" : "Request a tradie"}
+        {status === "saving" ? "Saving" : submitLabel}
       </Button>
       <p className="min-h-5 text-sm" role="status">
         {message}

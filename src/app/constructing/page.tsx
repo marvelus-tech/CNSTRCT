@@ -5,12 +5,20 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Wordmark } from "@/components/wordmark";
 
-const STEPS = [
-  "Blueprint from your answers",
-  "Public site and lead form",
-  "Agents Mara and Jules",
-  "Routines and approval cards",
-] as const;
+const STEPS_BY_TEMPLATE: Record<string, readonly string[]> = {
+  "home-services": [
+    "Blueprint from your answers",
+    "Public site and lead form",
+    "Agents Mara and Jules",
+    "Routines and approval cards",
+  ],
+  "mobile-detailing": [
+    "Blueprint from your answers",
+    "Public booking page and lead form",
+    "Agents Riley and Sam",
+    "Routines and approval cards",
+  ],
+};
 
 const MIN_MS = 5000;
 
@@ -18,6 +26,7 @@ function ConstructingInner() {
   const router = useRouter();
   const params = useSearchParams();
   const template = params.get("template") || "home-services";
+  const steps = STEPS_BY_TEMPLATE[template] ?? STEPS_BY_TEMPLATE["home-services"]!;
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
 
@@ -26,7 +35,7 @@ function ConstructingInner() {
     let cancelled = false;
 
     const advance = window.setInterval(() => {
-      setStep((current) => Math.min(current + 1, STEPS.length - 1));
+      setStep((current) => Math.min(current + 1, steps.length - 1));
     }, 900);
 
     async function provision() {
@@ -45,7 +54,7 @@ function ConstructingInner() {
         setError(json.error || "Could not construct this business.");
         return;
       }
-      setStep(STEPS.length - 1);
+      setStep(steps.length - 1);
       router.replace(`/command-center?new=${json.businessId}`);
     }
 
@@ -54,7 +63,7 @@ function ConstructingInner() {
       cancelled = true;
       window.clearInterval(advance);
     };
-  }, [router, template]);
+  }, [router, template, steps.length]);
 
   return (
     <div className="min-h-full bg-background">
@@ -66,7 +75,7 @@ function ConstructingInner() {
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight">Your business is taking shape</h1>
         <p className="mt-3 text-sm text-muted">This usually takes a few seconds. Then you land in your command center.</p>
         <ul className="mt-12 space-y-4 text-left text-sm">
-          {STEPS.map((label, index) => {
+          {steps.map((label, index) => {
             const done = index < step;
             const active = index === step;
             return (

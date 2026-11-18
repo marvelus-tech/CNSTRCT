@@ -2,7 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { dataDir } from "../db";
-import { searchTradies } from "./directory";
+import { searchDetailers, searchTradies } from "./directory";
 import { orgo } from "./orgo";
 import { getComputer, upsertComputer } from "../store";
 
@@ -180,7 +180,7 @@ export async function execInSandbox(agentId: string, command: string, city = "th
   const trimmed = command.trim();
   appendTerminal(agentId, `$ ${trimmed}`);
   if (trimmed.startsWith("cnstrct-search")) {
-    const output = searchTradies(city);
+    const output = /detailers/i.test(trimmed) ? searchDetailers(city) : searchTradies(city);
     appendTerminal(agentId, output);
     const provider = configuredProvider() === "orgo" ? "local" : configuredProvider();
     upsertComputer(agentId, provider === "docker" ? "docker" : "local", "running", providerNote(provider === "docker" ? "docker" : "local"));

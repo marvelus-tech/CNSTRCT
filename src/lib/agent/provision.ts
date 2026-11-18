@@ -1,4 +1,4 @@
-import { businessName, cityOf } from "../copy";
+import { businessName, cityOf, type TemplateId } from "../copy";
 import { newId } from "../ids";
 import {
   getAgent,
@@ -33,24 +33,86 @@ function uniqueSlug(name: string) {
   return `${base}-${newId("s").slice(-4)}`;
 }
 
-function scoutInstructions(city: string) {
-  return `Find tradies who work in ${city}. Save notes on your computer. Draft one partnership email and wait for approval before any send. Never spend money.`;
+interface DeskBlueprint {
+  scoutName: string;
+  scoutTitle: string;
+  scoutInstructions: (city: string) => string;
+  scoutRoutineName: string;
+  scoutRoutinePrompt: (city: string) => string;
+  scoutRoutineLabel: string;
+  matcherName: string;
+  matcherTitle: string;
+  matcherInstructions: (city: string) => string;
+  matcherRoutineName: string;
+  matcherRoutinePrompt: string;
+  matcherRoutineLabel: string;
+  exampleLead: (city: string) => { name: string; phone: string; address: string; service: string };
 }
 
-function matcherInstructions(city: string) {
-  return `Read homeowner leads for ${city}. Save a short match note. Draft one introduction to a tradie and wait for approval. Example leads are not real customers.`;
+const BLUEPRINTS: Record<string, DeskBlueprint> = {
+  "home-services": {
+    scoutName: "Mara",
+    scoutTitle: "Tradie scout",
+    scoutInstructions: (city) =>
+      `Find tradies who work in ${city}. Save notes on your computer. Draft one partnership email and wait for approval before any send. Never spend money.`,
+    scoutRoutineName: "Weekday tradie sweep",
+    scoutRoutinePrompt: (city) =>
+      `Search tradies in ${city}, save notes/tradies.md, and draft one partnership email. Do not send it.`,
+    scoutRoutineLabel: "Weekdays at 8:00",
+    matcherName: "Jules",
+    matcherTitle: "Lead matcher",
+    matcherInstructions: (city) =>
+      `Read homeowner leads for ${city}. Save a short match note. Draft one introduction to a tradie and wait for approval. Example leads are not real customers.`,
+    matcherRoutineName: "New lead check",
+    matcherRoutinePrompt: "Read the newest homeowner lead, save a match note, and draft an introduction. Do not send it.",
+    matcherRoutineLabel: "Every morning",
+    exampleLead: (city) => ({
+      name: "Alex Rivera",
+      phone: "555-0100",
+      address: `12 Pine Street, ${city}`,
+      service: "Kitchen faucet leak",
+    }),
+  },
+  "mobile-detailing": {
+    scoutName: "Riley",
+    scoutTitle: "Partnership drafts",
+    scoutInstructions: (city) =>
+      `Find mobile detailers who serve ${city}. Save notes on your computer. Draft one shop partnership email and wait for approval before any send. Never spend money.`,
+    scoutRoutineName: "Weekday detailer sweep",
+    scoutRoutinePrompt: (city) =>
+      `Search detailers in ${city}, save notes/detailers.md, and draft one partnership email. Do not send it.`,
+    scoutRoutineLabel: "Weekdays at 8:00",
+    matcherName: "Sam",
+    matcherTitle: "Job match",
+    matcherInstructions: (city) =>
+      `Read driveway booking leads for ${city}. Save a short match note. Draft one introduction to a detailer and wait for approval. Example leads are not real customers.`,
+    matcherRoutineName: "New booking check",
+    matcherRoutinePrompt: "Read the newest driveway booking, save a match note, and draft an introduction. Do not send it.",
+    matcherRoutineLabel: "Every morning",
+    exampleLead: (city) => ({
+      name: "Jordan Lee",
+      phone: "555-0142",
+      address: `88 Maple Drive, ${city}`,
+      service: "Full exterior wash, Saturday 9am",
+    }),
+  },
+};
+
+function blueprintFor(templateId: string): DeskBlueprint {
+  return BLUEPRINTS[templateId] ?? BLUEPRINTS["home-services"]!;
 }
 
 export async function openDesk(
   userId: string,
   profile: Profile,
-  templateId = "home-services",
+  templateId: TemplateId | string = "home-services",
 ): Promise<{ business: Business; agents: Agent[] }> {
   const existing = getBusinessForUserAndTemplate(userId, templateId);
   if (existing) return { business: existing, agents: listAgents(existing.id) };
 
   const city = cityOf(profile.location);
-  const name = businessName(profile);
+  const name = businessName(profile, templateId as TemplateId);
+  const plan = blueprintFor(templateId);
   const business = insertBusiness({
     userId,
     templateId,
@@ -63,18 +125,18 @@ export async function openDesk(
     businessId: business.id,
     userId,
     role: "scout",
-    name: "Mara",
-    title: "Tradie scout",
-    instructions: scoutInstructions(city),
+    name: plan.scoutName,
+    title: plan.scoutTitle,
+    instructions: plan.scoutInstructions(city),
     status: "active",
   });
   const matcher = insertAgent({
     businessId: business.id,
     userId,
     role: "matcher",
-    name: "Jules",
-    title: "Lead matcher",
-    instructions: matcherInstructions(city),
+    name: plan.matcherName,
+    title: plan.matcherTitle,
+    instructions: plan.matcherInstructions(city),
     status: "active",
   });
 
@@ -86,29 +148,30 @@ export async function openDesk(
 
   const scoutRoutine = insertRoutine({
     agentId: scout.id,
-    name: "Weekday tradie sweep",
-    prompt: `Search tradies in ${city}, save notes/tradies.md, and draft one partnership email. Do not send it.`,
-    scheduleLabel: "Weekdays at 8:00",
+    name: plan.scoutRoutineName,
+    prompt: plan.scoutRoutinePrompt(city),
+    scheduleLabel: plan.scoutRoutineLabel,
     intervalMs: DAY,
     enabled: true,
     nextRunAt: null,
   });
   const matchRoutine = insertRoutine({
     agentId: matcher.id,
-    name: "New lead check",
-    prompt: "Read the newest homeowner lead, save a match note, and draft an introduction. Do not send it.",
-    scheduleLabel: "Every morning",
+    name: plan.matcherRoutineName,
+    prompt: plan.matcherRoutinePrompt,
+    scheduleLabel: plan.matcherRoutineLabel,
     intervalMs: DAY,
     enabled: true,
     nextRunAt: null,
   });
 
+  const lead = plan.exampleLead(city);
   insertLead({
     businessId: business.id,
-    name: "Alex Rivera",
-    phone: "555-0100",
-    address: `12 Pine Street, ${city}`,
-    service: "Kitchen faucet leak",
+    name: lead.name,
+    phone: lead.phone,
+    address: lead.address,
+    service: lead.service,
     source: "example",
   });
 

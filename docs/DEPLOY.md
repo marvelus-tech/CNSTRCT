@@ -29,8 +29,8 @@ You only need to do this once per Vercel team. After that, every push to `main` 
 
    | Name | Value |
    | --- | --- |
-   | `CNSTRCT_DATA_DIR` | `/tmp/cnstrct-data` |
-   | `NEXT_PUBLIC_SITE_URL` | Your production URL, e.g. `https://cnstrct-app.vercel.app` (no trailing slash) |
+   | `CNSTRCT_DATA_DIR` | `/tmp/cnstrct-data` (ephemeral on serverless; see README **Hosted demo: what persists**) |
+   | `NEXT_PUBLIC_SITE_URL` | `https://cnstrct-app.vercel.app` (no trailing slash) |
 
 8. **Deployment Protection:** Project → Settings → Deployment Protection → set **Production** to **None** (or "Only Preview Deployments") so colleagues can open the demo without a Vercel login.
 9. Click **Deploy**. When the build finishes, copy **Visit** on the Production deployment. That URL is the shareable app link.

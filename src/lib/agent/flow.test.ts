@@ -79,6 +79,28 @@ test("desk sweep asks before send and can be refused", async () => {
   assert.match(blocked.output, /blocked/i);
 });
 
+test("mobile detailing desk provisions Riley and Sam", async () => {
+  const { createUser, saveProfile } = await import("../store");
+  const { openDesk } = await import("./provision");
+  const { detailingCardCopy } = await import("../copy");
+  const { TEMPLATES } = await import("../templates");
+
+  const user = createUser({ email: "detail@cnstrct.local", name: "Detailer" });
+  const local = { ...profile, userId: user.id, location: "Austin, TX" };
+  saveProfile(local);
+  const card = detailingCardCopy(local);
+  assert.match(card.summary, /Driveway Detail/);
+  assert.equal(TEMPLATES.find((t) => t.id === "mobile-detailing")?.live, true);
+
+  const desk = await openDesk(user.id, local, "mobile-detailing");
+  assert.equal(desk.business.templateId, "mobile-detailing");
+  assert.equal(desk.business.name, "Austin Driveway Detail");
+  assert.deepEqual(
+    desk.agents.map((agent) => agent.name).sort(),
+    ["Riley", "Sam"],
+  );
+});
+
 test("openDesk is idempotent per user and template", async () => {
   const { createUser, getBusinessForUserAndTemplate, saveProfile } = await import("../store");
   const { openDesk } = await import("./provision");
@@ -93,4 +115,7 @@ test("openDesk is idempotent per user and template", async () => {
   assert.equal(first.business.id, again.business.id);
   assert.equal(first.agents.length, again.agents.length);
   assert.equal(getBusinessForUserAndTemplate(user.id, "home-services")?.id, first.business.id);
+
+  const detailing = await openDesk(user.id, local, "mobile-detailing");
+  assert.notEqual(detailing.business.id, first.business.id);
 });

@@ -14,7 +14,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
   {
     id: "mobile-detailing",
-    live: false,
+    live: true,
     title: "Mobile detailing bookings",
     pitch: "Take driveway bookings and hand them to detailers who already have the gear. You keep the booking margin.",
   },

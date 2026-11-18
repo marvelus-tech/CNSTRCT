@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DeskSite } from "@/components/desk-site";
-import { siteCopy } from "@/lib/copy";
+import { siteCopy, type TemplateId } from "@/lib/copy";
 import { NOT_FOUND_TITLE, businessDescription, businessTitle } from "@/lib/seo";
 import { getBusinessBySlug, getProfile } from "@/lib/store";
 
@@ -34,7 +34,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ slug:
       name={business.name}
       slug={business.slug}
       workspacePath={`/workspace/${business.id}`}
-      copy={siteCopy(profile, business.name, business.city)}
+      copy={siteCopy(profile, business.name, business.city, business.templateId as TemplateId)}
     />
   );
 }

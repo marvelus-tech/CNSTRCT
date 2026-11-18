@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/seo.test.ts src/lib/agent/flow.test.ts"
+    "test": "tsx --test src/lib/seo.test.ts src/lib/agent/flow.test.ts src/lib/agent/business-api.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

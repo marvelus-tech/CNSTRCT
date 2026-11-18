@@ -32,7 +32,7 @@ The first request creates `data/cnstrct.db` and a sample public desk at `/b/harb
 
 1. Start at `/` and choose **Start** or **Log in** (one tap demo sign-in at `/login`).
 2. Answer the eight questions. City becomes the business name (`Austin` becomes Austin Home Match).
-3. The board shows three cards. Open the live one. Mobile detailing and estate clearance stay coming soon.
+3. The board shows three cards. Home services and mobile detailing are live. Estate clearance stays coming soon.
 4. **Constructing** runs for a few seconds, then you land in the **command center** (`/command-center`).
 5. Open **workspace** for your business (`/workspace/[businessId]`). Mara (tradie scout) and Jules (lead matcher) each have approval cards and notes on their computer.
 6. Approve or reject. Approve writes `outbox/outreach.json` or `outbox/matches.json` inside that agent's sandbox. Reject does not.
@@ -68,3 +68,23 @@ Copy `.env.example` to `.env.local` only when you want a live provider. Every va
 | `CNSTRCT_DATA_DIR` | Where sqlite and sandboxes live. Defaults to `./data`. |
 
 Token and computer-hour meters are a hardcoded demo cap: 50,000 tokens and 2 hours per agent.
+
+## Hosted demo: what persists
+
+**Canonical production URL:** [https://cnstrct-app.vercel.app](https://cnstrct-app.vercel.app) (see [docs/DEPLOY.md](docs/DEPLOY.md)).
+
+Vercel sets `CNSTRCT_DATA_DIR` to `/tmp/cnstrct-data`. That directory is **ephemeral** on serverless: triage answers, demo sessions, workspaces, and agent sandboxes can disappear after a cold start, a new deployment, or when the instance is recycled.
+
+What **does** persist without signing in:
+
+- The app code and UI on each deploy.
+- A **seeded sample desk** at [`/b/harbor-tradie-desk`](https://cnstrct-app.vercel.app/b/harbor-tradie-desk). The first request on a fresh sqlite file inserts `user_sample` and that business. You can always open it to walk the public site and lead form.
+
+What **does not** persist reliably on hosted demo:
+
+- Your `cnstrct_sid` cookie and sqlite rows tied to your browser session.
+- Agent notes and outbox files under `/tmp/cnstrct-data/sandboxes`.
+
+On production, a banner explains this when `NEXT_PUBLIC_SITE_URL` is not localhost and the data dir lives under `/tmp`. Local dev is unchanged: sqlite stays in `./data/cnstrct.db` on disk.
+
+We did not wire Turso/libsql for this sprint (no paid hosted DB or extra secrets required). Optional `TURSO_*` env vars can be added later for durable hosted sqlite.

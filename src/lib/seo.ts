@@ -13,7 +13,7 @@ export const TRIAGE_DESCRIPTION =
 export const OPPORTUNITIES_TITLE = "CNSTRCT opportunity paths | One path is live today";
 
 export const OPPORTUNITIES_DESCRIPTION =
-  "Review three CNSTRCT business paths after triage. One home-services path is open today. Mobile detailing and estate clearance stay marked coming soon.";
+  "Review three CNSTRCT business paths after triage. Home services and mobile detailing are open today. Estate clearance stays marked coming soon for you.";
 
 export const DASHBOARD_TITLE = "CNSTRCT dashboard | Agent chat, computer, approvals";
 

@@ -34,7 +34,7 @@ export function DeskSite({
             <p className="mt-5 max-w-2xl text-lg text-muted">{copy.sub}</p>
             <div className="mt-8">
               <Button size="lg" asChild>
-                <a href="#lead">Describe the job</a>
+                <a href="#lead">{copy.heroCta}</a>
               </Button>
             </div>
           </div>
@@ -62,7 +62,7 @@ export function DeskSite({
               <h2 className="text-3xl font-semibold tracking-tight">Request the work</h2>
               <p className="mt-3 text-muted">{copy.contact}</p>
             </div>
-            <LeadForm slug={slug} />
+            <LeadForm slug={slug} submitLabel={copy.leadCta} servicePlaceholder={copy.leadPlaceholder} />
           </div>
         </section>
       </main>
