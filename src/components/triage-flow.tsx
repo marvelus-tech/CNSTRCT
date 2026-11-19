@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DottedArrowBack } from "@/components/ui/dotted-arrow-back";
@@ -8,14 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Wordmark } from "@/components/wordmark";
 import { QUESTIONS } from "@/lib/questions";
+import { clearTriageDraft, loadTriageDraft, saveTriageDraft, type TriageDraft } from "@/lib/triage-draft";
 import { cn } from "@/lib/utils";
-
-type Draft = Record<string, string>;
 
 export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: boolean }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<Draft>({});
+  const [draft, setDraft] = useState<TriageDraft>({});
   const [error, setError] = useState("");
   const [magic, setMagic] = useState("");
   const [magicNote, setMagicNote] = useState("");
@@ -23,8 +23,19 @@ export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: bo
   const question = QUESTIONS[step]!;
 
   useEffect(() => {
-    void fetch("/api/auth/demo", { method: "POST", credentials: "same-origin" });
-  }, []);
+    if (searchParams.get("intent") === "new") {
+      clearTriageDraft();
+      setDraft({});
+      setStep(0);
+      return;
+    }
+    const stored = loadTriageDraft();
+    if (stored) setDraft(stored);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (Object.keys(draft).length > 0) saveTriageDraft(draft);
+  }, [draft]);
 
   function buttonLabel() {
     if (saving) return "Saving";
@@ -41,31 +52,14 @@ export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: bo
     return (draft[question.id] ?? "").trim().length > 1;
   }
 
-  async function finish(next: Draft) {
+  async function finish(next: TriageDraft) {
     setSaving(true);
     setError("");
-    const response = await fetch("/api/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        interests: next.interests,
-        skills: next.skills,
-        hasIdea: next.hasIdea === "yes",
-        ideaText: next.ideaText ?? "",
-        space: next.space,
-        capital: next.capital,
-        trades: next.trades,
-        location: next.location,
-        constraints: next.constraints ?? "",
-      }),
-    });
-    const json = (await response.json()) as { error?: string };
+    saveTriageDraft(next);
+    const session = await fetch("/api/session");
+    const query = session.ok ? "?from=command-center" : "";
     setSaving(false);
-    if (!response.ok) {
-      setError(json.error || "Could not save those answers.");
-      return;
-    }
-    router.push("/opportunities");
+    router.push(`/opportunities${query}`);
   }
 
   async function next() {
@@ -75,7 +69,7 @@ export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: bo
     }
     setError("");
     if (step === QUESTIONS.length - 1) {
-      await finish(draft);
+      finish(draft);
       return;
     }
     setStep((current) => current + 1);
@@ -89,7 +83,7 @@ export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: bo
       body: JSON.stringify({ email: magic }),
     });
     const json = (await response.json()) as { error?: string; ok?: boolean };
-    setMagicNote(json.ok ? "Check that inbox for the link." : json.error || "Magic link is not configured. The demo session is already on.");
+    setMagicNote(json.ok ? "Check that inbox for the link." : json.error || "Magic link is not configured. Use Log in from the home page.");
   }
 
   return (

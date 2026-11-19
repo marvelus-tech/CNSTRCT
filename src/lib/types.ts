@@ -32,6 +32,7 @@ export interface Business {
   slug: string;
   city: string;
   createdAt: number;
+  profileJson?: string | null;
 }
 
 export interface Agent {

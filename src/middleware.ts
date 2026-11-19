@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { SESSION_COOKIE } from "@/lib/auth-constants";
 
-const PROTECTED_PREFIXES = ["/command-center", "/constructing", "/workspace", "/triage", "/opportunities"];
+const PROTECTED_PREFIXES = ["/command-center", "/constructing", "/workspace"];
 
 function isProtected(pathname: string) {
   return PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -21,5 +21,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/command-center/:path*", "/constructing", "/workspace/:path*", "/triage", "/opportunities"],
+  matcher: ["/command-center/:path*", "/constructing", "/workspace/:path*"],
 };

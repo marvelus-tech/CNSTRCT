@@ -3,8 +3,30 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/session";
 import { listBusinessesForUser } from "@/lib/store";
 import { TEMPLATES } from "@/lib/templates";
+import type { Profile } from "@/lib/types";
 
 export const runtime = "nodejs";
+
+function ventureSummary(profileJson: string | null | undefined): { city: string; interestsSnippet: string } | null {
+  if (!profileJson) return null;
+  try {
+    const profile = JSON.parse(profileJson) as Profile;
+    const interests = String(profile.interests ?? "").trim();
+    const snippet = interests.length > 72 ? `${interests.slice(0, 72)}…` : interests;
+    return { city: String(profile.location ?? ""), interestsSnippet: snippet };
+  } catch {
+    return null;
+  }
+}
+
+function profileSnapshot(profileJson: string | null | undefined): Profile | null {
+  if (!profileJson) return null;
+  try {
+    return JSON.parse(profileJson) as Profile;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET() {
   const user = await currentUser();
@@ -21,6 +43,8 @@ export async function GET() {
     slug: business.slug,
     sitePath: `/b/${business.slug}`,
     createdAt: business.createdAt,
+    ventureSummary: ventureSummary(business.profileJson),
+    ventureProfile: profileSnapshot(business.profileJson),
   }));
 
   return NextResponse.json({ businesses });

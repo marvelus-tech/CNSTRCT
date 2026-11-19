@@ -42,10 +42,10 @@ export default function HomePage() {
       <header className="flex items-center justify-between px-4 py-4 sm:px-5 md:px-10">
         <Wordmark />
         <nav className="flex items-center gap-4 text-sm">
-          <Link href="/login" className="text-muted">
+          <Link href="/login?next=/command-center" className="text-muted">
             Log in
           </Link>
-          <Link href="/login?next=/triage" className="font-medium">
+          <Link href="/triage" className="font-medium">
             Start
           </Link>
         </nav>
@@ -59,7 +59,7 @@ export default function HomePage() {
               </h1>
               <div className="mt-8">
                 <Button size="lg" asChild>
-                  <Link href="/login?next=/triage">See what fits you</Link>
+                  <Link href="/triage">See what fits you</Link>
                 </Button>
               </div>
             </div>

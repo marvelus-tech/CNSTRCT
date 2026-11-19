@@ -117,9 +117,18 @@ export function insertBusiness(input: Omit<Business, "id" | "createdAt">): Busin
   const business: Business = { ...input, id: newId("biz"), createdAt: Date.now() };
   db()
     .prepare(
-      "INSERT INTO businesses (id, user_id, template_id, name, slug, city, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO businesses (id, user_id, template_id, name, slug, city, created_at, profile_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     )
-    .run(business.id, business.userId, business.templateId, business.name, business.slug, business.city, business.createdAt);
+    .run(
+      business.id,
+      business.userId,
+      business.templateId,
+      business.name,
+      business.slug,
+      business.city,
+      business.createdAt,
+      business.profileJson ?? null,
+    );
   return business;
 }
 
@@ -132,6 +141,7 @@ function mapBusiness(row: Record<string, unknown>): Business {
     slug: String(row.slug),
     city: String(row.city),
     createdAt: Number(row.created_at),
+    profileJson: row.profile_json == null ? null : String(row.profile_json),
   };
 }
 
