@@ -30,10 +30,10 @@ The first request creates `data/cnstrct.db` and a sample public desk at `/b/harb
 
 ## Demo
 
-1. Start at `/` and choose **Start** or **Log in** (one tap demo sign-in at `/login`).
-2. Answer the eight questions. City becomes the business name (`Austin` becomes Austin Home Match).
-3. The board shows three cards. Home services and mobile detailing are live. Estate clearance stays coming soon.
-4. **Constructing** runs for a few seconds, then you land in the **command center** (`/command-center`).
+1. Start at `/` and choose **Start** (goes to `/triage` with no sign-in) or **Log in** (demo sign-in at `/login`, default landing `/command-center`).
+2. Answer the eight questions. Answers stay in `localStorage` until you sign in. City becomes the business name (`Austin` becomes Austin Home Match).
+3. The board at `/opportunities` uses `POST /api/opportunities/preview` when logged out, or saved profile when signed in.
+4. **Start this business** asks for login if needed, then **Constructing** syncs triage to your account and runs for a few seconds before the **command center** (`/command-center`).
 5. Open **workspace** for your business (`/workspace/[businessId]`). Mara (tradie scout) and Jules (lead matcher) each have approval cards and notes on their computer.
 6. Approve or reject. Approve writes `outbox/outreach.json` or `outbox/matches.json` inside that agent's sandbox. Reject does not.
 7. Open the public site from the workspace or visit `/b/harbor-tradie-desk`. The lead form saves a request on the desk. It does not text or email anyone.

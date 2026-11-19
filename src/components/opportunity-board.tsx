@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
 import { OpportunitySpaceField } from "@/components/opportunity-space-field";
+import { draftToProfileBody, isTriageDraftComplete, loadTriageDraft } from "@/lib/triage-draft";
 import Link from "next/link";
 
 interface Card {
@@ -66,12 +67,36 @@ export function OpportunityBoard() {
 
   useEffect(() => {
     void (async () => {
-      const response = await fetch("/api/opportunities");
-      if (response.status === 401) {
+      const sessionRes = await fetch("/api/session");
+      if (sessionRes.ok) {
+        const response = await fetch("/api/opportunities");
+        if (response.status === 401) {
+          setError("Answer the triage first.");
+          setCards([]);
+          return;
+        }
+        const json = (await response.json()) as { cards?: Card[]; error?: string };
+        if (!response.ok) {
+          setError(json.error || "Could not load paths.");
+          setCards([]);
+          return;
+        }
+        setCards(json.cards ?? []);
+        return;
+      }
+
+      const draft = loadTriageDraft();
+      if (!draft || !isTriageDraftComplete(draft)) {
         setError("Answer the triage first.");
         setCards([]);
         return;
       }
+
+      const response = await fetch("/api/opportunities/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draftToProfileBody(draft)),
+      });
       const json = (await response.json()) as { cards?: Card[]; error?: string };
       if (!response.ok) {
         setError(json.error || "Could not load paths.");
@@ -82,10 +107,17 @@ export function OpportunityBoard() {
     })();
   }, []);
 
-  function openLive(templateId: string) {
+  async function openLive(templateId: string) {
     setOpening(true);
     setError("");
-    router.push(`/constructing?template=${encodeURIComponent(templateId)}`);
+    const session = await fetch("/api/session");
+    const target = `/constructing?template=${encodeURIComponent(templateId)}`;
+    if (session.status === 401) {
+      router.push(`/login?next=${encodeURIComponent(target)}`);
+      setOpening(false);
+      return;
+    }
+    router.push(target);
   }
 
   return (
@@ -149,7 +181,7 @@ export function OpportunityBoard() {
                   </div>
                   <div className="mt-6 flex items-end justify-between gap-3">
                     {isLive ? (
-                      <Button onClick={() => openLive(card.id)} disabled={opening}>
+                      <Button onClick={() => void openLive(card.id)} disabled={opening}>
                         {opening ? "Starting up…" : "Start this business"}
                       </Button>
                     ) : (

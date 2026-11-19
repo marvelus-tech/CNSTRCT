@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Wordmark } from "@/components/wordmark";
+import { syncTriageFromClient } from "@/lib/triage-sync";
 
 const STEPS_BY_TEMPLATE: Record<string, readonly string[]> = {
   "home-services": [
@@ -39,6 +40,13 @@ function ConstructingInner() {
     }, 900);
 
     async function provision() {
+      const sync = await syncTriageFromClient();
+      if (!sync.ok) {
+        window.clearInterval(advance);
+        if (!cancelled) setError(sync.error || "Could not save your triage answers.");
+        return;
+      }
+
       const response = await fetch("/api/business", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
