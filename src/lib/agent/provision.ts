@@ -2,7 +2,6 @@ import { businessName, cityOf, type TemplateId } from "../copy";
 import { newId } from "../ids";
 import {
   getAgent,
-  getBusinessForUserAndTemplate,
   insertAgent,
   insertBusiness,
   insertLead,
@@ -107,9 +106,6 @@ export async function openDesk(
   profile: Profile,
   templateId: TemplateId | string = "home-services",
 ): Promise<{ business: Business; agents: Agent[] }> {
-  const existing = getBusinessForUserAndTemplate(userId, templateId);
-  if (existing) return { business: existing, agents: listAgents(existing.id) };
-
   const city = cityOf(profile.location);
   const name = businessName(profile, templateId as TemplateId);
   const plan = blueprintFor(templateId);
@@ -119,6 +115,7 @@ export async function openDesk(
     name,
     slug: uniqueSlug(name),
     city,
+    profileJson: JSON.stringify(profile),
   });
 
   const scout = insertAgent({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
@@ -61,20 +61,23 @@ function ArrowLink({ className }: { className?: string }) {
 
 export function OpportunityBoard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromCommandCenter =
+    searchParams.get("from") === "command-center" ||
+    (typeof document !== "undefined" && document.referrer.includes("/command-center"));
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState("");
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
     void (async () => {
-      const sessionRes = await fetch("/api/session");
-      if (sessionRes.ok) {
-        const response = await fetch("/api/opportunities");
-        if (response.status === 401) {
-          setError("Answer the triage first.");
-          setCards([]);
-          return;
-        }
+      const draft = loadTriageDraft();
+      if (draft && isTriageDraftComplete(draft)) {
+        const response = await fetch("/api/opportunities/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draftToProfileBody(draft)),
+        });
         const json = (await response.json()) as { cards?: Card[]; error?: string };
         if (!response.ok) {
           setError(json.error || "Could not load paths.");
@@ -85,25 +88,18 @@ export function OpportunityBoard() {
         return;
       }
 
-      const draft = loadTriageDraft();
-      if (!draft || !isTriageDraftComplete(draft)) {
-        setError("Answer the triage first.");
-        setCards([]);
-        return;
+      const sessionRes = await fetch("/api/session");
+      if (sessionRes.ok) {
+        const response = await fetch("/api/opportunities");
+        if (response.ok) {
+          const json = (await response.json()) as { cards?: Card[]; error?: string };
+          setCards(json.cards ?? []);
+          return;
+        }
       }
 
-      const response = await fetch("/api/opportunities/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draftToProfileBody(draft)),
-      });
-      const json = (await response.json()) as { cards?: Card[]; error?: string };
-      if (!response.ok) {
-        setError(json.error || "Could not load paths.");
-        setCards([]);
-        return;
-      }
-      setCards(json.cards ?? []);
+      setError("Answer the triage first.");
+      setCards([]);
     })();
   }, []);
 
@@ -124,9 +120,16 @@ export function OpportunityBoard() {
     <div className="min-h-full bg-background">
       <header className="relative z-10 flex items-center justify-between px-5 py-4 md:px-10">
         <Wordmark />
-        <Link href="/triage" className="text-sm text-muted">
-          Edit answers
-        </Link>
+        <div className="flex items-center gap-4 text-sm text-muted">
+          {fromCommandCenter ? (
+            <Link href="/command-center" className="underline">
+              Command center
+            </Link>
+          ) : null}
+          <Link href="/triage" className="underline">
+            Edit answers
+          </Link>
+        </div>
       </header>
       <main className="relative mx-auto max-w-6xl px-5 pb-16 pt-8">
         <div className="relative z-10">

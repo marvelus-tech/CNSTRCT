@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { TriageFlow } from "@/components/triage-flow";
 import { TRIAGE_DESCRIPTION, TRIAGE_TITLE } from "@/lib/seo";
 import { supabaseConfigured } from "@/lib/supabase";
@@ -11,5 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default function TriagePage() {
-  return <TriageFlow magicLinkEnabled={supabaseConfigured()} />;
+  return (
+    <Suspense fallback={<div className="min-h-full bg-background" />}>
+      <TriageFlow magicLinkEnabled={supabaseConfigured()} />
+    </Suspense>
+  );
 }

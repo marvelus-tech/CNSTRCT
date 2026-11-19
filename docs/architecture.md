@@ -65,15 +65,16 @@ Sqlite lives in `data/cnstrct.db` (or `CNSTRCT_DATA_DIR`). There is no hosted da
 
 ## Product flow
 
-1. `/` explains the product. **Start** opens public `/triage`. **Log in** opens `/login?next=/command-center`.
+1. `/` explains the product. **Start** opens public `/triage`. **Log in** opens `/login?next=/command-center` and lands on the command center with no triage sync.
 2. Middleware requires `cnstrct_sid` only for `/constructing`, `/command-center`, and `/workspace/*`. Triage and opportunities are public.
-3. `/triage` asks eight questions and saves answers in client `localStorage` (`cnstrct.triage.v1`). No silent demo account on mount.
-4. `/opportunities` reads the draft and calls `POST /api/opportunities/preview` when logged out, or `GET /api/opportunities` when a session exists. Home services and mobile detailing are live templates.
-5. Picking a live path checks session. Without a cookie, the browser goes to `/login?next=/constructing?template=…`. After sign-in, `syncTriageFromClient` runs `PUT /api/profile` once, then `/constructing` calls `POST /api/business`.
-6. `/command-center` uses the black left-rail `AppShell`, lists businesses (`GET /api/businesses`), and links to `/workspace/[businessId]` and `/b/[slug]`. Profile and settings are read-only panels in the same shell.
-7. `/workspace/[businessId]` is the per-business Grok-style shell: chat, approval card, computer, routines, leads, and usage meters (50,000 tokens and 2 hours, hardcoded). `/api/desk?businessId=` scopes data loading.
-8. `/dashboard` redirects to the latest workspace or the command center when empty.
-9. `/b/[slug]` is the public site: hero, how it works, lead form, about, contact, link back to the owner workspace.
+3. `/command-center` is the signed-in hub: business list, **Start new business** → `/triage?intent=new` (clears the draft for a fresh venture), then opportunities and construct.
+4. `/triage` asks eight questions and saves answers in client `localStorage` (`cnstrct.triage.v1`). `intent=new` clears any prior draft on mount.
+5. `/opportunities` prefers a complete local draft and calls `POST /api/opportunities/preview` (session optional). Home services and mobile detailing are live templates.
+6. Picking a live path checks session. Without a cookie, the browser goes to `/login?next=/constructing?template=…`. After sign-in, `syncTriageFromClient` runs `PUT /api/profile` once (only when `next` is construct), then `/constructing` syncs again and calls `POST /api/business`. Each construct stores a `profile_json` snapshot on the business row.
+7. `/command-center` uses the black left-rail `AppShell`, lists businesses (`GET /api/businesses` with `ventureSummary` from `profile_json`), and links to `/workspace/[businessId]` and `/b/[slug]`. The profile panel shows the latest venture snapshot, not a single global questionnaire.
+8. `/workspace/[businessId]` is the per-business Grok-style shell: chat, approval card, computer, routines, leads, and usage meters (50,000 tokens and 2 hours, hardcoded). `/api/desk?businessId=` scopes data loading.
+9. `/dashboard` redirects to the latest workspace or the command center when empty.
+10. `/b/[slug]` is the public site: hero, how it works, lead form, about, contact, link back to the owner workspace.
 
 ## Adding a business type
 

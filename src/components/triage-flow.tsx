@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DottedArrowBack } from "@/components/ui/dotted-arrow-back";
@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Wordmark } from "@/components/wordmark";
 import { QUESTIONS } from "@/lib/questions";
-import { loadTriageDraft, saveTriageDraft, type TriageDraft } from "@/lib/triage-draft";
+import { clearTriageDraft, loadTriageDraft, saveTriageDraft, type TriageDraft } from "@/lib/triage-draft";
 import { cn } from "@/lib/utils";
 
 export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: boolean }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<TriageDraft>({});
   const [error, setError] = useState("");
@@ -22,9 +23,15 @@ export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: bo
   const question = QUESTIONS[step]!;
 
   useEffect(() => {
+    if (searchParams.get("intent") === "new") {
+      clearTriageDraft();
+      setDraft({});
+      setStep(0);
+      return;
+    }
     const stored = loadTriageDraft();
     if (stored) setDraft(stored);
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (Object.keys(draft).length > 0) saveTriageDraft(draft);
@@ -45,12 +52,14 @@ export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: bo
     return (draft[question.id] ?? "").trim().length > 1;
   }
 
-  function finish(next: TriageDraft) {
+  async function finish(next: TriageDraft) {
     setSaving(true);
     setError("");
     saveTriageDraft(next);
+    const session = await fetch("/api/session");
+    const query = session.ok ? "?from=command-center" : "";
     setSaving(false);
-    router.push("/opportunities");
+    router.push(`/opportunities${query}`);
   }
 
   async function next() {

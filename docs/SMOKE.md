@@ -10,15 +10,16 @@ When `NEXT_PUBLIC_SITE_URL` is not localhost and `CNSTRCT_DATA_DIR` is under `/t
 
 ## Flow
 
-1. **`/`** — Landing loads. **Start** or **Log in** works (demo session).
-2. **`/triage`** — Eight questions save; then redirect to opportunities.
-3. **`/opportunities`** — Three cards; **home-services** and **mobile-detailing** are **Live** and start constructing. **estate-clearance** is **Soon**.
-4. **`/constructing?template=home-services`** — Finishes and lands on command center with a new business.
-5. Repeat triage or use a fresh session to try **`/constructing?template=mobile-detailing`** — Riley + Sam agents, detailing site copy.
-6. **`/command-center`** — Lists your businesses with workspace and public site links.
-7. **`/workspace/[businessId]`** — Chat, approvals, computer, leads load for the chosen desk.
-8. **`/b/[slug]`** — Public site and lead form for your business slug.
-9. **`/b/harbor-tradie-desk`** — Seeded sample desk always available (no prior session). Lead form saves to sqlite.
+1. **`/`** — Landing loads. **Start** explores triage without login. **Log in** lands on **`/command-center`** (no triage).
+2. **`/command-center`** — **Start new business** → fresh **`/triage?intent=new`** → **`/opportunities`** → construct.
+3. **`/triage`** — Eight questions save; then redirect to opportunities.
+4. **`/opportunities`** — Three cards; **home-services** and **mobile-detailing** are **Live** and start constructing. **estate-clearance** is **Soon**.
+5. **`/constructing?template=home-services`** — Finishes and lands on command center with a new business.
+6. Repeat **Start new business** to try **`/constructing?template=mobile-detailing`** — Riley + Sam agents, detailing site copy.
+7. **`/command-center`** — Lists your businesses with workspace and public site links.
+8. **`/workspace/[businessId]`** — Chat, approvals, computer, leads load for the chosen desk.
+9. **`/b/[slug]`** — Public site and lead form for your business slug.
+10. **`/b/harbor-tradie-desk`** — Seeded sample desk always available (no prior session). Lead form saves to sqlite.
 
 ## API session check
 

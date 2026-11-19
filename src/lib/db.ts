@@ -121,6 +121,10 @@ export function getDb() {
       updated_at INTEGER NOT NULL
     );
   `);
+  const businessCols = next.prepare("PRAGMA table_info(businesses)").all() as { name: string }[];
+  if (!businessCols.some((col) => col.name === "profile_json")) {
+    next.exec("ALTER TABLE businesses ADD COLUMN profile_json TEXT");
+  }
   database = next;
   seedSample();
   return next;

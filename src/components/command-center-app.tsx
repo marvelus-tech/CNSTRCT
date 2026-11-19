@@ -7,6 +7,11 @@ import { AppShell, type ShellSection } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import type { Profile } from "@/lib/types";
 
+interface VentureSummary {
+  city: string;
+  interestsSnippet: string;
+}
+
 interface BusinessRow {
   id: string;
   name: string;
@@ -14,7 +19,11 @@ interface BusinessRow {
   templateTitle: string;
   sitePath: string;
   createdAt: number;
+  ventureSummary?: VentureSummary | null;
+  ventureProfile?: Profile | null;
 }
+
+const START_NEW_HREF = "/triage?intent=new";
 
 function BusinessSkeleton() {
   return (
@@ -28,6 +37,14 @@ function BusinessSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+function StartNewBusinessButton({ size = "default" }: { size?: "default" | "lg" }) {
+  return (
+    <Button size={size} asChild>
+      <Link href={START_NEW_HREF}>Start new business</Link>
+    </Button>
   );
 }
 
@@ -60,14 +77,14 @@ function BusinessesPanel({
   if (businesses?.length === 0) {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center rounded-none border border-border bg-card px-8 py-12 text-center">
-        <p className="hud-readout text-[11px] uppercase tracking-[0.2em] text-muted">No signal yet</p>
+        <p className="hud-readout text-[11px] uppercase tracking-[0.2em] text-muted">No businesses yet</p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight">Your command center is ready</h2>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Complete triage, pick a live path, and construct your first business. It will show up here.
+          Start a new business when you want a fresh question set, matched paths, and a live desk.
         </p>
-        <Link href="/triage" className="mt-8">
-          <Button size="lg">Find a path</Button>
-        </Link>
+        <div className="mt-8">
+          <StartNewBusinessButton size="lg" />
+        </div>
       </div>
     );
   }
@@ -87,6 +104,9 @@ function BusinessesPanel({
             <p className="text-xs font-medium uppercase tracking-wide text-muted">{business.templateTitle}</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight">{business.name}</h2>
             <p className="mt-1 text-sm text-muted">{business.city}</p>
+            {business.ventureSummary?.interestsSnippet ? (
+              <p className="mt-2 line-clamp-2 text-xs text-muted">{business.ventureSummary.interestsSnippet}</p>
+            ) : null}
             <div className="mt-6 flex flex-wrap gap-2">
               <Link href={`/workspace/${business.id}`}>
                 <Button>Open workspace</Button>
@@ -102,7 +122,15 @@ function BusinessesPanel({
   );
 }
 
-function ProfilePanel({ profile, loading }: { profile: Profile | null; loading: boolean }) {
+function ProfilePanel({
+  ventureProfile,
+  loading,
+  hasBusinesses,
+}: {
+  ventureProfile: Profile | null;
+  loading: boolean;
+  hasBusinesses: boolean;
+}) {
   if (loading) {
     return (
       <div className="max-w-xl animate-pulse space-y-3">
@@ -112,28 +140,40 @@ function ProfilePanel({ profile, loading }: { profile: Profile | null; loading: 
       </div>
     );
   }
-  if (!profile) {
+  if (!ventureProfile) {
     return (
       <div className="max-w-xl rounded-none border border-border bg-card p-8">
-        <p className="text-sm text-muted">No saved triage profile yet.</p>
-        <Link href="/triage" className="mt-4 inline-block">
-          <Button>Complete triage</Button>
-        </Link>
+        <p className="text-sm text-muted">
+          {hasBusinesses
+            ? "Older desks may not have a saved venture snapshot yet."
+            : "No venture answers on file. Start a new business to capture triage for your first desk."}
+        </p>
+        <div className="mt-4">
+          <StartNewBusinessButton />
+        </div>
       </div>
     );
   }
   const rows: [string, string][] = [
-    ["Interests", profile.interests],
-    ["Skills", profile.skills],
-    ["Location", profile.location],
-    ["Space", profile.space],
-    ["Capital", profile.capital],
-    ["Trades", profile.trades],
-    ["Constraints", profile.constraints || "—"],
-    ["Idea", profile.hasIdea ? profile.ideaText || "Yes" : "Not yet"],
+    ["Interests", ventureProfile.interests],
+    ["Skills", ventureProfile.skills],
+    ["Location", ventureProfile.location],
+    ["Space", ventureProfile.space],
+    ["Capital", ventureProfile.capital],
+    ["Trades", ventureProfile.trades],
+    ["Constraints", ventureProfile.constraints || "—"],
+    ["Idea", ventureProfile.hasIdea ? ventureProfile.ideaText || "Yes" : "Not yet"],
   ];
   return (
-    <SummaryPanel title="Triage summary" rows={rows} footer={<Link href="/triage" className="text-sm text-accent underline">Edit in triage</Link>} />
+    <SummaryPanel
+      title="Latest venture answers"
+      rows={rows}
+      footer={
+        <Link href={START_NEW_HREF} className="text-sm text-accent underline">
+          Start new business
+        </Link>
+      }
+    />
   );
 }
 
@@ -187,8 +227,6 @@ function CommandCenterInner() {
   const [businesses, setBusinesses] = useState<BusinessRow[] | null>(null);
   const [bizLoading, setBizLoading] = useState(true);
   const [error, setError] = useState("");
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     void (async () => {
@@ -211,24 +249,13 @@ function CommandCenterInner() {
   }, []);
 
   useEffect(() => {
-    void (async () => {
-      const response = await fetch("/api/profile");
-      if (response.status === 401) {
-        setProfile(null);
-        setProfileLoading(false);
-        return;
-      }
-      const json = (await response.json()) as { profile?: Profile | null };
-      setProfile(json.profile ?? null);
-      setProfileLoading(false);
-    })();
-  }, []);
-
-  useEffect(() => {
     if (highlightId && highlightRef.current) {
       highlightRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [highlightId, businesses]);
+
+  const latestVentureProfile =
+    (businesses ?? []).find((row) => row.ventureProfile)?.ventureProfile ?? null;
 
   const titles: Record<ShellSection, string> = {
     businesses: "Command center",
@@ -240,7 +267,10 @@ function CommandCenterInner() {
     <AppShell active={section} onNavigate={setSection} title={titles[section]}>
       {section === "businesses" ? (
         <>
-          <p className="mb-8 max-w-xl text-muted">Every business you construct lives here. Open one to chat with its agents.</p>
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <p className="max-w-xl text-muted">Every business you construct lives here. Open one to chat with its agents.</p>
+            <StartNewBusinessButton />
+          </div>
           <BusinessesPanel
             highlightId={highlightId}
             businesses={businesses}
@@ -248,14 +278,16 @@ function CommandCenterInner() {
             error={error}
             highlightRef={highlightRef}
           />
-          <div className="mt-8">
-            <Link href="/opportunities" className="text-sm text-muted underline">
-              Start another path
-            </Link>
-          </div>
+          {(businesses?.length ?? 0) > 0 ? (
+            <div className="mt-8 flex justify-end">
+              <StartNewBusinessButton />
+            </div>
+          ) : null}
         </>
       ) : null}
-      {section === "profile" ? <ProfilePanel profile={profile} loading={profileLoading} /> : null}
+      {section === "profile" ? (
+        <ProfilePanel ventureProfile={latestVentureProfile} loading={bizLoading} hasBusinesses={(businesses?.length ?? 0) > 0} />
+      ) : null}
       {section === "settings" ? <SettingsPanel /> : null}
     </AppShell>
   );

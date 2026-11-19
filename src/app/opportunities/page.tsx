@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { OpportunityBoard } from "@/components/opportunity-board";
 import { OPPORTUNITIES_DESCRIPTION, OPPORTUNITIES_TITLE } from "@/lib/seo";
 
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function OpportunitiesPage() {
-  return <OpportunityBoard />;
+  return (
+    <Suspense fallback={<div className="min-h-full bg-background" />}>
+      <OpportunityBoard />
+    </Suspense>
+  );
 }

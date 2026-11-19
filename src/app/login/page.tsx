@@ -24,12 +24,15 @@ function LoginForm() {
       setError(json.error || "Could not sign you in.");
       return;
     }
-    const sync = await syncTriageFromClient();
-    setBusy(false);
-    if (!sync.ok) {
-      setError(sync.error || "Signed in but could not save triage answers.");
-      return;
+    if (next.startsWith("/constructing")) {
+      const sync = await syncTriageFromClient();
+      if (!sync.ok) {
+        setBusy(false);
+        setError(sync.error || "Signed in but could not save triage answers.");
+        return;
+      }
     }
+    setBusy(false);
     router.replace(next.startsWith("/") ? next : "/command-center");
   }
 
@@ -44,7 +47,7 @@ function LoginForm() {
       <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-5 pb-16">
         <h1 className="text-4xl font-semibold leading-tight tracking-tight">Sign in to build</h1>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Sign in to own businesses, open the command center, and construct a live path after you pick one.
+          Sign in to open your command center. Start a new business from there when you are ready for triage and a live path.
         </p>
         <Button className="mt-10 w-full" size="lg" onClick={() => void logIn()} disabled={busy}>
           {busy ? "Signing in…" : "Log in"}

@@ -101,20 +101,22 @@ test("mobile detailing desk provisions Riley and Sam", async () => {
   );
 });
 
-test("openDesk is idempotent per user and template", async () => {
-  const { createUser, getBusinessForUserAndTemplate, saveProfile } = await import("../store");
+test("openDesk stores profile_json and allows multiple desks per template", async () => {
+  const { createUser, saveProfile } = await import("../store");
   const { openDesk } = await import("./provision");
 
-  const user = createUser({ email: "idempotent@cnstrct.local", name: "Idem" });
+  const user = createUser({ email: "multi@cnstrct.local", name: "Multi" });
   const local = { ...profile, userId: user.id };
   saveProfile(local);
 
   const first = await openDesk(user.id, local, "home-services");
-  const again = await openDesk(user.id, local, "home-services");
+  const second = await openDesk(user.id, local, "home-services");
 
-  assert.equal(first.business.id, again.business.id);
-  assert.equal(first.agents.length, again.agents.length);
-  assert.equal(getBusinessForUserAndTemplate(user.id, "home-services")?.id, first.business.id);
+  assert.notEqual(first.business.id, second.business.id);
+  assert.equal(first.agents.length, 2);
+  assert.equal(second.agents.length, 2);
+  assert.ok(first.business.profileJson);
+  assert.match(first.business.profileJson!, /Austin/);
 
   const detailing = await openDesk(user.id, local, "mobile-detailing");
   assert.notEqual(detailing.business.id, first.business.id);
