@@ -42,7 +42,7 @@ function BusinessSkeleton() {
 
 function StartNewBusinessButton({ size = "default" }: { size?: "default" | "lg" }) {
   return (
-    <Button size={size} asChild>
+    <Button size={size} className="w-full sm:w-auto" asChild>
       <Link href={START_NEW_HREF}>Start new business</Link>
     </Button>
   );
@@ -76,15 +76,12 @@ function BusinessesPanel({
 
   if (businesses?.length === 0) {
     return (
-      <div className="mx-auto flex max-w-lg flex-col items-center rounded-none border border-border bg-card px-8 py-12 text-center">
+      <div className="mx-auto flex w-full max-w-lg flex-col items-center rounded-none border border-border bg-card px-4 py-10 text-center sm:px-8 sm:py-12">
         <p className="hud-readout text-[11px] uppercase tracking-[0.2em] text-muted">No businesses yet</p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight">Your command center is ready</h2>
         <p className="mt-3 text-sm leading-6 text-muted">
           Start a new business when you want a fresh question set, matched paths, and a live desk.
         </p>
-        <div className="mt-8">
-          <StartNewBusinessButton size="lg" />
-        </div>
       </div>
     );
   }
@@ -97,7 +94,7 @@ function BusinessesPanel({
           <li
             key={business.id}
             ref={highlight ? highlightRef : undefined}
-            className={`flex flex-col rounded-none border p-5 transition-colors hover:border-foreground/25 ${
+            className={`flex flex-col rounded-none border p-4 transition-colors hover:border-foreground/25 md:p-5 ${
               highlight ? "border-accent bg-card ring-1 ring-accent/30" : "border-border bg-card/90"
             }`}
           >
@@ -107,11 +104,11 @@ function BusinessesPanel({
             {business.ventureSummary?.interestsSnippet ? (
               <p className="mt-2 line-clamp-2 text-xs text-muted">{business.ventureSummary.interestsSnippet}</p>
             ) : null}
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Link href={`/workspace/${business.id}`}>
-                <Button>Open workspace</Button>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Link href={`/workspace/${business.id}`} className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto">Open workspace</Button>
               </Link>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
                 <Link href={business.sitePath}>Public site</Link>
               </Button>
             </div>
@@ -204,7 +201,7 @@ function SummaryPanel({
   footer?: React.ReactNode;
 }) {
   return (
-    <div className="max-w-xl">
+    <div className="w-full max-w-xl">
       <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
       <dl className="mt-6 divide-y divide-border border border-border bg-card">
         {rows.map(([label, value]) => (
@@ -267,9 +264,11 @@ function CommandCenterInner() {
     <AppShell active={section} onNavigate={setSection} title={titles[section]}>
       {section === "businesses" ? (
         <>
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mb-8 flex w-full flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <p className="max-w-xl text-muted">Every business you construct lives here. Open one to chat with its agents.</p>
-            <StartNewBusinessButton />
+            <div className="w-full shrink-0 sm:w-auto">
+              <StartNewBusinessButton />
+            </div>
           </div>
           <BusinessesPanel
             highlightId={highlightId}

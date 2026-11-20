@@ -44,7 +44,7 @@ function LoginForm() {
           Home
         </Link>
       </header>
-      <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-5 pb-16">
+      <main className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] sm:px-5 sm:pb-16">
         <h1 className="text-4xl font-semibold leading-tight tracking-tight">Sign in to build</h1>
         <p className="mt-3 text-sm leading-6 text-muted">
           Sign in to open your command center. Start a new business from there when you are ready for triage and a live path.
