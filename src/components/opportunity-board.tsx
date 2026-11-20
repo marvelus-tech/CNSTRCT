@@ -117,8 +117,14 @@ export function OpportunityBoard() {
     const billing = (await billingRes.json()) as {
       configured?: boolean;
       entitled?: boolean;
+      devBypassActive?: boolean;
       paymentsMessage?: string | null;
     };
+    if (billing.devBypassActive) {
+      router.push(target);
+      setOpening(false);
+      return;
+    }
     if (!billing.configured) {
       setError(billing.paymentsMessage || "Payments are not configured yet.");
       setOpening(false);

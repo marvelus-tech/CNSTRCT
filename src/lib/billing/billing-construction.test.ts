@@ -6,6 +6,8 @@ import test from "node:test";
 
 process.env.BILLING_TEST_MODE = "true";
 process.env.CNSTRCT_DATA_DIR = mkdtempSync(path.join(tmpdir(), "bizos-billing-"));
+delete process.env.VERCEL_ENV;
+delete process.env.BILLING_MODE;
 delete process.env.STRIPE_SECRET_KEY;
 delete process.env.STRIPE_PRICE_STARTER;
 delete process.env.STRIPE_PRICE_PRO;
@@ -54,15 +56,26 @@ test("construction allows paid starter and enforces business limit", async () =>
 });
 
 test("construction fails closed without Stripe keys or billing test mode", async () => {
-  const prev = process.env.BILLING_TEST_MODE;
+  const prevTest = process.env.BILLING_TEST_MODE;
+  const prevVercel = process.env.VERCEL_ENV;
+  const prevMode = process.env.BILLING_MODE;
   delete process.env.BILLING_TEST_MODE;
+  process.env.VERCEL_ENV = "production";
+  process.env.BILLING_MODE = "bypass";
+  delete process.env.STRIPE_SECRET_KEY;
+  delete process.env.STRIPE_PRICE_STARTER;
+  delete process.env.STRIPE_PRICE_PRO;
   const { createUser } = await import("../store");
   const { constructionAccess } = await import("./access");
   const user = createUser({ email: "prod@bizos.local", name: "Prod" });
   const gate = constructionAccess(user.id);
   assert.equal(gate.ok, false);
   if (!gate.ok) assert.equal(gate.code, "payments_not_configured");
-  process.env.BILLING_TEST_MODE = prev ?? "true";
+  process.env.BILLING_TEST_MODE = prevTest ?? "true";
+  if (prevVercel === undefined) delete process.env.VERCEL_ENV;
+  else process.env.VERCEL_ENV = prevVercel;
+  if (prevMode === undefined) delete process.env.BILLING_MODE;
+  else process.env.BILLING_MODE = prevMode;
 });
 
 test("opportunity recommendations stay available without billing", async () => {
