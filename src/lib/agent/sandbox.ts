@@ -103,11 +103,31 @@ function appendTerminal(agentId: string, line: string) {
 }
 
 function blocked(command: string) {
-  if (/[|&;`$<>]/.test(command)) return "Pipes, redirects, and command substitution are off in this sandbox.";
-  if (/\b(curl|wget|nc|ncat|ssh|scp|sudo|python|node|npm|pnpm|pip|ruby|perl|php)\b/i.test(command)) {
+  if (/[\r\n]/.test(command)) return "Newlines are blocked. One command only.";
+  if (/[|&;`$<>\\]/.test(command)) return "Chaining, pipes, redirects, and substitution are blocked.";
+  if (/\b(curl|wget|nc|ncat|ssh|scp|sudo|python3?|python|node|npm|pnpm|pip|ruby|perl|php|bash|sh|zsh)\b/i.test(command)) {
     return "Network tools and interpreters are blocked. Outbound messages use an approval card instead.";
   }
   return null;
+}
+
+/** Exact argv allowlist. Rejects chaining, newlines, and interpreters before any machine sees the string. */
+export function planCommand(command: string): { ok: true; argv: string[] } | { ok: false; reason: string } {
+  const reason = blocked(command);
+  if (reason) return { ok: false, reason };
+  const argv = tokenize(command.trim());
+  const bin = argv[0];
+  if (!bin || !ALLOW.has(bin)) {
+    return { ok: false, reason: `Command not allowed: ${bin || command}. Interpreters and network tools are blocked.` };
+  }
+  if (bin === "rm" && argv.some((token) => token === "/" || token.includes(".."))) {
+    return { ok: false, reason: "Refusing to delete outside this folder." };
+  }
+  return { ok: true, argv };
+}
+
+export function commandLine(argv: string[]) {
+  return argv.map((token) => `'${token.replaceAll("'", `'"'"'`)}'`).join(" ");
 }
 
 function tokenize(segment: string) {
@@ -118,47 +138,31 @@ function tokenize(segment: string) {
   return tokens;
 }
 
-function runLocal(root: string, command: string): Promise<{ exitCode: number; output: string }> {
-  const parts = command.split("&&").map((part) => part.trim()).filter(Boolean);
-  return (async () => {
-    let output = "";
-    for (const part of parts) {
-      const tokens = tokenize(part);
-      const bin = tokens[0];
-      if (!bin || !ALLOW.has(bin)) {
-        return { exitCode: 126, output: `Command not allowed: ${bin || part}. Try cnstrct-search, ls, cat, or mkdir.` };
-      }
-      if (bin === "rm" && tokens.some((token) => token === "/" || token.includes(".."))) {
-        return { exitCode: 126, output: "Refusing to delete outside this folder." };
-      }
-      const result = await new Promise<{ code: number; output: string }>((resolve) => {
-        const child = spawn(bin, tokens.slice(1), {
-          cwd: root,
-          env: { PATH: "/usr/bin:/bin", HOME: root, LANG: "C" } as unknown as NodeJS.ProcessEnv,
-          timeout: 8_000,
-        });
-        let text = "";
-        child.stdout.on("data", (chunk) => {
-          text += String(chunk);
-        });
-        child.stderr.on("data", (chunk) => {
-          text += String(chunk);
-        });
-        child.on("close", (code) => resolve({ code: code ?? 1, output: text }));
-        child.on("error", (error) => resolve({ code: 127, output: error.message }));
-      });
-      output += result.output;
-      if (result.code !== 0) return { exitCode: result.code, output: output.slice(0, 8000) };
-    }
-    return { exitCode: 0, output: output.slice(0, 8000) || "(no output)" };
-  })();
+function runLocal(root: string, argv: string[]): Promise<{ exitCode: number; output: string }> {
+  const bin = argv[0]!;
+  return new Promise((resolve) => {
+    const child = spawn(bin, argv.slice(1), {
+      cwd: root,
+      env: { PATH: "/usr/bin:/bin", HOME: root, LANG: "C" } as unknown as NodeJS.ProcessEnv,
+      timeout: 8_000,
+    });
+    let text = "";
+    child.stdout.on("data", (chunk) => {
+      text += String(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      text += String(chunk);
+    });
+    child.on("close", (code) => resolve({ exitCode: code ?? 1, output: text.slice(0, 8000) || "(no output)" }));
+    child.on("error", (error) => resolve({ exitCode: 127, output: error.message }));
+  });
 }
 
-async function runDocker(root: string, command: string) {
+async function runDocker(root: string, argv: string[]) {
   return new Promise<{ exitCode: number; output: string }>((resolve) => {
     const child = spawn(
       "docker",
-      ["run", "--rm", "--network", "none", "-v", `${root}:/work`, "-w", "/work", "alpine:3.20", "sh", "-c", command],
+      ["run", "--rm", "--network", "none", "-v", `${root}:/work`, "-w", "/work", "alpine:3.20", ...argv],
       { timeout: 20_000 },
     );
     let text = "";
@@ -177,38 +181,46 @@ export async function execInSandbox(agentId: string, command: string, city = "th
   const root = ensureWorkspace(agentId);
   const trimmed = command.trim();
   appendTerminal(agentId, `$ ${trimmed}`);
+  const orgoId = getAgent(agentId)?.orgoComputerId ?? null;
   if (trimmed.startsWith("cnstrct-search")) {
     const output = /detailers/i.test(trimmed) ? searchDetailers(city) : searchTradies(city);
     appendTerminal(agentId, output);
-    const provider = configuredProvider() === "orgo" ? "local" : configuredProvider();
-    upsertComputer(agentId, provider === "docker" ? "docker" : "local", "running", providerNote(provider === "docker" ? "docker" : "local"));
-    return { exitCode: 0, output, provider: provider as SandboxProvider };
+    if (!orgoId) {
+      const provider = configuredProvider() === "orgo" ? "local" : configuredProvider();
+      upsertComputer(agentId, provider === "docker" ? "docker" : "local", "running", providerNote(provider === "docker" ? "docker" : "local"));
+    }
+    return { exitCode: 0, output, provider: (orgoId ? "orgo" : "local") as SandboxProvider };
   }
-  const reason = blocked(trimmed);
-  if (reason) {
-    appendTerminal(agentId, reason);
-    upsertComputer(agentId, "local", "running", providerNote("local"));
-    return { exitCode: 126, output: reason, provider: "local" as const };
+  const plan = planCommand(trimmed);
+  if (!plan.ok) {
+    appendTerminal(agentId, plan.reason);
+    return { exitCode: 126, output: plan.reason, provider: (orgoId ? "orgo" : "local") as SandboxProvider };
   }
 
-  const savedComputer = getAgent(agentId)?.orgoComputerId;
-  if (savedComputer && process.env.ORGO_API_KEY) {
+  if (orgoId && process.env.ORGO_API_KEY) {
     try {
-      const result = await orgo.bash(savedComputer, `cd /root && ${trimmed}`);
+      const info = await orgo.getComputer(orgoId);
+      if ((info.status ?? "").toLowerCase() !== "running") {
+        const resumed = await orgo.resume(orgoId);
+        if ((resumed.status ?? "").toLowerCase() !== "running") {
+          throw new Error("Orgo computer is not running yet.");
+        }
+      }
+      const result = await orgo.bash(orgoId, commandLine(plan.argv));
       const output = result.output || "(no output)";
       appendTerminal(agentId, output);
       upsertComputer(agentId, "orgo", "connected", "Orgo Small computer. App secrets are not on this VM.");
       return { exitCode: result.exit_code ?? 0, output, provider: "orgo" as const };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Orgo failed";
-      appendTerminal(agentId, `Orgo unavailable (${message}). Using the local sandbox.`);
-      upsertComputer(agentId, "local", "not_connected", "Orgo call failed. This folder is a local sandbox, not an Orgo computer.");
+      appendTerminal(agentId, `Orgo command failed (${message}). This computer was not switched to the local sandbox.`);
+      return { exitCode: 1, output: message, provider: "orgo" as const };
     }
   }
 
   const wanted = configuredProvider();
   if (wanted === "docker") {
-    const result = await runDocker(root, trimmed);
+    const result = await runDocker(root, plan.argv);
     if (result.exitCode === 0 || !result.output.includes("Unable to find image")) {
       appendTerminal(agentId, result.output);
       upsertComputer(agentId, "docker", "running", providerNote("docker"));
@@ -217,7 +229,7 @@ export async function execInSandbox(agentId: string, command: string, city = "th
     appendTerminal(agentId, "Docker image unavailable. Using the local sandbox.");
   }
 
-  const result = await runLocal(root, trimmed);
+  const result = await runLocal(root, plan.argv);
   appendTerminal(agentId, result.output);
   upsertComputer(agentId, "local", "running", providerNote("local"));
   return { ...result, provider: "local" as const };

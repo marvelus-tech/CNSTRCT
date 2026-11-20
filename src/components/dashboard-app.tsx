@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Wordmark } from "@/components/wordmark";
+import { approvalChoice } from "@/lib/agent/approval-choice";
 import type { DeskPayload } from "@/lib/desk";
 
 export function DashboardApp({ businessId }: { businessId: string }) {
@@ -81,7 +82,11 @@ export function DashboardApp({ businessId }: { businessId: string }) {
       setConfirmReset(true);
       return;
     }
-    await fetch("/api/desk/reset", { method: "POST" });
+    await fetch("/api/desk/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ businessId: desk?.business?.id }),
+    });
     router.push("/triage");
   }
 
@@ -105,9 +110,10 @@ export function DashboardApp({ businessId }: { businessId: string }) {
     );
   }
 
-  const usage = agent;
-  const tokenPct = Math.min(100, Math.round((usage.tokensUsed / desk.limits.tokens) * 100));
-  const hourPct = Math.min(100, Math.round((usage.computerSeconds / desk.limits.computerSeconds) * 100));
+  const tokenUsed = desk.agents.reduce((sum, item) => sum + item.tokensUsed, 0);
+  const tokenCap = desk.limits.tokens * Math.max(desk.agents.length, 1);
+  const tokenPct = Math.min(100, Math.round((tokenUsed / tokenCap) * 100));
+  const specialists = desk.agents.filter((item) => item.role !== "orchestrator");
 
   return (
     <div className="min-h-full bg-background">
@@ -131,8 +137,14 @@ export function DashboardApp({ businessId }: { businessId: string }) {
           </Link>
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <Meter label={`${usage.tokensUsed.toLocaleString()} of ${desk.limits.tokens.toLocaleString()} tokens`} value={tokenPct} />
-          <Meter label={`${(usage.computerSeconds / 3600).toFixed(2)} of 2.00 computer hours`} value={hourPct} />
+          <Meter label={`${tokenUsed.toLocaleString()} tokens across the desk`} value={tokenPct} />
+          {specialists.map((item) => (
+            <Meter
+              key={item.id}
+              label={`${item.name} ${(item.computerSeconds / 3600).toFixed(2)} of 2.00 computer hours`}
+              value={Math.min(100, Math.round((item.computerSeconds / desk.limits.computerSeconds) * 100))}
+            />
+          ))}
         </div>
       </header>
       <div className="flex gap-2 px-4 pt-3 md:hidden md:px-8">
@@ -171,7 +183,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
               void send();
             }}
           >
-            <p className="mb-2 text-xs text-muted">You talk to {agent.name} only. A new message closes an approval that is still open.</p>
+            <p className="mb-2 text-xs text-muted">You talk to {agent.name} only. A new message closes every open approval and delegated task on this desk.</p>
             <div className="flex gap-2">
               <Textarea value={text} onChange={(event) => setText(event.target.value)} placeholder={`Message ${agent.name}`} className="min-h-12" />
               <Button type="submit" disabled={busy}>
@@ -216,6 +228,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
                 </li>
               ))}
             </ul>
+            <p className="mt-3 text-xs text-muted">Gmail send is not available in this MVP. An approved draft stays in the local outbox and is not sent.</p>
             <ul className="mt-3 space-y-2 text-xs text-muted">
               {desk.connections.scopes.map((scope) => (
                 <li key={scope.role}>
@@ -226,14 +239,22 @@ export function DashboardApp({ businessId }: { businessId: string }) {
           </section>
           <section className={`rounded-[28px] border border-border bg-card p-4 ${tab === "team" ? "hidden md:block" : ""}`}>
             <h2 className="font-medium">Computers</h2>
-            <ul className="mt-3 space-y-3 text-sm">
+            <ul className="mt-3 space-y-4 text-sm">
               {desk.computers.map((computer) => (
                 <li key={computer.agentId}>
                   <p className="font-medium">
-                    {computer.name} <span className="font-normal text-muted">{computer.size}</span>
+                    {computer.name}{" "}
+                    <span className="font-normal text-muted">{computer.size === "none" ? "no machine" : computer.size}</span>
                   </p>
-                  <p className="text-muted">Orgo {computer.state.replaceAll("_", " ")}</p>
+                  <p className="text-muted">
+                    {computer.size === "none" ? "No Orgo computer" : `Orgo ${computer.state.replaceAll("_", " ")}`}
+                  </p>
                   <p className="text-xs text-muted">{computer.localNote}</p>
+                  <p className="text-xs text-muted">
+                    {(computer.computerSeconds / 3600).toFixed(2)} computer hours · {computer.tokensUsed.toLocaleString()} tokens
+                  </p>
+                  <pre className="mt-2 max-h-28 overflow-auto whitespace-pre-wrap text-xs text-muted">{computer.terminal || "(no command output yet)"}</pre>
+                  <p className="text-xs text-muted">{computer.files.length ? computer.files.map((file) => file.path).join(", ") : "No files yet."}</p>
                 </li>
               ))}
             </ul>
@@ -262,7 +283,14 @@ export function DashboardApp({ businessId }: { businessId: string }) {
           <section className="rounded-[28px] border border-border bg-card p-4">
             <h2 className="font-medium">Audit</h2>
             <ul className="mt-3 space-y-2 text-xs text-muted">
-              {desk.audit.length ? desk.audit.map((event) => <li key={event.id}>{event.summary}</li>) : <li>No audit events yet.</li>}
+              {desk.audit.length
+                ? desk.audit.map((event) => (
+                    <li key={event.id}>
+                      {event.summary}
+                      {event.refId ? ` [${event.refId}]` : ""}
+                    </li>
+                  ))
+                : <li>No audit events yet.</li>}
             </ul>
           </section>
           <section className="rounded-[28px] border border-border bg-card p-4">
@@ -286,7 +314,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
       {error ? <p className="px-8 pb-4 text-sm text-danger">{error}</p> : null}
       <div className="px-4 pb-8 md:px-8">
         <Button type="button" variant="ghost" onClick={() => void reset()}>
-          {confirmReset ? "Click again to clear and start over" : "Start over"}
+          {confirmReset ? "Click again to clear this business" : "Start over this business"}
         </Button>
       </div>
     </div>
@@ -337,8 +365,10 @@ function ApprovalCard({
   const pending = row.body.status === "pending";
   const tool = String(row.body.tool ?? "");
   const editable = tool === "send_outreach" || tool === "send_match" || tool === "shell";
-  const [draft, setDraft] = useState(String(args.body ?? args.command ?? ""));
+  const original = String(args.body ?? args.command ?? "");
+  const [draft, setDraft] = useState(original);
   const draftKey = tool === "shell" ? "command" : "body";
+  const choice = approvalChoice(original, draft);
   return (
     <article className="rounded-3xl border border-accent/40 bg-accent-soft p-4">
       <p className="font-medium">{String(row.body.title ?? "Approval")}</p>
@@ -355,16 +385,19 @@ function ApprovalCard({
       {pending && editable ? (
         <Textarea className="mt-3 min-h-24" value={draft} onChange={(event) => setDraft(event.target.value)} />
       ) : null}
+      {pending && choice.dirty ? (
+        <p className="mt-2 text-xs text-muted">This draft changed. Approve is off so the original is not run by mistake.</p>
+      ) : null}
       {pending ? (
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button type="button" disabled={busy} onClick={() => onDecide(String(row.body.approvalId), "allow")}>
+          <Button type="button" disabled={busy || (editable && !choice.approveEnabled)} onClick={() => onDecide(String(row.body.approvalId), "allow")}>
             Approve
           </Button>
           {editable ? (
             <Button
               type="button"
               variant="outline"
-              disabled={busy}
+              disabled={busy || !choice.editEnabled}
               onClick={() => onDecide(String(row.body.approvalId), "edit", { [draftKey]: draft, ...(args.to ? { to: String(args.to) } : {}), ...(args.subject ? { subject: String(args.subject) } : {}) })}
             >
               Approve edited draft

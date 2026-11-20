@@ -1,10 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { AgentRole } from "../types";
 import { COMPUTER_LIMIT_SECONDS, SECONDS_PER_COMPUTER_CALL } from "./limits";
-import { addUsage, getAgent, listConnections, listLeads } from "../store";
+import { addUsage, getAgent, listLeads } from "../store";
 import { deliverComposioSend } from "./adapters";
-import { toolsForRole } from "./blueprint";
 import type { ToolContext } from "./contracts";
 import {
   ensureWorkspace,
@@ -40,8 +38,8 @@ export function toolSchemas() {
   return SCHEMAS;
 }
 
-export function toolSchemasFor(role: AgentRole) {
-  const allow = new Set(toolsForRole(role));
+export function toolSchemasFor(tools: string[]) {
+  const allow = new Set(tools);
   return SCHEMAS.filter((schema) => allow.has(schema.function.name));
 }
 
@@ -63,9 +61,9 @@ function recordOutbox(agentId: string, file: string, payload: Record<string, unk
 }
 
 export async function runTool(name: string, args: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutcome> {
-  if (!toolsForRole(ctx.agent.role).includes(name)) {
+  if (!ctx.agent.tools.includes(name)) {
     return {
-      output: `${name} is not on the ${ctx.agent.role} tool list.`,
+      output: `${name} is not on this agent's tool list.`,
       summary: "Tool blocked",
       status: "error",
       computer: false,
@@ -102,7 +100,7 @@ export async function runTool(name: string, args: Record<string, unknown>, ctx: 
         charge(ctx.agent.id);
         const files = listSandboxFiles(ctx.agent.id).map((file) => file.path).join(", ") || "none yet";
         const terminal = readTerminal(ctx.agent.id) || "(terminal is clear)";
-        const output = `Desktop 1280x800. Files: ${files}.\nTerminal:\n${terminal}`;
+        const output = `Local sandbox files and terminal. This is not an Orgo desktop. Files: ${files}.\nTerminal:\n${terminal}`;
         writeSandboxFile(ctx.agent.id, "notes/screen.txt", output);
         return { output, summary: "Looked at the screen", status: "done", computer: true };
       }
@@ -141,34 +139,30 @@ export async function runTool(name: string, args: Record<string, unknown>, ctx: 
             computer: true,
           };
         }
-        const connection = listConnections(ctx.business.id).find((item) => item.toolkit === "gmail");
         const delivery = await deliverComposioSend({
           businessId: ctx.business.id,
           role: ctx.agent.role,
-          connectedAccountId: connection?.connectedAccountId ?? null,
+          connectedAccountId: null,
           args,
         });
+        const file = name === "send_outreach" ? "outreach.json" : "matches.json";
         if (delivery.delivered) {
-          recordOutbox(ctx.agent.id, name === "send_outreach" ? "outreach.json" : "matches.json", {
-            ...args,
-            network: true,
-            mocked: false,
-            composioLogId: delivery.logId,
-          });
+          recordOutbox(ctx.agent.id, file, { ...args, network: true, mocked: false, composioLogId: delivery.logId });
           return { output: `Sent through Composio (${delivery.logId}).`, summary: "Sent", status: "done", computer: false };
         }
-        const file = name === "send_outreach" ? "outreach.json" : "matches.json";
-        recordOutbox(ctx.agent.id, file, { ...args, composio: delivery.reason });
-        const output =
-          delivery.reason === "not_configured"
-            ? "Recorded locally. Composio is not configured. No message was sent."
-            : delivery.reason === "not_connected"
-              ? "Recorded locally. Gmail is not connected. No message was sent."
-              : `Composio did not send (${delivery.reason}). No success was recorded.`;
+        recordOutbox(ctx.agent.id, file, { ...args, network: false, mocked: true, composio: delivery.reason });
+        if (delivery.reason === "provider_error" || delivery.reason === "sdk_not_loaded") {
+          return {
+            output: `Send failed (${delivery.reason}). No message was sent.`,
+            summary: "Send failed",
+            status: "error",
+            computer: true,
+          };
+        }
         return {
-          output,
-          summary: delivery.reason === "provider_error" || delivery.reason === "sdk_not_loaded" ? "Send failed" : "Recorded locally",
-          status: delivery.reason === "provider_error" || delivery.reason === "sdk_not_loaded" ? "error" : "done",
+          output: "Recorded locally. Gmail send is not available in this MVP. No message was sent.",
+          summary: "Recorded locally",
+          status: "done",
           computer: true,
         };
       }

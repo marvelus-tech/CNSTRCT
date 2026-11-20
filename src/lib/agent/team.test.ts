@@ -73,6 +73,10 @@ test("a new blueprint provisions three roles without a code branch", async () =>
     ["orchestrator", "scout", "matcher"],
   );
   assert.equal(listRoutines(desk.agents[1]!.id)[0]?.lastRunAt ?? null, null);
+  assert.deepEqual(
+    desk.agents.find((agent) => agent.name === "Bea")?.tools,
+    ["shell", "send_outreach"],
+  );
 });
 
 test("owner delegates through Quinn and shell waits for approval", async () => {
@@ -183,8 +187,9 @@ test("adapters stay not configured and never report a send or a VM", async () =>
   assert.equal(scout.sessionPreset, "direct_tools");
   assert.equal(scout.manageConnections.enable, false);
   assert.equal(scout.sandbox.enable, false);
-  assert.deepEqual(scout.tools?.gmail.enable, ["GMAIL_FETCH_EMAILS", "GMAIL_CREATE_EMAIL_DRAFT"]);
-  assert.equal(scout.tools?.gmail.enable.includes("GMAIL_SEND_EMAIL"), false);
+  const gmailTools = scout.tools?.gmail.enable ?? [];
+  assert.deepEqual(gmailTools, []);
+  assert.equal(gmailTools.some((tool) => tool === "GMAIL_SEND_EMAIL"), false);
   const quinn = sessionForRole({ businessId: "biz_123", role: "orchestrator" });
   assert.deepEqual(quinn.toolkits?.enable, []);
   const delivery = await deliverComposioSend({
@@ -195,4 +200,14 @@ test("adapters stay not configured and never report a send or a VM", async () =>
   });
   assert.equal(delivery.delivered, false);
   if (!delivery.delivered) assert.equal(delivery.reason, "not_configured");
+  process.env.COMPOSIO_API_KEY = "present";
+  const keyed = await deliverComposioSend({
+    businessId: "biz_123",
+    role: "scout",
+    connectedAccountId: "ca_1",
+    args: { to: "a@b.example", subject: "Hi", body: "Hello" },
+  });
+  delete process.env.COMPOSIO_API_KEY;
+  assert.equal(keyed.delivered, false);
+  if (!keyed.delivered) assert.equal(keyed.reason, "not_configured");
 });

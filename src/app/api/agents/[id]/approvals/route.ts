@@ -12,12 +12,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!user || !agent || agent.userId !== user.id) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
   const body = (await request.json()) as {
     approvalId?: string;
-    decision?: "allow" | "deny" | "always" | "edit";
+    decision?: string;
     draft?: Record<string, string>;
   };
   if (!body.approvalId || !body.decision) return NextResponse.json({ error: "Missing decision." }, { status: 400 });
   try {
-    await resolveApproval(user.id, body.approvalId, body.decision, body.draft);
+    await resolveApproval(user.id, body.approvalId, body.decision, body.draft, agent.id);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not resolve that card.";
     return NextResponse.json({ error: message }, { status: 400 });

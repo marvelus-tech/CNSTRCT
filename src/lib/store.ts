@@ -197,10 +197,13 @@ export function slugTaken(slug: string) {
 }
 
 export function insertAgent(
-  input: Omit<Agent, "id" | "createdAt" | "tokensUsed" | "computerSeconds" | "orgoComputerId">,
+  input: Omit<Agent, "id" | "createdAt" | "tokensUsed" | "computerSeconds" | "orgoComputerId" | "tools"> & {
+    tools?: string[];
+  },
 ): Agent {
   const agent: Agent = {
     ...input,
+    tools: input.tools ?? [],
     id: newId("agt"),
     tokensUsed: 0,
     computerSeconds: 0,
@@ -209,8 +212,8 @@ export function insertAgent(
   };
   db()
     .prepare(
-      `INSERT INTO agents (id, business_id, user_id, role, name, title, specialty, instructions, status, tokens_used, computer_seconds, created_at, orgo_computer_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, NULL)`,
+      `INSERT INTO agents (id, business_id, user_id, role, name, title, specialty, instructions, status, tokens_used, computer_seconds, created_at, orgo_computer_id, tools_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, NULL, ?)`,
     )
     .run(
       agent.id,
@@ -223,8 +226,23 @@ export function insertAgent(
       agent.instructions,
       agent.status,
       agent.createdAt,
+      JSON.stringify(agent.tools),
     );
   return agent;
+}
+
+export function setAgentTools(agentId: string, tools: string[]) {
+  db().prepare("UPDATE agents SET tools_json = ? WHERE id = ?").run(JSON.stringify(tools), agentId);
+}
+
+function parseTools(value: unknown): string[] {
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
 }
 
 function mapAgent(row: Record<string, unknown>): Agent {
@@ -239,6 +257,7 @@ function mapAgent(row: Record<string, unknown>): Agent {
     instructions: String(row.instructions),
     status: String(row.status) as Agent["status"],
     orgoComputerId: row.orgo_computer_id == null ? null : String(row.orgo_computer_id),
+    tools: parseTools(row.tools_json),
     tokensUsed: Number(row.tokens_used),
     computerSeconds: Number(row.computer_seconds),
     createdAt: Number(row.created_at),
@@ -432,6 +451,48 @@ export function setPolicy(userId: string, tool: string, mode: string) {
     .run(userId, tool, mode);
 }
 
+export function getActionPolicy(businessId: string, agentId: string, tool: string): string | null {
+  const row = asRecord(
+    db()
+      .prepare("SELECT mode FROM action_policies WHERE business_id = ? AND agent_id = ? AND tool = ?")
+      .get(businessId, agentId, tool),
+  );
+  return row ? String(row.mode) : null;
+}
+
+export function setActionPolicy(businessId: string, agentId: string, tool: string, mode: string) {
+  db()
+    .prepare(
+      `INSERT INTO action_policies (business_id, agent_id, tool, mode) VALUES (?, ?, ?, ?)
+       ON CONFLICT(business_id, agent_id, tool) DO UPDATE SET mode = excluded.mode`,
+    )
+    .run(businessId, agentId, tool, mode);
+}
+
+export function listPendingApprovalsForBusiness(businessId: string): Approval[] {
+  return db()
+    .prepare(
+      `SELECT approvals.* FROM approvals
+       JOIN agents ON agents.id = approvals.agent_id
+       WHERE agents.business_id = ? AND approvals.status = 'pending'`,
+    )
+    .all(businessId)
+    .map((row) => {
+      const record = asRecord(row)!;
+      return {
+        id: String(record.id),
+        agentId: String(record.agent_id),
+        userId: String(record.user_id),
+        rowId: String(record.row_id),
+        callId: String(record.call_id),
+        tool: String(record.tool),
+        status: String(record.status) as Approval["status"],
+        createdAt: Number(record.created_at),
+        resolvedAt: record.resolved_at == null ? null : Number(record.resolved_at),
+      };
+    });
+}
+
 export function setPending(agentId: string, state: PendingState) {
   db()
     .prepare(
@@ -572,6 +633,15 @@ export function openTaskForAgent(agentId: string): WorkTask | null {
   return row ? mapTask(row) : null;
 }
 
+export function cancelOpenTasks(businessId: string, report: string) {
+  db()
+    .prepare(
+      `UPDATE tasks SET status = 'cancelled', report = ?, updated_at = ?
+       WHERE business_id = ? AND status IN ('queued', 'running', 'waiting_approval')`,
+    )
+    .run(report, Date.now(), businessId);
+}
+
 export function setTaskStatus(id: string, status: TaskStatus, report?: string) {
   if (report == null) {
     db().prepare("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?").run(status, Date.now(), id);
@@ -591,6 +661,7 @@ export function recordAudit(input: {
   tool?: string | null;
   decision?: string | null;
   summary: string;
+  refId?: string | null;
 }): AuditEvent {
   const event: AuditEvent = {
     id: newId("aud"),
@@ -602,12 +673,13 @@ export function recordAudit(input: {
     tool: input.tool ?? null,
     decision: input.decision ?? null,
     summary: input.summary,
+    refId: input.refId ?? null,
     createdAt: Date.now(),
   };
   db()
     .prepare(
-      `INSERT INTO audit_events (id, business_id, user_id, agent_id, actor, kind, tool, decision, summary, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO audit_events (id, business_id, user_id, agent_id, actor, kind, tool, decision, summary, created_at, ref_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       event.id,
@@ -620,6 +692,7 @@ export function recordAudit(input: {
       event.decision,
       event.summary,
       event.createdAt,
+      event.refId,
     );
   return event;
 }
@@ -640,6 +713,7 @@ export function listAudit(businessId: string, limit = 20): AuditEvent[] {
         tool: record.tool == null ? null : String(record.tool),
         decision: record.decision == null ? null : String(record.decision),
         summary: String(record.summary),
+        refId: record.ref_id == null ? null : String(record.ref_id),
         createdAt: Number(record.created_at),
       };
     });
@@ -706,12 +780,9 @@ export function listConnections(businessId: string): AppConnection[] {
     });
 }
 
-export function deleteDesk(userId: string) {
-  const business = getBusinessForUser(userId);
-  if (!business) {
-    db().prepare("DELETE FROM profiles WHERE user_id = ?").run(userId);
-    return [];
-  }
+export function deleteBusinessForUser(userId: string, businessId: string) {
+  const business = getBusiness(businessId);
+  if (!business || business.userId !== userId) return null;
   const agents = listAgents(business.id);
   for (const agent of agents) {
     db().prepare("DELETE FROM messages WHERE agent_id = ?").run(agent.id);
@@ -719,6 +790,7 @@ export function deleteDesk(userId: string) {
     db().prepare("DELETE FROM pending_turns WHERE agent_id = ?").run(agent.id);
     db().prepare("DELETE FROM routines WHERE agent_id = ?").run(agent.id);
     db().prepare("DELETE FROM computers WHERE agent_id = ?").run(agent.id);
+    db().prepare("DELETE FROM action_policies WHERE agent_id = ?").run(agent.id);
   }
   db().prepare("DELETE FROM leads WHERE business_id = ?").run(business.id);
   db().prepare("DELETE FROM tasks WHERE business_id = ?").run(business.id);
@@ -726,6 +798,5 @@ export function deleteDesk(userId: string) {
   db().prepare("DELETE FROM app_connections WHERE business_id = ?").run(business.id);
   db().prepare("DELETE FROM agents WHERE business_id = ?").run(business.id);
   db().prepare("DELETE FROM businesses WHERE id = ?").run(business.id);
-  db().prepare("DELETE FROM profiles WHERE user_id = ?").run(userId);
   return agents.map((agent) => agent.id);
 }

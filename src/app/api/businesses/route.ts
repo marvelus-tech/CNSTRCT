@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { computerState, composioConfigured, connectionState, orgoConfigured } from "@/lib/agent/adapters";
+import { composioConfigured, connectionState, orgoConfigured, orgoDeskLabel } from "@/lib/agent/adapters";
 import { ensureTeamShape } from "@/lib/agent/provision";
 import { currentUser } from "@/lib/session";
 import { listBusinessesForUser, listConnections } from "@/lib/store";
@@ -44,9 +44,11 @@ export async function GET() {
       connectedAccountId: gmail?.connectedAccountId ?? null,
       storedStatus: gmail?.status,
     });
-    const orgoState = team.some((agent) => agent.orgoComputerId)
-      ? "connected"
-      : computerState(null, orgoConfigured());
+    const specialists = team.filter((agent) => agent.role !== "orchestrator");
+    const orgoLabel = orgoDeskLabel(
+      specialists.map((agent) => agent.orgoComputerId),
+      orgoConfigured(),
+    );
     return {
       id: business.id,
       name: business.name,
@@ -60,7 +62,7 @@ export async function GET() {
       ventureProfile: profileSnapshot(business.profileJson),
       teamLabel: team.map((agent) => agent.name).join(", "),
       connectionLabel: `Gmail ${gmailState.replaceAll("_", " ")}`,
-      computerLabel: `Orgo ${orgoState.replaceAll("_", " ")}`,
+      computerLabel: orgoLabel,
     };
   });
 

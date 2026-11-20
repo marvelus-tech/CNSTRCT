@@ -33,8 +33,8 @@ The MIT notice and the list of changes are in `THIRD_PARTY_NOTICES.md`.
 2. The model returns text and zero or more tool calls. With no `XAI_API_KEY` or `OPENAI_API_KEY`, `mockModel` follows the home-services script. With a key, the server calls that vendor's chat completions API and falls back to the script if the call fails.
 3. Computer tools (`shell`, `write_file`, `read_file`, `list_files`, `screenshot`) call `policyFor` and wait. Composio's write approval does not cover a shell.
 4. `send_outreach`, `send_match`, and `spend` also call `policyFor`. The default is ask. The loop writes an approval card and stores the batch in `pending_turns`. The owner can approve, reject, or approve an edited draft.
-5. Approve runs the tool. Reject writes a refusal into the transcript and tells the model not to retry. Always allow stores a policy so that tool stops asking.
-6. A newer user message expires an open card, matching grokbot, so only one batch is pending.
+5. Approve runs the unchanged tool. An edited textarea uses Approve edited draft. Reject writes a refusal and tells the model not to retry. Always allow stores a policy for that agent, that tool, and that business.
+6. A newer message to the orchestrator expires every open approval and delegated task on that desk, including specialist cards.
 
 Nothing in those three gated tools opens a network socket. Approve writes `outbox/*.json` with `network: false`.
 
@@ -42,9 +42,9 @@ Nothing in those three gated tools opens a network socket. Approve writes `outbo
 
 `configuredProvider()` picks Orgo when both Orgo env vars are set, otherwise Docker if `docker version` succeeds, otherwise a folder under `data/sandboxes/<agentId>`.
 
-The local sandbox allows a short command list (`ls`, `cat`, `mkdir`, and similar) plus `cnstrct-search`, which reads a built-in tradie directory. Pipes, redirects, curl, and interpreters are rejected. The dashboard computer view is that folder: terminal log, files, and the note the agent wrote. It is not a fake screenshot of a desktop the process never had.
+The local sandbox allows a short command list (`ls`, `cat`, `mkdir`, and similar) plus `cnstrct-search`, which reads a built-in tradie directory. Chaining, newlines, pipes, redirects, curl, and interpreters are rejected. The same allowlist is what Orgo bash receives, as quoted argv, with no `cd /root`. The dashboard computer view shows each agent's terminal log, files, and computer hours. It is not a fake screenshot of a desktop the process never had.
 
-Orgo, when configured, uses the ported client for `bash`. If the call fails, the same command runs locally and the terminal says so.
+Orgo, when `ORGO_API_KEY` is set, creates one workspace per business and one Small computer per specialist. Quinn has no machine. Bash calls `GET /computers/{id}` and resumes unless the status is running. If bash fails, the computer row stays on Orgo.
 
 ## Routines
 
@@ -97,6 +97,6 @@ Detailing and estate clearance are the two coming-soon cards. Tutoring is the th
 | --- | --- | --- |
 | Triage, cards, site, leads | Live, stored in sqlite | Same |
 | Agent chat and routines | Owner chats with Quinn. Specialists take tasks. Routines stay planned | xAI if `XAI_API_KEY` is set, else OpenAI |
-| Computer | Status not configured. Local folder is labeled as a sandbox | Orgo Small, one computer per agent, only after create returns an id |
-| Email, match intro, shell | Approval card, then a local outbox or local command | Composio send only with a key and a stored connected account |
+| Computer | Status not configured. Local folder is labeled as a sandbox | Orgo Small for each specialist, only after create returns an id. Quinn has none |
+| Email, match intro, shell | Approval card, then a local outbox or local command | Gmail send is not available. The outbox stays local and is not marked sent |
 | Auth | Demo session cookie | Supabase magic link when both public vars are set |

@@ -1,5 +1,4 @@
-import { composioConfigured, computerState, connectionState, GMAIL_MODEL_TOOLS, orgoConfigured } from "./agent/adapters";
-import { toolsForRole } from "./agent/blueprint";
+import { composioConfigured, computerState, connectionState, orgoConfigured } from "./agent/adapters";
 import { COMPUTER_LIMIT_SECONDS, TOKEN_LIMIT } from "./agent/limits";
 import { modelMode } from "./agent/model";
 import { ensureTeamShape } from "./agent/provision";
@@ -33,7 +32,7 @@ export function loadDesk(userId: string, businessId?: string) {
   const agents = business
     ? ensureTeamShape(business.id).map((agent) => ({
         ...agent,
-        tools: toolsForRole(agent.role),
+        tools: agent.tools,
         rows: listRows(agent.id),
         routines: listRoutines(agent.id),
         computer: computerSnapshot(agent.id),
@@ -65,20 +64,32 @@ export function loadDesk(userId: string, businessId?: string) {
             connectedAccountId: item.connectedAccountId,
           }))
         : [],
-      scopes: [
-        { role: "orchestrator" as const, session: "direct_tools", tools: [] as string[] },
-        { role: "scout" as const, session: "direct_tools", tools: [...GMAIL_MODEL_TOOLS] },
-        { role: "matcher" as const, session: "direct_tools", tools: [...GMAIL_MODEL_TOOLS] },
-      ],
+      scopes: (["orchestrator", "scout", "matcher"] as const).map((role) => ({
+        role,
+        session: "direct_tools",
+        tools: [] as string[],
+        note: "Gmail send is not available in this MVP.",
+      })),
     },
     computers: agents.map((agent) => ({
       agentId: agent.id,
       name: agent.name,
       role: agent.role,
-      state: computerState(agent.orgoComputerId, orgoKey),
+      state: agent.orgoComputerId
+        ? ("connected" as const)
+        : agent.role === "orchestrator"
+          ? ("not_configured" as const)
+          : computerState(null, orgoKey),
       orgoComputerId: agent.orgoComputerId,
-      size: "Small" as const,
-      localNote: agent.computer.note,
+      size: agent.role === "orchestrator" ? ("none" as const) : ("Small" as const),
+      localNote:
+        agent.role === "orchestrator"
+          ? "Quinn does not get an Orgo computer."
+          : agent.computer.note,
+      terminal: agent.computer.terminal,
+      files: agent.computer.files,
+      computerSeconds: agent.computerSeconds,
+      tokensUsed: agent.tokensUsed,
     })),
     modelMode: modelMode(),
     composioConfigured: keySet,

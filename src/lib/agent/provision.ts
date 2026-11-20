@@ -11,6 +11,7 @@ import {
   recordAudit,
   setAgentOrgoComputer,
   setAgentSpecialty,
+  setAgentTools,
   setBusinessWorkspace,
   slugTaken,
   upsertComputer,
@@ -79,6 +80,7 @@ export async function provisionBlueprint(
       specialty: role.specialty,
       instructions: role.instructions(ctx),
       status: "active",
+      tools: role.tools,
     });
     ensureWorkspace(agent.id);
     upsertComputer(agent.id, "local", "not_connected", LOCAL_COMPUTER_NOTE);
@@ -149,18 +151,26 @@ export function ensureTeamShape(businessId: string): Agent[] {
   if (!agents.some((agent) => agent.role === "orchestrator")) {
     const role = blueprint?.roles.find((item) => item.role === "orchestrator");
     const ctx: BlueprintContext = { city: business.city, businessName: business.name };
-    const created = insertAgent({
-      businessId: business.id,
-      userId: business.userId,
-      role: "orchestrator",
-      name: role?.name ?? "Quinn",
-      title: role?.title ?? "Chief of staff",
-      specialty: role?.specialty ?? "Routes the owner's requests to the specialists",
-      instructions: role
-        ? role.instructions(ctx)
-        : "You are the only agent the owner messages. Delegate work. Do not send, spend, or use a computer.",
-      status: "active",
-    });
+    let created;
+    try {
+      created = insertAgent({
+        businessId: business.id,
+        userId: business.userId,
+        role: "orchestrator",
+        name: role?.name ?? "Quinn",
+        title: role?.title ?? "Chief of staff",
+        specialty: role?.specialty ?? "Routes the owner's requests to the specialists",
+        instructions: role
+          ? role.instructions(ctx)
+          : "You are the only agent the owner messages. Delegate work. Do not send, spend, or use a computer.",
+        status: "active",
+        tools: role?.tools ?? ["delegate", "list_leads"],
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (!message.includes("UNIQUE")) throw error;
+      return listAgents(businessId);
+    }
     const routine = role?.routines[0];
     insertRoutine({
       agentId: created.id,
@@ -185,9 +195,10 @@ export function ensureTeamShape(businessId: string): Agent[] {
   }
   if (blueprint) {
     for (const agent of agents) {
-      if (agent.specialty) continue;
       const role = blueprint.roles.find((item) => item.role === agent.role);
-      if (role) setAgentSpecialty(agent.id, role.specialty);
+      if (!role) continue;
+      if (!agent.specialty) setAgentSpecialty(agent.id, role.specialty);
+      if (!agent.tools.length) setAgentTools(agent.id, role.tools);
     }
   }
   return listAgents(businessId);
@@ -195,14 +206,15 @@ export function ensureTeamShape(businessId: string): Agent[] {
 
 async function provisionOrgo(business: Business, agents: Agent[]) {
   if (!orgoConfigured()) return;
+  const specialists = agents.filter((agent) => agent.role !== "orchestrator");
   try {
-    let workspaceId = business.orgoWorkspaceId || process.env.ORGO_WORKSPACE_ID || "";
+    let workspaceId = business.orgoWorkspaceId || "";
     if (!workspaceId) {
-      const created = await orgo.createWorkspace(`cnstrct-${business.id.slice(-12)}`);
+      const created = await orgo.createWorkspace(`cnstrct-${business.id}`);
       workspaceId = created.id;
+      setBusinessWorkspace(business.id, workspaceId);
     }
-    if (!business.orgoWorkspaceId) setBusinessWorkspace(business.id, workspaceId);
-    for (const agent of agents) {
+    for (const agent of specialists) {
       const name = `${agent.role}-${agent.id.slice(-8)}`.slice(0, 80);
       const computer = await orgo.createComputer({ workspaceId, name });
       setAgentOrgoComputer(agent.id, computer.id);
@@ -214,6 +226,7 @@ async function provisionOrgo(business: Business, agents: Agent[]) {
         actor: agent.role,
         kind: "computer.created",
         summary: `${agent.name} has Orgo computer ${computer.id} (${ORGO_SMALL.label}). Secrets were not synced.`,
+        refId: computer.id,
       });
     }
   } catch (error) {

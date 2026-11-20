@@ -99,8 +99,15 @@ function scoutPlan(input: ModelInput): ModelResult {
       tokens: TOKENS_PER_MOCK_TURN,
     };
   }
+  if (last.body.status !== "done") {
+    return {
+      text: "The send did not go out. Nothing was sent.",
+      calls: [],
+      tokens: TOKENS_PER_MOCK_TURN,
+    };
+  }
   return {
-    text: "Logged as sent on this computer only. No email left the machine.",
+    text: "Recorded on this computer only. No email was sent.",
     calls: [],
     tokens: TOKENS_PER_MOCK_TURN,
   };
@@ -165,6 +172,9 @@ function matcherPlan(input: ModelInput): ModelResult {
       ],
       tokens: TOKENS_PER_MOCK_TURN,
     };
+  }
+  if (last?.body.status !== "done") {
+    return { text: "The introduction was not sent.", calls: [], tokens: TOKENS_PER_MOCK_TURN };
   }
   return {
     text: "The introduction is logged on this computer only. Nobody was contacted.",

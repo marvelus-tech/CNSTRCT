@@ -47,6 +47,7 @@ export interface Agent {
   instructions: string;
   status: "active" | "coming_soon";
   orgoComputerId: string | null;
+  tools: string[];
   tokensUsed: number;
   computerSeconds: number;
   createdAt: number;
@@ -102,7 +103,7 @@ export type Trigger =
   | { type: "task"; taskId: string; instruction: string }
   | { type: "resume" };
 
-export type TaskStatus = "queued" | "running" | "waiting_approval" | "reported" | "failed";
+export type TaskStatus = "queued" | "running" | "waiting_approval" | "reported" | "failed" | "cancelled";
 
 export interface WorkTask {
   id: string;
@@ -126,6 +127,7 @@ export interface AuditEvent {
   tool: string | null;
   decision: string | null;
   summary: string;
+  refId: string | null;
   createdAt: number;
 }
 

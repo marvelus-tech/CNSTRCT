@@ -8,7 +8,8 @@ import type { AgentRole } from "../types";
 
 export const ORGO_SMALL = { cpu: 0.5, ram: 4, diskGb: 20, label: "Small" } as const;
 
-export const GMAIL_MODEL_TOOLS = ["GMAIL_FETCH_EMAILS", "GMAIL_CREATE_EMAIL_DRAFT"] as const;
+/** Gmail send is not wired in this MVP. The model list and the session list stay empty so they match. */
+export const GMAIL_MODEL_TOOLS = [] as const;
 export const GMAIL_SEND_SLUG = "GMAIL_SEND_EMAIL";
 
 export type ConnectionState = "not_configured" | "not_connected" | "connected" | "expired";
@@ -19,7 +20,7 @@ export interface DirectToolsSession {
   sessionPreset: "direct_tools";
   manageConnections: { enable: false };
   sandbox: { enable: false };
-  toolkits?: { enable: [] };
+  toolkits?: { enable: string[] };
   tools?: { gmail: { enable: string[] } };
   connectedAccounts?: { gmail: string[] };
 }
@@ -53,6 +54,13 @@ export function computerState(computerId: string | null, keySet: boolean): Compu
   return "not_connected";
 }
 
+/** Desk label uses specialist computer ids only. One id is not "the desk is connected". */
+export function orgoDeskLabel(computerIds: Array<string | null>, keySet: boolean) {
+  const connected = computerIds.filter((id) => Boolean(id)).length;
+  if (connected === 0) return `Orgo ${computerState(null, keySet).replaceAll("_", " ")}`;
+  return `Orgo ${connected} of ${computerIds.length} connected`;
+}
+
 export function sessionForRole(input: {
   businessId: string;
   role: AgentRole;
@@ -69,7 +77,8 @@ export function sessionForRole(input: {
   }
   const session: DirectToolsSession = {
     ...base,
-    tools: { gmail: { enable: [...GMAIL_MODEL_TOOLS] } },
+    toolkits: { enable: [] },
+    tools: { gmail: { enable: [] } },
   };
   if (input.connectedAccountId) session.connectedAccounts = { gmail: [input.connectedAccountId] };
   return session;
@@ -80,58 +89,20 @@ export type Delivery =
   | { delivered: true; logId: string };
 
 /**
- * Live send exists only when the key, a connected account, and the SDK are all present.
- * Any miss returns a reason. Callers must not describe that as a sent email.
+ * Gmail send stays unavailable in this MVP.
+ * A key, a connected account, or a missing SDK must not be reported as a sent email.
+ * The session enable list is empty, so this function does not call execute.
  */
-export async function deliverComposioSend(input: {
+export async function deliverComposioSend(_input: {
   businessId: string;
   role: AgentRole;
   connectedAccountId: string | null;
   args: Record<string, unknown>;
 }): Promise<Delivery> {
-  if (!composioConfigured()) return { delivered: false, reason: "not_configured" };
-  if (!input.connectedAccountId) return { delivered: false, reason: "not_connected" };
-  if (input.role === "orchestrator") return { delivered: false, reason: "provider_error", detail: "Orchestrator has no send session." };
-  const loaded = await loadComposio();
-  if (!loaded) return { delivered: false, reason: "sdk_not_loaded" };
-  try {
-    const session = await loaded.create(composioTenantId(input.businessId), sessionForRole(input));
-    const result = await session.execute(GMAIL_SEND_SLUG, input.args);
-    const logId = result.logId || result.id;
-    if (!logId) return { delivered: false, reason: "provider_error", detail: "Composio returned no log id." };
-    return { delivered: true, logId };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : "Composio send failed";
-    return { delivered: false, reason: "provider_error", detail };
-  }
+  return {
+    delivered: false,
+    reason: "not_configured",
+    detail: "Gmail send is not available in this MVP.",
+  };
 }
 
-interface ComposioSession {
-  execute: (slug: string, args: Record<string, unknown>) => Promise<{ logId?: string; id?: string }>;
-}
-
-interface ComposioModule {
-  create: (userId: string, config: DirectToolsSession) => Promise<ComposioSession>;
-}
-
-async function loadComposio(): Promise<ComposioModule | null> {
-  try {
-    const importer = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<Record<string, unknown>>;
-    const mod = await importer("@composio/core");
-    const Composio = mod.Composio as
-      | (new (options: { apiKey: string }) => { create: (userId: string, config: object) => Promise<ComposioSession> })
-      | undefined;
-    const preset = (mod.SessionPreset as { DIRECT_TOOLS?: string } | undefined)?.DIRECT_TOOLS;
-    const key = process.env.COMPOSIO_API_KEY;
-    if (!Composio || !key) return null;
-    const client = new Composio({ apiKey: key });
-    return {
-      async create(userId, config) {
-        const { tenantUserId: _tenant, ...sessionConfig } = config;
-        return client.create(userId, { ...sessionConfig, sessionPreset: preset ?? config.sessionPreset });
-      },
-    };
-  } catch {
-    return null;
-  }
-}

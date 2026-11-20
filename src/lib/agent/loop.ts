@@ -2,6 +2,7 @@ import { newId } from "../ids";
 import {
   addUsage,
   appendRow,
+  cancelOpenTasks,
   clearPending,
   getAgent,
   getApproval,
@@ -13,14 +14,15 @@ import {
   insertTask,
   listAgents,
   listLeads,
+  listPendingApprovalsForBusiness,
   listRows,
   maxSeq,
   openTaskForAgent,
   recordAudit,
   rowsSince,
+  setActionPolicy,
   setApprovalStatus,
   setPending,
-  setPolicy,
   setTaskStatus,
   updateRow,
 } from "../store";
@@ -34,7 +36,8 @@ import { runTool, toolSchemasFor } from "./tools";
  * Turn loop adapted from grokbot-clone server/src/agent/loop.ts (MIT).
  * One queue per agent. Tool calls run in order. A gated tool writes an
  * approval card and stores the rest of the batch in pending_turns. Allow,
- * edit, or deny resumes that batch. A newer user message expires an open card.
+ * edit, or deny resumes that batch. A newer owner message expires every open
+ * approval and delegated task on that desk, including specialist cards.
  */
 
 const queues = new Map<string, Promise<void>>();
@@ -65,8 +68,12 @@ async function runTurn(agentId: string, trigger: Trigger) {
   if (!business || !profile) return;
 
   if (trigger.type !== "resume") {
-    const pending = getPending(agentId);
-    if (pending) expirePending(agentId, pending);
+    if (trigger.type === "user" && agent.role === "orchestrator") {
+      expireDeskChain(business.id);
+    } else {
+      const pending = getPending(agentId);
+      if (pending) expirePending(agentId, pending);
+    }
   }
 
   let startSeq = maxSeq(agentId) + 1;
@@ -79,6 +86,11 @@ async function runTurn(agentId: string, trigger: Trigger) {
   } else if (trigger.type === "user") {
     appendRow(agentId, "message", { role: "user", text: trigger.text });
   } else if (trigger.type === "task") {
+    const task = getTask(trigger.taskId);
+    if (!task || task.status === "cancelled" || task.status === "failed") {
+      appendRow(agentId, "notice", { tone: "info", text: "This task was closed before it ran." });
+      return;
+    }
     setTaskStatus(trigger.taskId, "running");
     appendRow(agentId, "event", { event: "task", text: trigger.instruction, taskId: trigger.taskId });
   } else {
@@ -110,7 +122,7 @@ async function runTurn(agentId: string, trigger: Trigger) {
     };
     let result;
     try {
-      result = await callModel(modelInput, toolSchemasFor(fresh.role));
+      result = await callModel(modelInput, toolSchemasFor(fresh.tools));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Model failed";
       appendRow(agentId, "notice", { tone: "info", text: `${message} Falling back to the scripted demo model.` });
@@ -152,13 +164,13 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
     const call = state.calls[0]!;
     const args = parseArgs(call.arguments);
     const approval = state.approvalId ? getApproval(state.approvalId) : null;
-    let decision = policyFor(agent.userId, call.name).decision;
+    const policy = policyFor(agent.userId, call.name, { businessId: business.id, agentId: agent.id });
+    let decision = policy.decision;
     if (approval && approval.callId === call.callId) {
       if (approval.status === "pending") return true;
-      decision = approval.status === "denied" || approval.status === "expired" ? "block" : "allow";
+      decision = approval.status === "allowed" || approval.status === "always" ? "allow" : "block";
       state.approvalId = "";
     } else if (decision === "ask") {
-      const policy = policyFor(agent.userId, call.name);
       const approvalId = newId("apr");
       const card = appendRow(agentId, "card", {
         card: "approval",
@@ -189,10 +201,11 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         tool: call.name,
         decision: "ask",
         summary: `${agent.name} is waiting for approval to ${policy.title}.`,
+        refId: approvalId,
       });
       if (agent.role !== "orchestrator") {
         const task = trigger.type === "task" ? getTask(trigger.taskId) : openTaskForAgent(agent.id);
-        if (task) setTaskStatus(task.id, "waiting_approval");
+        if (task && task.status !== "cancelled" && task.status !== "failed") setTaskStatus(task.id, "waiting_approval");
         tellOrchestrator(business.id, `${agent.name} is waiting for you to approve ${policy.title}.`);
       }
       return true;
@@ -241,6 +254,7 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         actor: "orchestrator",
         kind: "task.delegated",
         summary: `${agent.name} delegated to ${target.name}.`,
+        refId: task.id,
       });
       await enqueue(target.id, { type: "task", taskId: task.id, instruction: outcome.handoff.task });
       const finished = getTask(task.id);
@@ -277,6 +291,7 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         tool: call.name,
         decision: "allow",
         summary: outcome.summary,
+        refId: call.name === "shell" ? agent.orgoComputerId ?? "local" : "not-sent",
       });
     }
     state.calls.shift();
@@ -300,6 +315,7 @@ function settleSpecialist(agent: Agent, text: string) {
     actor: agent.role,
     kind: "task.reported",
     summary: report,
+    refId: task.id,
   });
 }
 
@@ -327,6 +343,7 @@ function expirePending(agentId: string, state: PendingState) {
           tool: approval.tool,
           decision: "expired",
           summary: "A new message closed the open approval.",
+          refId: approval.id,
         });
       }
     }
@@ -344,6 +361,30 @@ function expirePending(agentId: string, state: PendingState) {
   clearPending(agentId);
 }
 
+function expireDeskChain(businessId: string) {
+  for (const member of listAgents(businessId)) {
+    const pending = getPending(member.id);
+    if (pending) expirePending(member.id, pending);
+  }
+  for (const approval of listPendingApprovalsForBusiness(businessId)) {
+    setApprovalStatus(approval.id, "expired");
+    const card = listRows(approval.agentId).find((row) => row.id === approval.rowId);
+    if (card) updateRow(card.id, { ...card.body, status: "expired" });
+    recordAudit({
+      businessId,
+      userId: approval.userId,
+      agentId: approval.agentId,
+      actor: "owner",
+      kind: "approval.expired",
+      tool: approval.tool,
+      decision: "expired",
+      summary: "A new message closed the open approval.",
+      refId: approval.id,
+    });
+  }
+  cancelOpenTasks(businessId, "Closed because a new owner message arrived.");
+}
+
 function markTool(agentId: string, rowId: string, status: string) {
   const row = listRows(agentId).find((item) => item.id === rowId);
   if (!row) return;
@@ -359,19 +400,27 @@ function parseArgs(raw: string) {
   }
 }
 
+const APPROVAL_DECISIONS = new Set(["allow", "deny", "edit", "always"]);
+
 export function resolveApproval(
   userId: string,
   approvalId: string,
-  decision: "allow" | "always" | "deny" | "edit",
+  decision: string,
   draft?: Record<string, string>,
+  expectedAgentId?: string,
 ) {
+  if (!APPROVAL_DECISIONS.has(decision)) throw new Error("That decision is not allowed.");
   const approval = getApproval(approvalId);
   if (!approval || approval.userId !== userId) throw new Error("Approval not found.");
+  if (expectedAgentId && approval.agentId !== expectedAgentId) throw new Error("Approval not found.");
   if (approval.status !== "pending") return Promise.resolve();
+  const agent = getAgent(approval.agentId);
+  if (!agent) throw new Error("Approval not found.");
+  if (decision === "allow" || decision === "always") assertDraftUnchanged(approval.agentId, approval.callId, draft);
   if (decision === "edit") applyDraft(approval.agentId, approval.callId, draft);
   const status = decision === "deny" ? "denied" : "allowed";
   setApprovalStatus(approval.id, status);
-  if (decision === "always") setPolicy(userId, approval.tool, "always_allow");
+  if (decision === "always") setActionPolicy(agent.businessId, agent.id, approval.tool, "always_allow");
   const card = listRows(approval.agentId).find((row) => row.id === approval.rowId);
   if (card) {
     const nextBody: Record<string, unknown> = { ...card.body, status: decision === "edit" ? "edited" : status };
@@ -381,25 +430,40 @@ export function resolveApproval(
     }
     updateRow(card.id, nextBody);
   }
-  const agent = getAgent(approval.agentId);
-  if (agent) {
-    recordAudit({
-      businessId: agent.businessId,
-      userId,
-      agentId: agent.id,
-      actor: "owner",
-      kind: decision === "edit" ? "approval.edited" : decision === "deny" ? "approval.denied" : "approval.allowed",
-      tool: approval.tool,
-      decision,
-      summary:
-        decision === "deny"
-          ? `Owner rejected ${agent.name}'s ${approval.tool}.`
-          : decision === "edit"
-            ? `Owner edited and approved ${agent.name}'s ${approval.tool}.`
+  recordAudit({
+    businessId: agent.businessId,
+    userId,
+    agentId: agent.id,
+    actor: "owner",
+    kind: decision === "edit" ? "approval.edited" : decision === "deny" ? "approval.denied" : "approval.allowed",
+    tool: approval.tool,
+    decision,
+    summary:
+      decision === "deny"
+        ? `Owner rejected ${agent.name}'s ${approval.tool}.`
+        : decision === "edit"
+          ? `Owner edited and approved ${agent.name}'s ${approval.tool}.`
+          : decision === "always"
+            ? `Owner always-allowed ${agent.name}'s ${approval.tool} on this business.`
             : `Owner approved ${agent.name}'s ${approval.tool}.`,
-    });
-  }
+    refId: approval.id,
+  });
   return enqueue(approval.agentId, { type: "resume" });
+}
+
+function assertDraftUnchanged(agentId: string, callId: string, draft?: Record<string, string>) {
+  if (!draft) return;
+  const state = getPending(agentId);
+  const call = state?.calls.find((item) => item.callId === callId);
+  if (!call) return;
+  const args = parseArgs(call.arguments);
+  const allowed = new Set(["to", "subject", "body", "command", "leadName", "tradieName", "purpose"]);
+  for (const [key, value] of Object.entries(draft)) {
+    if (!allowed.has(key) || typeof value !== "string") continue;
+    if (String(args[key] ?? "") !== value) {
+      throw new Error("Draft changed. Approve the edited draft.");
+    }
+  }
 }
 
 function applyDraft(agentId: string, callId: string, draft?: Record<string, string>) {

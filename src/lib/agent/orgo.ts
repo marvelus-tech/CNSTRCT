@@ -1,7 +1,7 @@
 /**
  * Slim port of grokbot-clone server/src/orgo.ts (MIT).
- * Used only when ORGO_API_KEY and ORGO_WORKSPACE_ID are set.
- * The demo path never calls this.
+ * Create and bash run only when ORGO_API_KEY is set and this agent has a computer id.
+ * Bash is resumed first. The command string is built from an allowlist, never `cd /root`.
  */
 
 const BASE = "https://www.orgo.ai/api";
@@ -48,6 +48,12 @@ export const orgo = {
       ram: 4,
       disk_size_gb: 20,
     });
+  },
+  getComputer(id: string) {
+    return call<{ id: string; status?: string }>("GET", `/computers/${id}`);
+  },
+  resume(id: string) {
+    return call<{ id: string; status?: string }>("POST", `/computers/${id}/resume`);
   },
   bash(id: string, command: string) {
     return call<{ success: boolean; output: string; exit_code: number }>("POST", `/computers/${id}/bash`, {

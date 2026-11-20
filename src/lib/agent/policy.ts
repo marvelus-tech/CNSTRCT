@@ -1,4 +1,4 @@
-import { getPolicy } from "../store";
+import { getActionPolicy } from "../store";
 
 /**
  * Adapted from grokbot-clone server/src/agent/tools.ts policyFor (MIT).
@@ -38,10 +38,14 @@ export function toolTitle(name: string) {
   return TITLES[name] ?? name.replaceAll("_", " ");
 }
 
-export function policyFor(userId: string, toolName: string): { decision: Decision; key: string; title: string } {
+export function policyFor(
+  _userId: string,
+  toolName: string,
+  scope?: { businessId: string; agentId: string },
+): { decision: Decision; key: string; title: string } {
   const title = toolTitle(toolName);
   if (!GATED.has(toolName)) return { decision: "allow", key: toolName, title };
-  const mode = getPolicy(userId, toolName) ?? "needs_approval";
+  const mode = scope ? getActionPolicy(scope.businessId, scope.agentId, toolName) : null;
   if (mode === "blocked") return { decision: "block", key: toolName, title };
   if (mode === "always_allow") return { decision: "allow", key: toolName, title };
   return { decision: "ask", key: toolName, title };
