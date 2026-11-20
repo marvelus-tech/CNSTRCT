@@ -64,15 +64,14 @@ export default function HomePage() {
                 <span className="text-accent">Business</span> operating system
               </p>
               <h1 className="mt-3 max-w-xl text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-foreground sm:text-4xl sm:leading-[1.08] md:text-6xl md:leading-[1.05]">
-                Spin up a real business from almost nothing.
+                Your founding team ships on day one.
               </h1>
               <p className="mt-4 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
-                The work is shifting to agents. Leaders are wiring orchestrators and specialists into daily
-                operations. BizOS gives you that desk on day one.
+                BizOS finds a business that fits you, then starts your bots. They do the work. You approve it.
               </p>
               <div className="mt-8">
                 <Button size="lg" asChild>
-                  <Link href="/triage">See what fits you</Link>
+                  <Link href="/triage">Find my business</Link>
                 </Button>
               </div>
             </div>
@@ -87,18 +86,9 @@ export default function HomePage() {
           <h2 className="landing-section-title">How it works</h2>
           <ol className="mt-8 grid gap-8 md:grid-cols-3">
             {[
-              [
-                "Tell us your interest and situation",
-                "A short triage on your skills, resources, and what you want to explore.",
-              ],
-              [
-                "Custom engine matches and presents suitable business ideas",
-                "BizOS surfaces paths that fit you, not a one-size-fits-all template.",
-              ],
-              [
-                "Build it and start your business journey",
-                "Set up your business, approve what the agents draft, and launch when you are ready.",
-              ],
+              ["Tell us who you are", "Short triage. Skills, time, goal."],
+              ["Get a business that fits", "Matched ideas, not a generic list."],
+              ["Turn the key", "Your bots go live. You approve what ships."],
             ].map(([title, body], index) => (
               <li key={title}>
                 <p className="text-sm font-medium text-accent">0{index + 1}</p>
