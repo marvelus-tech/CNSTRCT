@@ -1,8 +1,13 @@
 export const FAQS = [
   {
-    question: "What is CNSTRCT?",
+    question: "What is BizOS?",
     answer:
-      "CNSTRCT turns a few facts about you into a small business: a public site, and agents that draft the work. The first live path matches homeowners with local tradies for home repairs.",
+      "BizOS turns a few facts about you into a small business: a public site, and agents that draft the work. The first live path matches homeowners with local tradies for home repairs.",
+  },
+  {
+    question: "Is the questionnaire free?",
+    answer:
+      "Yes. Triage and business path recommendations are free. Constructing a business with Quinn and specialists requires a paid Starter or Pro plan.",
   },
   {
     question: "Do I need startup cash?",
@@ -17,6 +22,6 @@ export const FAQS = [
   {
     question: "Why agents instead of another chatbot?",
     answer:
-      "A chatbot answers one thread. CNSTRCT gives you an orchestrator you talk to, specialists that do focused work behind it, and approval gates before anything sensitive is marked sent. You can connect more apps over time; in this MVP, outbound actions still stop on your approval card.",
+      "A chatbot answers one thread. BizOS gives you an orchestrator you talk to, specialists that do focused work behind it, and approval gates before anything sensitive is marked sent. You can connect more apps over time; in this MVP, outbound actions still stop on your approval card.",
   },
 ];

@@ -30,6 +30,7 @@ function ConstructingInner() {
   const steps = STEPS_BY_TEMPLATE[template] ?? STEPS_BY_TEMPLATE["home-services"]!;
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
+  const [paywallCode, setPaywallCode] = useState("");
 
   useEffect(() => {
     const started = Date.now();
@@ -52,7 +53,7 @@ function ConstructingInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ templateId: template }),
       });
-      const json = (await response.json()) as { businessId?: string; error?: string };
+      const json = (await response.json()) as { businessId?: string; error?: string; code?: string };
       const elapsed = Date.now() - started;
       const wait = Math.max(0, MIN_MS - elapsed);
       await new Promise((resolve) => window.setTimeout(resolve, wait));
@@ -60,6 +61,7 @@ function ConstructingInner() {
       if (cancelled) return;
       if (!response.ok || !json.businessId) {
         setError(json.error || "Could not construct this business.");
+        setPaywallCode(json.code || "");
         return;
       }
       setStep(steps.length - 1);
@@ -100,9 +102,22 @@ function ConstructingInner() {
         {error ? (
           <p className="mt-8 text-sm text-danger">
             {error}{" "}
-            <Link href="/opportunities" className="underline">
-              Back to paths
-            </Link>
+            {paywallCode === "payment_required" ? (
+              <Link
+                href={`/checkout?plan=starter&next=${encodeURIComponent(`/constructing?template=${template}`)}`}
+                className="underline"
+              >
+                Choose a plan
+              </Link>
+            ) : paywallCode === "plan_limit" ? (
+              <Link href={`/checkout?plan=pro&next=${encodeURIComponent("/command-center")}`} className="underline">
+                Upgrade to Pro
+              </Link>
+            ) : (
+              <Link href="/opportunities" className="underline">
+                Back to paths
+              </Link>
+            )}
           </p>
         ) : null}
       </main>

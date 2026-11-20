@@ -106,7 +106,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
 
   if (!desk.profile) {
     return (
-      <Empty title="No answers yet" body="The triage is how CNSTRCT learns what fits you." href="/triage" label="Start the questions" />
+      <Empty title="No answers yet" body="The triage is how BizOS learns what fits you." href="/triage" label="Start the questions" />
     );
   }
 

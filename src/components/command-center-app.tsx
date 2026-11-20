@@ -171,7 +171,7 @@ function ProfilePanel({
     ["Space", ventureProfile.space],
     ["Capital", ventureProfile.capital],
     ["Trades", ventureProfile.trades],
-    ["Constraints", ventureProfile.constraints || "—"],
+    ["Constraints", ventureProfile.constraints || "none listed"],
     ["Idea", ventureProfile.hasIdea ? ventureProfile.ideaText || "Yes" : "Not yet"],
   ];
   return (
@@ -195,7 +195,7 @@ function SettingsPanel() {
     <SummaryPanel
       title="Settings"
       rows={[
-        ["Environment", "Demo mode — sqlite on this host"],
+        ["Environment", "Demo mode, sqlite on this host"],
         ["Auth", "Demo session or Supabase magic link when configured"],
       ]}
       footer={

@@ -166,7 +166,7 @@ function matcherPlan(input: ModelInput): ModelResult {
             to: partner.contact,
             leadName: lead.name,
             tradieName: partner.name,
-            body: `${need} This is a CNSTRCT demo lead. Do not contact them outside this demo.`,
+            body: `${need} This is a BizOS demo lead. Do not contact them outside this demo.`,
           },
         },
       ],

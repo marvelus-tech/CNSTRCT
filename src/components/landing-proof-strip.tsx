@@ -7,7 +7,7 @@ import {
 export function LandingProofStrip() {
   return (
     <section
-      aria-label="Enterprise AI adoption and CNSTRCT digital workers"
+      aria-label="Enterprise AI adoption and BizOS digital workers"
       className="border-y border-border bg-card px-5 py-12 md:px-10 md:py-14"
     >
       <div className="mx-auto max-w-6xl">

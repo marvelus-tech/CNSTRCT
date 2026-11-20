@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroCrosshairShowcase } from "@/components/hero-crosshair-showcase";
+import { LandingPricing } from "@/components/landing-pricing";
 import { LandingProofStrip } from "@/components/landing-proof-strip";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
@@ -20,11 +21,14 @@ export default function HomePage() {
     "@graph": [
       {
         "@type": "SoftwareApplication",
-        name: "CNSTRCT",
+        name: "BizOS",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         description: HOME_DESCRIPTION,
-        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        offers: [
+          { "@type": "Offer", name: "Starter", price: "39", priceCurrency: "USD" },
+          { "@type": "Offer", name: "Pro", price: "79", priceCurrency: "USD" },
+        ],
       },
       {
         "@type": "FAQPage",
@@ -60,7 +64,7 @@ export default function HomePage() {
               </h1>
               <p className="mt-4 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
                 The work is shifting to agents. Leaders are wiring orchestrators and specialists into daily
-                operations. CNSTRCT gives you that desk on day one.
+                operations. BizOS gives you that desk on day one.
               </p>
               <div className="mt-8">
                 <Button size="lg" asChild>
@@ -74,6 +78,7 @@ export default function HomePage() {
           </div>
         </section>
         <LandingProofStrip />
+        <LandingPricing />
         <section className="border-y border-border bg-card px-5 py-14 md:px-10">
           <ol className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
             {[
@@ -83,7 +88,7 @@ export default function HomePage() {
               ],
               [
                 "Custom engine matches and presents suitable business ideas",
-                "CNSTRCT surfaces paths that fit you, not a one-size-fits-all template.",
+                "BizOS surfaces paths that fit you, not a one-size-fits-all template.",
               ],
               [
                 "Build it and start your business journey",

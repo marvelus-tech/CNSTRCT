@@ -11,11 +11,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: HOME_TITLE, template: "%s" },
   description: HOME_DESCRIPTION,
-  applicationName: "CNSTRCT",
+  applicationName: "BizOS",
   openGraph: {
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
-    siteName: "CNSTRCT",
+    siteName: "BizOS",
     type: "website",
   },
 };

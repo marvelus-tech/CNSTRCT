@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { constructionAccess } from "@/lib/billing/access";
 import { openDesk } from "@/lib/agent/provision";
 import { currentUser } from "@/lib/session";
 import { getProfile } from "@/lib/store";
@@ -12,6 +13,11 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   const profile = getProfile(user.id);
   if (!profile) return NextResponse.json({ error: "Answer the triage first." }, { status: 401 });
+
+  const paid = constructionAccess(user.id);
+  if (!paid.ok) {
+    return NextResponse.json({ error: paid.error, code: paid.code }, { status: paid.status });
+  }
 
   let templateId = "home-services";
   try {

@@ -231,7 +231,7 @@ export function HeroCrosshairShowcase() {
       ref={panelRef}
       className="hero-crosshair-panel relative min-h-[360px] w-full md:min-h-[480px]"
       role="region"
-      aria-label="Business types CNSTRCT can spin up"
+      aria-label="Business types BizOS can spin up"
     >
       <span
         aria-hidden

@@ -45,7 +45,7 @@ export const LANDING_PROOF_STATS: readonly LandingStat[] = [
 ] as const;
 
 export const LANDING_PROOF_KICKER =
-  "Agentic AI is the fastest-growing slice of enterprise AI value. CNSTRCT turns that pattern into a business you can start, with approvals and connected tools built in.";
+  "Agentic AI is the fastest-growing slice of enterprise AI value. BizOS turns that pattern into a business you can start, with approvals and connected tools built in.";
 
 export const LANDING_PROOF_SOURCES: readonly { name: string; url: string }[] = [
   {

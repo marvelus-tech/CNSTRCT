@@ -180,6 +180,15 @@ export function getDb() {
       updated_at INTEGER NOT NULL,
       UNIQUE (business_id, toolkit)
     );
+    CREATE TABLE IF NOT EXISTS billing_entitlements (
+      user_id TEXT PRIMARY KEY,
+      plan_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      stripe_customer_id TEXT,
+      stripe_subscription_id TEXT,
+      current_period_end INTEGER,
+      updated_at INTEGER NOT NULL
+    );
   `);
   const auditCols = next.prepare("PRAGMA table_info(audit_events)").all() as { name: string }[];
   if (!auditCols.some((col) => col.name === "ref_id")) {

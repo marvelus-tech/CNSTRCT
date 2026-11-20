@@ -64,7 +64,7 @@ function dockerAvailable() {
 export function providerNote(provider: SandboxProvider) {
   if (provider === "orgo") return "Orgo cloud computer. Sends still wait for approval.";
   if (provider === "docker") return "Docker sandbox with the network off. Sends still wait for approval.";
-  return "Local sandbox folder on the CNSTRCT server. Commands cannot open the network.";
+  return "Local sandbox folder on the BizOS server. Commands cannot open the network.";
 }
 
 function safePath(root: string, rel: string) {

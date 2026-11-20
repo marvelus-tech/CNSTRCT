@@ -1,34 +1,34 @@
-export const SITE_NAME = "CNSTRCT";
+export const SITE_NAME = "BizOS";
 
-export const HOME_TITLE = "CNSTRCT | Start a real business with almost nothing";
+export const HOME_TITLE = "BizOS app | Start a real business with almost nothing";
 
 export const HOME_DESCRIPTION =
-  "CNSTRCT gives you an orchestrator and specialists to start a real micro-business. Short triage, a path that fits you, and you approve every outbound draft.";
+  "BizOS gives you an orchestrator and specialists to start a real micro-business. Short triage, a path that fits you, and you approve every outbound draft.";
 
-export const TRIAGE_TITLE = "CNSTRCT onboarding | Skills, cash, space, and city";
+export const TRIAGE_TITLE = "BizOS onboarding | Your skills, cash, space, and city";
 
 export const TRIAGE_DESCRIPTION =
-  "Answer eight short CNSTRCT questions, one at a time. Share skills, cash, space, and city so the business we suggest matches what you already have right now.";
+  "Answer eight short BizOS questions, one at a time. Share skills, cash, space, and city so the business we suggest matches what you already have right now.";
 
-export const OPPORTUNITIES_TITLE = "CNSTRCT opportunity paths | One path is live today";
+export const OPPORTUNITIES_TITLE = "BizOS opportunity paths | Two paths are live for you";
 
 export const OPPORTUNITIES_DESCRIPTION =
-  "Review three CNSTRCT business paths after triage. Home services and mobile detailing are open today. Estate clearance stays marked coming soon for you.";
+  "Review three BizOS business paths after triage. Home services and mobile detailing are open today. Estate clearance stays marked coming soon for you now.";
 
-export const DASHBOARD_TITLE = "CNSTRCT dashboard | Agent chat, computer, approvals";
+export const DASHBOARD_TITLE = "BizOS workspace | Agent chat, computer, and approvals";
 
 export const DASHBOARD_DESCRIPTION =
-  "Run your CNSTRCT business from one screen. Read the agent chat, open the sandbox computer, and approve or reject each drafted note before it is marked sent.";
+  "Run your BizOS business from one screen. Read the agent chat, open the sandbox computer, and approve or reject each drafted note before it is marked sent.";
 
-export const CALLBACK_TITLE = "CNSTRCT sign-in | Finish your email magic link now";
+export const CALLBACK_TITLE = "BizOS sign-in | Finish your email magic link today";
 
 export const CALLBACK_DESCRIPTION =
-  "Finish a CNSTRCT email magic link when Supabase keys are set. Without those keys, keep going with the demo session this browser already stored for you.";
+  "Finish a BizOS email magic link when Supabase keys are set. Without those keys, keep going with the demo session this browser already stored for you here.";
 
-export const NOT_FOUND_TITLE = "CNSTRCT missing page | This page was not found here";
+export const NOT_FOUND_TITLE = "BizOS missing page | The page you wanted is not here";
 
 export const NOT_FOUND_DESCRIPTION =
-  "That CNSTRCT page is not here. Head home, see the sample Harbor business, or start triage and build a small business from the skills and cash on hand now.";
+  "That BizOS page is not here. Head home, see the sample Harbor business, or start triage and build a small business from the skills and cash on hand now.";
 
 export function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");

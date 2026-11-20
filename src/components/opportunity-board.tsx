@@ -113,6 +113,22 @@ export function OpportunityBoard() {
       setOpening(false);
       return;
     }
+    const billingRes = await fetch("/api/billing/status");
+    const billing = (await billingRes.json()) as {
+      configured?: boolean;
+      entitled?: boolean;
+      paymentsMessage?: string | null;
+    };
+    if (!billing.configured) {
+      setError(billing.paymentsMessage || "Payments are not configured yet.");
+      setOpening(false);
+      return;
+    }
+    if (!billing.entitled) {
+      router.push(`/checkout?plan=starter&next=${encodeURIComponent(target)}`);
+      setOpening(false);
+      return;
+    }
     router.push(target);
   }
 
