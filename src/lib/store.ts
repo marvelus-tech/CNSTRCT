@@ -280,6 +280,14 @@ export function setAgentSpecialty(id: string, specialty: string) {
   db().prepare("UPDATE agents SET specialty = ? WHERE id = ?").run(specialty, id);
 }
 
+export function setAgentName(id: string, name: string) {
+  db().prepare("UPDATE agents SET name = ? WHERE id = ?").run(name, id);
+}
+
+export function setAgentInstructions(id: string, instructions: string) {
+  db().prepare("UPDATE agents SET instructions = ? WHERE id = ?").run(instructions, id);
+}
+
 export function setAgentOrgoComputer(id: string, computerId: string) {
   db().prepare("UPDATE agents SET orgo_computer_id = ? WHERE id = ?").run(computerId, id);
 }

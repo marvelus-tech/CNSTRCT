@@ -54,7 +54,7 @@ test("approval buttons follow the textarea, and a dirty allow does not run", asy
   await assert.rejects(async () => resolveApproval(user.id, String(card?.body.approvalId), "ship-it", undefined, mara.id), /not allowed/);
 });
 
-test("a new message to Quinn expires the specialist approval before it can run", async () => {
+test("a new message to Bizzie expires the specialist approval before it can run", async () => {
   const { createUser, getApproval, listTasks, saveProfile } = await import("../store");
   const { openDesk } = await import("./provision");
   const { enqueue, resolveApproval } = await import("./loop");

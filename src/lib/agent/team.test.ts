@@ -79,7 +79,7 @@ test("a new blueprint provisions three roles without a code branch", async () =>
   );
 });
 
-test("owner delegates through Quinn and shell waits for approval", async () => {
+test("owner delegates through Bizzie and shell waits for approval", async () => {
   const { createUser, listAudit, listRows, listTasks, saveProfile } = await import("../store");
   const { openDesk } = await import("./provision");
   const { enqueue, ownerCanMessage, resolveApproval } = await import("./loop");
@@ -126,7 +126,7 @@ test("edited shell approval runs the edited command", async () => {
   const local = { ...profile, userId: user.id };
   saveProfile(local);
   const desk = await openDesk(user.id, local, "mobile-detailing");
-  const quinn = desk.agents.find((agent) => agent.name === "Quinn")!;
+  const quinn = desk.agents.find((agent) => agent.name === "Bizzie")!;
   const riley = desk.agents.find((agent) => agent.name === "Riley")!;
   await enqueue(quinn.id, { type: "user", text: "Find detailers and draft outreach" });
   const card = listRows(riley.id).find((row) => row.kind === "card" && row.body.status === "pending");
@@ -170,6 +170,7 @@ test("existing two-agent desk gains an orchestrator without dropping specialists
   });
   const team = ensureTeamShape(business.id);
   assert.equal(team.filter((agent) => agent.role === "orchestrator").length, 1);
+  assert.equal(team.find((agent) => agent.role === "orchestrator")?.name, "Bizzie");
   assert.deepEqual(team.filter((agent) => agent.role !== "orchestrator").map((agent) => agent.name).sort(), ["Jules", "Mara"]);
   assert.ok((listAgents(business.id).find((agent) => agent.name === "Mara")?.specialty.length ?? 0) > 0);
 });
