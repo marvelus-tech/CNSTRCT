@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { enqueue } from "@/lib/agent/loop";
+import { enqueue, ownerCanMessage } from "@/lib/agent/loop";
 import { currentUser } from "@/lib/session";
 import { getAgent, listRows } from "@/lib/store";
 
@@ -10,6 +10,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params;
   const agent = getAgent(id);
   if (!user || !agent || agent.userId !== user.id) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
+  if (!ownerCanMessage(agent)) {
+    return NextResponse.json({ error: "Message the orchestrator. Specialists take tasks, not owner chat." }, { status: 403 });
+  }
   const body = (await request.json()) as { text?: string };
   const text = body.text?.trim() ?? "";
   if (!text) return NextResponse.json({ error: "Write a message first." }, { status: 400 });

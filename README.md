@@ -1,6 +1,6 @@
 # CNSTRCT
 
-CNSTRCT spins up a real micro-business from almost nothing. You answer a short triage, pick the live home-services desk, and get a public site plus two agents. The agents draft tradie outreach and lead matches on their own computer. Nothing is emailed, posted, or spent until you approve it.
+CNSTRCT spins up a real micro-business from almost nothing. You answer a short triage, pick a live desk, and get a public site plus three agents: Quinn and two specialists. You talk only to Quinn. Nothing is emailed, posted, spent, or run on a computer until you approve it.
 
 This app adapts the agent loop from [grokbot-clone](https://github.com/nickvasilescu/grokbot-clone) (MIT). Why that base, and how to add the next business type, is in [docs/architecture.md](docs/architecture.md). The MIT notice is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
@@ -34,9 +34,10 @@ The first request creates `data/cnstrct.db` and a sample public desk at `/b/harb
 2. Answer the eight questions. Answers stay in `localStorage` until you sign in. City becomes the business name (`Austin` becomes Austin Home Match).
 3. The board at `/opportunities` uses `POST /api/opportunities/preview` when logged out, or saved profile when signed in.
 4. **Start this business** asks for login if needed, then **Constructing** syncs triage to your account and runs for a few seconds before the **command center** (`/command-center`).
-5. Open **workspace** for your business (`/workspace/[businessId]`). Mara (tradie scout) and Jules (lead matcher) each have approval cards and notes on their computer.
-6. Approve or reject. Approve writes `outbox/outreach.json` or `outbox/matches.json` inside that agent's sandbox. Reject does not.
-7. Open the public site from the workspace or visit `/b/harbor-tradie-desk`. The lead form saves a request on the desk. It does not text or email anyone.
+5. Open **workspace** for your business (`/workspace/[businessId]`). You chat only with Quinn, the chief of staff. The team panel lists Quinn plus two specialists. Connections show Gmail as not configured. Computers show Orgo as not configured, with a local sandbox note that is not an Orgo machine.
+6. Message Quinn to find partners or check leads. Quinn delegates a persisted task. The specialist's command and any outbound draft wait on an approval card. Approve runs the unchanged draft. If you edit the text, Approve turns off and only Approve edited draft runs what you typed. Reject writes nothing to the outbox. A later message to Quinn expires every open approval on the desk, including the specialist card. An approved send writes `outbox/*.json` with `network: false` and is not a sent email.
+7. Routines are listed as planned. Queue is explicit. Nothing runs on a timer.
+8. Open the public site from the workspace or visit `/b/harbor-tradie-desk`. The lead form saves a request on the desk. It does not text or email anyone.
 
 `/dashboard` redirects to your latest workspace or the command center.
 
@@ -48,9 +49,9 @@ A new chat message closes an approval that is still open. Approve or reject befo
 | --- | --- |
 | Triage, cards, site, leads | Stored in local sqlite |
 | Auth | Fake login at `/login` sets demo session cookie (`cnstrct_sid`) |
-| Agent chat and routines | Scripted model driving the real tool loop |
-| Computer | A folder per agent under `data/sandboxes` |
-| Outreach, match, spend | Approval card, then a local outbox file. No network |
+| Agent chat and routines | Scripted model. Owner chats with the orchestrator. Routines stay planned until queued |
+| Computer | Orgo status is not configured. A local folder is labeled as a sandbox, not a VM |
+| Outreach, match, shell | Approval card, then a local outbox or a local command. No Composio or Orgo call |
 
 ## Env vars
 
@@ -60,9 +61,9 @@ Copy `.env.example` to `.env.local` only when you want a live provider. Every va
 | --- | --- |
 | `XAI_API_KEY`, `XAI_MODEL` | Chat completions on xAI. Default model `grok-4.7`. Wins over OpenAI when both are set. A failed call falls back to the scripted model. |
 | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_BASE_URL` | Chat completions on OpenAI, or any compatible base URL. |
-| `ORGO_API_KEY`, `ORGO_WORKSPACE_ID`, `ORGO_RAM_GB`, `ORGO_CPU` | Both key and workspace are required. Shell then runs on Orgo. If the call fails, the same command runs in the local folder. |
-| Docker | Used only when the daemon answers `docker version` and Orgo is unset. The container is `alpine` with `--network none`. |
-| `COMPOSIO_API_KEY` | Accepted so a later integration has a place to live. This MVP never calls Composio. |
+| `ORGO_API_KEY` | Key required before any computer is created. Each business gets its own workspace. Each specialist gets one Small computer (0.5 vCPU, 4 GB, 20 GB). Quinn does not. A failed command stays on that computer and does not fall back to the local folder. No secrets sync. |
+| Docker | Used only when the daemon answers `docker version`, Orgo is unset, and the owner already approved the command. The container is `alpine` with `--network none`. |
+| `COMPOSIO_API_KEY` | Reserved. This MVP does not send Gmail. A set key is still not a sent message. Approved drafts stay in the local outbox with `network: false`. |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Email magic link. The template should land on `/auth/callback` with `token_hash` and `type`. Without the keys, the demo session is the path that always works. |
 | `NEXT_PUBLIC_SITE_URL` | Canonical origin. Defaults to `http://localhost:3000`. |
 | `CNSTRCT_DATA_DIR` | Where sqlite and sandboxes live. Defaults to `./data`. |

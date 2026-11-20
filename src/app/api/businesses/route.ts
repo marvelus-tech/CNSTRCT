@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { composioConfigured, connectionState, orgoConfigured, orgoDeskLabel } from "@/lib/agent/adapters";
+import { ensureTeamShape } from "@/lib/agent/provision";
 import { currentUser } from "@/lib/session";
-import { listBusinessesForUser } from "@/lib/store";
+import { listBusinessesForUser, listConnections } from "@/lib/store";
 import { TEMPLATES } from "@/lib/templates";
 import type { Profile } from "@/lib/types";
 
@@ -34,18 +36,35 @@ export async function GET() {
 
   const templateTitle = Object.fromEntries(TEMPLATES.map((template) => [template.id, template.title]));
 
-  const businesses = listBusinessesForUser(user.id).map((business) => ({
-    id: business.id,
-    name: business.name,
-    city: business.city,
-    templateId: business.templateId,
-    templateTitle: templateTitle[business.templateId] ?? business.templateId,
-    slug: business.slug,
-    sitePath: `/b/${business.slug}`,
-    createdAt: business.createdAt,
-    ventureSummary: ventureSummary(business.profileJson),
-    ventureProfile: profileSnapshot(business.profileJson),
-  }));
+  const businesses = listBusinessesForUser(user.id).map((business) => {
+    const team = ensureTeamShape(business.id);
+    const gmail = listConnections(business.id).find((item) => item.toolkit === "gmail");
+    const gmailState = connectionState({
+      keySet: composioConfigured(),
+      connectedAccountId: gmail?.connectedAccountId ?? null,
+      storedStatus: gmail?.status,
+    });
+    const specialists = team.filter((agent) => agent.role !== "orchestrator");
+    const orgoLabel = orgoDeskLabel(
+      specialists.map((agent) => agent.orgoComputerId),
+      orgoConfigured(),
+    );
+    return {
+      id: business.id,
+      name: business.name,
+      city: business.city,
+      templateId: business.templateId,
+      templateTitle: templateTitle[business.templateId] ?? business.templateId,
+      slug: business.slug,
+      sitePath: `/b/${business.slug}`,
+      createdAt: business.createdAt,
+      ventureSummary: ventureSummary(business.profileJson),
+      ventureProfile: profileSnapshot(business.profileJson),
+      teamLabel: team.map((agent) => agent.name).join(", "),
+      connectionLabel: `Gmail ${gmailState.replaceAll("_", " ")}`,
+      computerLabel: orgoLabel,
+    };
+  });
 
   return NextResponse.json({ businesses });
 }
