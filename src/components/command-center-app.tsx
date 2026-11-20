@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { AppShell, type ShellSection } from "@/components/app-shell";
+import { SessionUserAccountRow } from "@/components/session-user-chip";
 import { Button } from "@/components/ui/button";
 import type { Profile } from "@/lib/types";
 
@@ -139,16 +140,19 @@ function ProfilePanel({
   }
   if (!ventureProfile) {
     return (
-      <div className="max-w-xl rounded-none border border-border bg-card p-8">
-        <p className="text-sm text-muted">
-          {hasBusinesses
-            ? "Older desks may not have a saved venture snapshot yet."
-            : "No venture answers on file. Start a new business to capture triage for your first desk."}
-        </p>
-        <div className="mt-4">
-          <StartNewBusinessButton />
+      <>
+        <SessionUserAccountRow />
+        <div className="max-w-xl rounded-none border border-border bg-card p-8">
+          <p className="text-sm text-muted">
+            {hasBusinesses
+              ? "Older desks may not have a saved venture snapshot yet."
+              : "No venture answers on file. Start a new business to capture triage for your first desk."}
+          </p>
+          <div className="mt-4">
+            <StartNewBusinessButton />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
   const rows: [string, string][] = [
@@ -162,15 +166,18 @@ function ProfilePanel({
     ["Idea", ventureProfile.hasIdea ? ventureProfile.ideaText || "Yes" : "Not yet"],
   ];
   return (
-    <SummaryPanel
-      title="Latest venture answers"
-      rows={rows}
-      footer={
-        <Link href={START_NEW_HREF} className="text-sm text-accent underline">
-          Start new business
-        </Link>
-      }
-    />
+    <>
+      <SessionUserAccountRow />
+      <SummaryPanel
+        title="Latest venture answers"
+        rows={rows}
+        footer={
+          <Link href={START_NEW_HREF} className="text-sm text-accent underline">
+            Start new business
+          </Link>
+        }
+      />
+    </>
   );
 }
 
@@ -264,7 +271,7 @@ function CommandCenterInner() {
     <AppShell active={section} onNavigate={setSection} title={titles[section]}>
       {section === "businesses" ? (
         <>
-          <div className="mb-8 flex w-full flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mb-6 flex w-full flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <p className="max-w-xl text-muted">Every business you construct lives here. Open one to chat with its agents.</p>
             <div className="w-full shrink-0 sm:w-auto">
               <StartNewBusinessButton />
