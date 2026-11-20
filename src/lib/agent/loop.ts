@@ -2,34 +2,42 @@ import { newId } from "../ids";
 import {
   addUsage,
   appendRow,
+  cancelOpenTasks,
   clearPending,
   getAgent,
   getApproval,
   getBusiness,
   getPending,
   getProfile,
+  getTask,
   insertApproval,
+  insertTask,
+  listAgents,
   listLeads,
+  listPendingApprovalsForBusiness,
   listRows,
   maxSeq,
+  openTaskForAgent,
+  recordAudit,
   rowsSince,
+  setActionPolicy,
   setApprovalStatus,
   setPending,
-  setPolicy,
+  setTaskStatus,
   updateRow,
 } from "../store";
-import type { PendingState, Trigger } from "../types";
+import type { Agent, PendingState, Trigger } from "../types";
 import { TOKEN_LIMIT } from "./limits";
 import { callModel, mockModel } from "./model";
 import { describeArgs, policyFor } from "./policy";
-import { runTool, toolSchemas } from "./tools";
+import { runTool, toolSchemasFor } from "./tools";
 
 /**
  * Turn loop adapted from grokbot-clone server/src/agent/loop.ts (MIT).
  * One queue per agent. Tool calls run in order. A gated tool writes an
- * approval card and stores the rest of the batch in pending_turns. Allow
- * or deny resumes that batch. A newer user message expires an open card,
- * which is how grokbot keeps a single pending turn.
+ * approval card and stores the rest of the batch in pending_turns. Allow,
+ * edit, or deny resumes that batch. A newer owner message expires every open
+ * approval and delegated task on that desk, including specialist cards.
  */
 
 const queues = new Map<string, Promise<void>>();
@@ -48,6 +56,10 @@ export function enqueue(agentId: string, trigger: Trigger) {
   return next;
 }
 
+export function ownerCanMessage(agent: { role: Agent["role"] }) {
+  return agent.role === "orchestrator";
+}
+
 async function runTurn(agentId: string, trigger: Trigger) {
   const agent = getAgent(agentId);
   if (!agent) return;
@@ -56,8 +68,12 @@ async function runTurn(agentId: string, trigger: Trigger) {
   if (!business || !profile) return;
 
   if (trigger.type !== "resume") {
-    const pending = getPending(agentId);
-    if (pending) expirePending(agentId, pending);
+    if (trigger.type === "user" && agent.role === "orchestrator") {
+      expireDeskChain(business.id);
+    } else {
+      const pending = getPending(agentId);
+      if (pending) expirePending(agentId, pending);
+    }
   }
 
   let startSeq = maxSeq(agentId) + 1;
@@ -65,10 +81,18 @@ async function runTurn(agentId: string, trigger: Trigger) {
     const state = getPending(agentId);
     if (!state) return;
     startSeq = state.startSeq;
-    const paused = await processCalls(agentId, state);
+    const paused = await processCalls(agentId, state, trigger);
     if (paused) return;
   } else if (trigger.type === "user") {
     appendRow(agentId, "message", { role: "user", text: trigger.text });
+  } else if (trigger.type === "task") {
+    const task = getTask(trigger.taskId);
+    if (!task || task.status === "cancelled" || task.status === "failed") {
+      appendRow(agentId, "notice", { tone: "info", text: "This task was closed before it ran." });
+      return;
+    }
+    setTaskStatus(trigger.taskId, "running");
+    appendRow(agentId, "event", { event: "task", text: trigger.instruction, taskId: trigger.taskId });
   } else {
     appendRow(agentId, "event", {
       event: "routine-run",
@@ -98,7 +122,7 @@ async function runTurn(agentId: string, trigger: Trigger) {
     };
     let result;
     try {
-      result = await callModel(modelInput, toolSchemas());
+      result = await callModel(modelInput, toolSchemasFor(fresh.tools));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Model failed";
       appendRow(agentId, "notice", { tone: "info", text: `${message} Falling back to the scripted demo model.` });
@@ -106,7 +130,10 @@ async function runTurn(agentId: string, trigger: Trigger) {
     }
     addUsage(agentId, result.tokens, 0);
     if (result.text) appendRow(agentId, "message", { role: "assistant", text: result.text });
-    if (!result.calls.length) return;
+    if (!result.calls.length) {
+      settleSpecialist(fresh, result.text);
+      return;
+    }
 
     const state: PendingState = {
       calls: result.calls.map((call) => {
@@ -123,12 +150,12 @@ async function runTurn(agentId: string, trigger: Trigger) {
       approvalId: "",
       startSeq,
     };
-    const paused = await processCalls(agentId, state);
+    const paused = await processCalls(agentId, state, trigger);
     if (paused) return;
   }
 }
 
-async function processCalls(agentId: string, state: PendingState) {
+async function processCalls(agentId: string, state: PendingState, trigger: Trigger) {
   const agent = getAgent(agentId);
   const business = agent ? getBusiness(agent.businessId) : null;
   if (!agent || !business) return false;
@@ -137,13 +164,13 @@ async function processCalls(agentId: string, state: PendingState) {
     const call = state.calls[0]!;
     const args = parseArgs(call.arguments);
     const approval = state.approvalId ? getApproval(state.approvalId) : null;
-    let decision = policyFor(agent.userId, call.name).decision;
+    const policy = policyFor(agent.userId, call.name, { businessId: business.id, agentId: agent.id });
+    let decision = policy.decision;
     if (approval && approval.callId === call.callId) {
       if (approval.status === "pending") return true;
-      decision = approval.status === "denied" || approval.status === "expired" ? "block" : "allow";
+      decision = approval.status === "allowed" || approval.status === "always" ? "allow" : "block";
       state.approvalId = "";
     } else if (decision === "ask") {
-      const policy = policyFor(agent.userId, call.name);
       const approvalId = newId("apr");
       const card = appendRow(agentId, "card", {
         card: "approval",
@@ -165,6 +192,22 @@ async function processCalls(agentId: string, state: PendingState) {
       markTool(agentId, call.rowId, "awaiting-approval");
       state.approvalId = approvalId;
       setPending(agentId, state);
+      recordAudit({
+        businessId: business.id,
+        userId: agent.userId,
+        agentId,
+        actor: agent.role,
+        kind: "approval.requested",
+        tool: call.name,
+        decision: "ask",
+        summary: `${agent.name} is waiting for approval to ${policy.title}.`,
+        refId: approvalId,
+      });
+      if (agent.role !== "orchestrator") {
+        const task = trigger.type === "task" ? getTask(trigger.taskId) : openTaskForAgent(agent.id);
+        if (task && task.status !== "cancelled" && task.status !== "failed") setTaskStatus(task.id, "waiting_approval");
+        tellOrchestrator(business.id, `${agent.name} is waiting for you to approve ${policy.title}.`);
+      }
       return true;
     }
 
@@ -182,7 +225,54 @@ async function processCalls(agentId: string, state: PendingState) {
       continue;
     }
 
+    // allow and always_allow both land here. Shell still goes through planCommand.
     const outcome = await runTool(call.name, args, { agent, business, city: business.city });
+    if (outcome.handoff && agent.role === "orchestrator") {
+      const target = listAgents(business.id).find((item) => item.role === outcome.handoff?.role);
+      if (!target) {
+        appendRow(agentId, "tool-result", {
+          tool: call.name,
+          callId: call.callId,
+          output: `No ${outcome.handoff.role} on this desk.`,
+          status: "error",
+          summary: "Missing specialist",
+          args,
+        });
+        markTool(agentId, call.rowId, "error");
+        state.calls.shift();
+        continue;
+      }
+      const task = insertTask({
+        businessId: business.id,
+        fromAgentId: agent.id,
+        toAgentId: target.id,
+        instruction: outcome.handoff.task,
+      });
+      recordAudit({
+        businessId: business.id,
+        userId: agent.userId,
+        agentId: agent.id,
+        actor: "orchestrator",
+        kind: "task.delegated",
+        summary: `${agent.name} delegated to ${target.name}.`,
+        refId: task.id,
+      });
+      await enqueue(target.id, { type: "task", taskId: task.id, instruction: outcome.handoff.task });
+      const finished = getTask(task.id);
+      appendRow(agentId, "tool-result", {
+        tool: call.name,
+        callId: call.callId,
+        output: finished?.report || `${target.name} has the task (${finished?.status ?? "queued"}).`,
+        status: "done",
+        summary: `Delegated to ${target.name}`,
+        args,
+        taskId: task.id,
+      });
+      markTool(agentId, call.rowId, "done");
+      state.calls.shift();
+      continue;
+    }
+
     appendRow(agentId, "tool-result", {
       tool: call.name,
       callId: call.callId,
@@ -192,11 +282,48 @@ async function processCalls(agentId: string, state: PendingState) {
       args,
     });
     markTool(agentId, call.rowId, outcome.status === "done" ? "done" : "error");
+    if (outcome.status === "done" && (call.name === "send_outreach" || call.name === "send_match" || call.name === "shell")) {
+      recordAudit({
+        businessId: business.id,
+        userId: agent.userId,
+        agentId,
+        actor: agent.role,
+        kind: "tool.executed",
+        tool: call.name,
+        decision: "allow",
+        summary: outcome.summary,
+        refId: call.name === "shell" ? agent.orgoComputerId ?? "local" : "not-sent",
+      });
+    }
     state.calls.shift();
   }
 
   clearPending(agentId);
   return false;
+}
+
+function settleSpecialist(agent: Agent, text: string) {
+  if (agent.role === "orchestrator") return;
+  const task = openTaskForAgent(agent.id);
+  if (!task) return;
+  const report = text || `${agent.name} finished without a draft.`;
+  setTaskStatus(task.id, "reported", report);
+  tellOrchestrator(agent.businessId, `${agent.name}: ${report}`);
+  recordAudit({
+    businessId: agent.businessId,
+    userId: agent.userId,
+    agentId: agent.id,
+    actor: agent.role,
+    kind: "task.reported",
+    summary: report,
+    refId: task.id,
+  });
+}
+
+function tellOrchestrator(businessId: string, text: string) {
+  const orchestrator = listAgents(businessId).find((agent) => agent.role === "orchestrator");
+  if (!orchestrator) return;
+  appendRow(orchestrator.id, "notice", { tone: "info", text });
 }
 
 function expirePending(agentId: string, state: PendingState) {
@@ -206,6 +333,20 @@ function expirePending(agentId: string, state: PendingState) {
       setApprovalStatus(approval.id, "expired");
       const card = listRows(agentId).find((row) => row.id === approval.rowId);
       if (card) updateRow(card.id, { ...card.body, status: "expired" });
+      const agent = getAgent(agentId);
+      if (agent) {
+        recordAudit({
+          businessId: agent.businessId,
+          userId: agent.userId,
+          agentId,
+          actor: "owner",
+          kind: "approval.expired",
+          tool: approval.tool,
+          decision: "expired",
+          summary: "A new message closed the open approval.",
+          refId: approval.id,
+        });
+      }
     }
   }
   for (const call of state.calls) {
@@ -219,6 +360,30 @@ function expirePending(agentId: string, state: PendingState) {
     markTool(agentId, call.rowId, "denied");
   }
   clearPending(agentId);
+}
+
+function expireDeskChain(businessId: string) {
+  for (const member of listAgents(businessId)) {
+    const pending = getPending(member.id);
+    if (pending) expirePending(member.id, pending);
+  }
+  for (const approval of listPendingApprovalsForBusiness(businessId)) {
+    setApprovalStatus(approval.id, "expired");
+    const card = listRows(approval.agentId).find((row) => row.id === approval.rowId);
+    if (card) updateRow(card.id, { ...card.body, status: "expired" });
+    recordAudit({
+      businessId,
+      userId: approval.userId,
+      agentId: approval.agentId,
+      actor: "owner",
+      kind: "approval.expired",
+      tool: approval.tool,
+      decision: "expired",
+      summary: "A new message closed the open approval.",
+      refId: approval.id,
+    });
+  }
+  cancelOpenTasks(businessId, "Closed because a new owner message arrived.");
 }
 
 function markTool(agentId: string, rowId: string, status: string) {
@@ -236,14 +401,84 @@ function parseArgs(raw: string) {
   }
 }
 
-export function resolveApproval(userId: string, approvalId: string, decision: "allow" | "always" | "deny") {
+const APPROVAL_DECISIONS = new Set(["allow", "deny", "edit", "always"]);
+
+export function resolveApproval(
+  userId: string,
+  approvalId: string,
+  decision: string,
+  draft?: Record<string, string>,
+  expectedAgentId?: string,
+) {
+  if (!APPROVAL_DECISIONS.has(decision)) throw new Error("That decision is not allowed.");
   const approval = getApproval(approvalId);
   if (!approval || approval.userId !== userId) throw new Error("Approval not found.");
+  if (expectedAgentId && approval.agentId !== expectedAgentId) throw new Error("Approval not found.");
   if (approval.status !== "pending") return Promise.resolve();
-  const status = decision === "deny" ? "denied" : decision === "always" ? "always" : "allowed";
+  const agent = getAgent(approval.agentId);
+  if (!agent) throw new Error("Approval not found.");
+  if (decision === "allow" || decision === "always") assertDraftUnchanged(approval.agentId, approval.callId, draft);
+  if (decision === "edit") applyDraft(approval.agentId, approval.callId, draft);
+  const status = decision === "deny" ? "denied" : "allowed";
   setApprovalStatus(approval.id, status);
-  if (decision === "always") setPolicy(userId, approval.tool, "always_allow");
+  if (decision === "always") setActionPolicy(agent.businessId, agent.id, approval.tool, "always_allow");
   const card = listRows(approval.agentId).find((row) => row.id === approval.rowId);
-  if (card) updateRow(card.id, { ...card.body, status });
+  if (card) {
+    const nextBody: Record<string, unknown> = { ...card.body, status: decision === "edit" ? "edited" : status };
+    if (decision === "edit" && draft) {
+      const current = card.body.args && typeof card.body.args === "object" ? (card.body.args as Record<string, unknown>) : {};
+      nextBody.args = { ...current, ...draft };
+    }
+    updateRow(card.id, nextBody);
+  }
+  recordAudit({
+    businessId: agent.businessId,
+    userId,
+    agentId: agent.id,
+    actor: "owner",
+    kind: decision === "edit" ? "approval.edited" : decision === "deny" ? "approval.denied" : "approval.allowed",
+    tool: approval.tool,
+    decision,
+    summary:
+      decision === "deny"
+        ? `Owner rejected ${agent.name}'s ${approval.tool}.`
+        : decision === "edit"
+          ? `Owner edited and approved ${agent.name}'s ${approval.tool}.`
+          : decision === "always"
+            ? `Owner always-allowed ${agent.name}'s ${approval.tool} on this business.`
+            : `Owner approved ${agent.name}'s ${approval.tool}.`,
+    refId: approval.id,
+  });
   return enqueue(approval.agentId, { type: "resume" });
+}
+
+function assertDraftUnchanged(agentId: string, callId: string, draft?: Record<string, string>) {
+  if (!draft) return;
+  const state = getPending(agentId);
+  const call = state?.calls.find((item) => item.callId === callId);
+  if (!call) return;
+  const args = parseArgs(call.arguments);
+  const allowed = new Set(["to", "subject", "body", "command", "leadName", "tradieName", "purpose"]);
+  for (const [key, value] of Object.entries(draft)) {
+    if (!allowed.has(key) || typeof value !== "string") continue;
+    if (String(args[key] ?? "") !== value) {
+      throw new Error("Draft changed. Approve the edited draft.");
+    }
+  }
+}
+
+function applyDraft(agentId: string, callId: string, draft?: Record<string, string>) {
+  if (!draft) return;
+  const state = getPending(agentId);
+  if (!state) return;
+  const allowed = new Set(["to", "subject", "body", "command", "leadName", "tradieName", "purpose"]);
+  const call = state.calls.find((item) => item.callId === callId);
+  if (!call) return;
+  const args = parseArgs(call.arguments);
+  for (const [key, value] of Object.entries(draft)) {
+    if (!allowed.has(key) || typeof value !== "string") continue;
+    args[key] = value;
+  }
+  call.arguments = JSON.stringify(args);
+  setPending(agentId, state);
 }

@@ -125,6 +125,72 @@ export function getDb() {
   if (!businessCols.some((col) => col.name === "profile_json")) {
     next.exec("ALTER TABLE businesses ADD COLUMN profile_json TEXT");
   }
+  if (!businessCols.some((col) => col.name === "orgo_workspace_id")) {
+    next.exec("ALTER TABLE businesses ADD COLUMN orgo_workspace_id TEXT");
+  }
+  const agentCols = next.prepare("PRAGMA table_info(agents)").all() as { name: string }[];
+  if (!agentCols.some((col) => col.name === "specialty")) {
+    next.exec("ALTER TABLE agents ADD COLUMN specialty TEXT NOT NULL DEFAULT ''");
+  }
+  if (!agentCols.some((col) => col.name === "orgo_computer_id")) {
+    next.exec("ALTER TABLE agents ADD COLUMN orgo_computer_id TEXT");
+  }
+  if (!agentCols.some((col) => col.name === "tools_json")) {
+    next.exec("ALTER TABLE agents ADD COLUMN tools_json TEXT NOT NULL DEFAULT ''");
+  }
+  next.exec(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      from_agent_id TEXT NOT NULL,
+      to_agent_id TEXT NOT NULL,
+      instruction TEXT NOT NULL,
+      status TEXT NOT NULL,
+      report TEXT NOT NULL DEFAULT '',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS audit_events (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      agent_id TEXT,
+      actor TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      tool TEXT,
+      decision TEXT,
+      summary TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS audit_events_business ON audit_events (business_id, created_at);
+    CREATE TABLE IF NOT EXISTS action_policies (
+      business_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      tool TEXT NOT NULL,
+      mode TEXT NOT NULL,
+      PRIMARY KEY (business_id, agent_id, tool)
+    );
+    CREATE TABLE IF NOT EXISTS app_connections (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      toolkit TEXT NOT NULL,
+      connected_account_id TEXT,
+      status TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      UNIQUE (business_id, toolkit)
+    );
+  `);
+  const auditCols = next.prepare("PRAGMA table_info(audit_events)").all() as { name: string }[];
+  if (!auditCols.some((col) => col.name === "ref_id")) {
+    next.exec("ALTER TABLE audit_events ADD COLUMN ref_id TEXT");
+  }
+  const dupes = next
+    .prepare("SELECT business_id, role FROM agents GROUP BY business_id, role HAVING COUNT(*) > 1")
+    .all() as unknown[];
+  if (dupes.length === 0) {
+    next.exec("CREATE UNIQUE INDEX IF NOT EXISTS agents_business_role ON agents (business_id, role)");
+  }
   database = next;
   seedSample();
   return next;

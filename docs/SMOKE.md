@@ -15,9 +15,9 @@ When `NEXT_PUBLIC_SITE_URL` is not localhost and `CNSTRCT_DATA_DIR` is under `/t
 3. **`/triage`** — Eight questions save; then redirect to opportunities.
 4. **`/opportunities`** — Three cards; **home-services** and **mobile-detailing** are **Live** and start constructing. **estate-clearance** is **Soon**.
 5. **`/constructing?template=home-services`** — Finishes and lands on command center with a new business.
-6. Repeat **Start new business** to try **`/constructing?template=mobile-detailing`** — Riley + Sam agents, detailing site copy.
-7. **`/command-center`** — Lists your businesses with workspace and public site links. Below `lg` (1024px), use the bottom tab bar (Businesses, Profile, Settings); from `lg` up, the 240px left rail returns.
-8. **`/workspace/[businessId]`** — Chat, approvals, computer, leads load for the chosen desk.
+6. Repeat **Start new business** to try **`/constructing?template=mobile-detailing`**. Team is Quinn, Riley, and Sam.
+7. **`/command-center`** — Lists your businesses with team names, Gmail and Orgo status, workspace and public site links. Below `lg` (1024px), use the bottom tab bar (Businesses, Profile, Settings); from `lg` up, the 240px left rail returns.
+8. **`/workspace/[businessId]`** — Chat is Quinn only. Team, connections, and computers show real statuses (`not configured` with no keys). Routines say planned. Message Quinn, then approve or reject the specialist card. No timer fires a routine.
 9. **`/b/[slug]`** — Public site and lead form for your business slug.
 10. **`/b/harbor-tradie-desk`** — Seeded sample desk always available (no prior session). Lead form saves to sqlite.
 

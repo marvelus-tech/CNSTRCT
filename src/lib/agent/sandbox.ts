@@ -4,7 +4,7 @@ import path from "node:path";
 import { dataDir } from "../db";
 import { searchDetailers, searchTradies } from "./directory";
 import { orgo } from "./orgo";
-import { getComputer, upsertComputer } from "../store";
+import { getAgent, getComputer, upsertComputer } from "../store";
 
 /**
  * Computer backend.
@@ -14,7 +14,24 @@ import { getComputer, upsertComputer } from "../store";
  * The local folder is the default on this machine.
  */
 
-const ALLOW = new Set(["ls", "cat", "mkdir", "head", "tail", "wc", "find", "printf", "echo", "pwd", "touch", "cp", "mv", "rm"]);
+const ALLOW = new Set(["ls", "cat", "mkdir", "head", "tail", "wc", "printf", "echo", "pwd", "touch", "cp", "mv", "rm"]);
+
+/** Flags that do not run another program or point a write at an arbitrary directory. `find` is omitted. */
+const SAFE_FLAGS: Record<string, Set<string>> = {
+  ls: new Set(["-l", "-a", "-h", "-1", "-la", "-al", "-lh", "-ahl", "-lah", "-hal"]),
+  cat: new Set(["-n", "-A", "-b", "-E", "-T", "-s", "-v"]),
+  mkdir: new Set(["-p", "-v"]),
+  head: new Set(["-n", "-c", "-q", "-v"]),
+  tail: new Set(["-n", "-c", "-q", "-v"]),
+  wc: new Set(["-l", "-w", "-c", "-m", "-L"]),
+  printf: new Set(),
+  echo: new Set(["-n", "-E"]),
+  pwd: new Set(["-L", "-P"]),
+  touch: new Set(),
+  cp: new Set(["-r", "-R", "-v", "-n"]),
+  mv: new Set(["-n", "-v"]),
+  rm: new Set(["-r", "-R", "-f", "-v", "-rf", "-fr", "-Rf", "-fR"]),
+};
 
 let dockerCache: boolean | null = null;
 
@@ -103,11 +120,64 @@ function appendTerminal(agentId: string, line: string) {
 }
 
 function blocked(command: string) {
-  if (/[|&;`$<>]/.test(command)) return "Pipes, redirects, and command substitution are off in this sandbox.";
-  if (/\b(curl|wget|nc|ncat|ssh|scp|sudo|python|node|npm|pnpm|pip|ruby|perl|php)\b/i.test(command)) {
+  if (/[\r\n]/.test(command)) return "Newlines are blocked. One command only.";
+  if (/[|&;`$<>\\]/.test(command)) return "Chaining, pipes, redirects, and substitution are blocked.";
+  if (/\b(curl|wget|nc|ncat|ssh|scp|sudo|python3?|python|node|npm|pnpm|pip|ruby|perl|php|bash|sh|zsh)\b/i.test(command)) {
     return "Network tools and interpreters are blocked. Outbound messages use an approval card instead.";
   }
   return null;
+}
+
+function executionFlag(token: string) {
+  const lower = token.toLowerCase();
+  if (/^--?(exec|execdir|okdir|delete)(=|$)/.test(lower)) return true;
+  if (lower === "-ok" || lower === "--ok" || lower.startsWith("-ok=") || lower.startsWith("--ok=")) return true;
+  if (/^--?fprint/.test(lower) || /^--?fprintf/.test(lower) || /^--?fls(=|$)/.test(lower)) return true;
+  return false;
+}
+
+function flagAllowed(bin: string, token: string) {
+  if (token === "--") return true;
+  if (SAFE_FLAGS[bin]?.has(token)) return true;
+  if ((bin === "head" || bin === "tail") && /^-(n|c)\d+$/.test(token)) return true;
+  if (bin === "ls" && /^-[1lah]+$/.test(token)) return true;
+  if (bin === "rm" && /^-[rRf]+$/.test(token)) return true;
+  if (bin === "wc" && /^-[lwcLm]+$/.test(token)) return true;
+  return false;
+}
+
+function pathEscapes(token: string) {
+  if (token.startsWith("/") || token.startsWith("~")) return true;
+  return token.split(/[\\/]/).includes("..");
+}
+
+/**
+ * Allowlisted executable plus safe flags. `always` does not skip this.
+ * `find` is not allowed: `-exec`, `-ok`, `-delete`, and `-fprint` run other programs or write outside the folder.
+ */
+export function planCommand(command: string): { ok: true; argv: string[] } | { ok: false; reason: string } {
+  const reason = blocked(command);
+  if (reason) return { ok: false, reason };
+  const argv = tokenize(command.trim());
+  const bin = argv[0];
+  if (!bin || !ALLOW.has(bin)) {
+    return { ok: false, reason: `Command not allowed: ${bin || command}. Interpreters and network tools are blocked.` };
+  }
+  for (const token of argv.slice(1)) {
+    if (executionFlag(token)) {
+      return { ok: false, reason: "Flags that run another program or write an outside file are blocked." };
+    }
+    if (token.startsWith("-")) {
+      if (!flagAllowed(bin, token)) return { ok: false, reason: `Flag not allowed: ${token}.` };
+      continue;
+    }
+    if (pathEscapes(token)) return { ok: false, reason: "Paths must stay inside this folder." };
+  }
+  return { ok: true, argv };
+}
+
+export function commandLine(argv: string[]) {
+  return argv.map((token) => `'${token.replaceAll("'", `'"'"'`)}'`).join(" ");
 }
 
 function tokenize(segment: string) {
@@ -118,47 +188,31 @@ function tokenize(segment: string) {
   return tokens;
 }
 
-function runLocal(root: string, command: string): Promise<{ exitCode: number; output: string }> {
-  const parts = command.split("&&").map((part) => part.trim()).filter(Boolean);
-  return (async () => {
-    let output = "";
-    for (const part of parts) {
-      const tokens = tokenize(part);
-      const bin = tokens[0];
-      if (!bin || !ALLOW.has(bin)) {
-        return { exitCode: 126, output: `Command not allowed: ${bin || part}. Try cnstrct-search, ls, cat, or mkdir.` };
-      }
-      if (bin === "rm" && tokens.some((token) => token === "/" || token.includes(".."))) {
-        return { exitCode: 126, output: "Refusing to delete outside this folder." };
-      }
-      const result = await new Promise<{ code: number; output: string }>((resolve) => {
-        const child = spawn(bin, tokens.slice(1), {
-          cwd: root,
-          env: { PATH: "/usr/bin:/bin", HOME: root, LANG: "C" } as unknown as NodeJS.ProcessEnv,
-          timeout: 8_000,
-        });
-        let text = "";
-        child.stdout.on("data", (chunk) => {
-          text += String(chunk);
-        });
-        child.stderr.on("data", (chunk) => {
-          text += String(chunk);
-        });
-        child.on("close", (code) => resolve({ code: code ?? 1, output: text }));
-        child.on("error", (error) => resolve({ code: 127, output: error.message }));
-      });
-      output += result.output;
-      if (result.code !== 0) return { exitCode: result.code, output: output.slice(0, 8000) };
-    }
-    return { exitCode: 0, output: output.slice(0, 8000) || "(no output)" };
-  })();
+function runLocal(root: string, argv: string[]): Promise<{ exitCode: number; output: string }> {
+  const bin = argv[0]!;
+  return new Promise((resolve) => {
+    const child = spawn(bin, argv.slice(1), {
+      cwd: root,
+      env: { PATH: "/usr/bin:/bin", HOME: root, LANG: "C" } as unknown as NodeJS.ProcessEnv,
+      timeout: 8_000,
+    });
+    let text = "";
+    child.stdout.on("data", (chunk) => {
+      text += String(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      text += String(chunk);
+    });
+    child.on("close", (code) => resolve({ exitCode: code ?? 1, output: text.slice(0, 8000) || "(no output)" }));
+    child.on("error", (error) => resolve({ exitCode: 127, output: error.message }));
+  });
 }
 
-async function runDocker(root: string, command: string) {
+async function runDocker(root: string, argv: string[]) {
   return new Promise<{ exitCode: number; output: string }>((resolve) => {
     const child = spawn(
       "docker",
-      ["run", "--rm", "--network", "none", "-v", `${root}:/work`, "-w", "/work", "alpine:3.20", "sh", "-c", command],
+      ["run", "--rm", "--network", "none", "-v", `${root}:/work`, "-w", "/work", "alpine:3.20", ...argv],
       { timeout: 20_000 },
     );
     let text = "";
@@ -173,48 +227,50 @@ async function runDocker(root: string, command: string) {
   });
 }
 
-const orgoIds = new Map<string, string>();
-
 export async function execInSandbox(agentId: string, command: string, city = "the area") {
   const root = ensureWorkspace(agentId);
   const trimmed = command.trim();
   appendTerminal(agentId, `$ ${trimmed}`);
+  const orgoId = getAgent(agentId)?.orgoComputerId ?? null;
   if (trimmed.startsWith("cnstrct-search")) {
     const output = /detailers/i.test(trimmed) ? searchDetailers(city) : searchTradies(city);
     appendTerminal(agentId, output);
-    const provider = configuredProvider() === "orgo" ? "local" : configuredProvider();
-    upsertComputer(agentId, provider === "docker" ? "docker" : "local", "running", providerNote(provider === "docker" ? "docker" : "local"));
-    return { exitCode: 0, output, provider: provider as SandboxProvider };
+    if (!orgoId) {
+      const provider = configuredProvider() === "orgo" ? "local" : configuredProvider();
+      upsertComputer(agentId, provider === "docker" ? "docker" : "local", "running", providerNote(provider === "docker" ? "docker" : "local"));
+    }
+    return { exitCode: 0, output, provider: (orgoId ? "orgo" : "local") as SandboxProvider };
   }
-  const reason = blocked(trimmed);
-  if (reason) {
-    appendTerminal(agentId, reason);
-    upsertComputer(agentId, "local", "running", providerNote("local"));
-    return { exitCode: 126, output: reason, provider: "local" as const };
+  const plan = planCommand(trimmed);
+  if (!plan.ok) {
+    appendTerminal(agentId, plan.reason);
+    return { exitCode: 126, output: plan.reason, provider: (orgoId ? "orgo" : "local") as SandboxProvider };
   }
 
-  const wanted = configuredProvider();
-  if (wanted === "orgo") {
+  if (orgoId && process.env.ORGO_API_KEY) {
     try {
-      let id = orgoIds.get(agentId);
-      if (!id) {
-        const created = await orgo.createComputer(`cnstrct-${agentId.slice(-6)}`);
-        id = created.id;
-        orgoIds.set(agentId, id);
+      const info = await orgo.getComputer(orgoId);
+      if ((info.status ?? "").toLowerCase() !== "running") {
+        const resumed = await orgo.resume(orgoId);
+        if ((resumed.status ?? "").toLowerCase() !== "running") {
+          throw new Error("Orgo computer is not running yet.");
+        }
       }
-      const result = await orgo.bash(id, `cd /root && ${trimmed}`);
+      const result = await orgo.bash(orgoId, commandLine(plan.argv));
       const output = result.output || "(no output)";
       appendTerminal(agentId, output);
-      upsertComputer(agentId, "orgo", "running", providerNote("orgo"));
+      upsertComputer(agentId, "orgo", "connected", "Orgo Small computer. App secrets are not on this VM.");
       return { exitCode: result.exit_code ?? 0, output, provider: "orgo" as const };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Orgo failed";
-      appendTerminal(agentId, `Orgo unavailable (${message}). Using the local sandbox.`);
+      appendTerminal(agentId, `Orgo command failed (${message}). This computer was not switched to the local sandbox.`);
+      return { exitCode: 1, output: message, provider: "orgo" as const };
     }
   }
 
+  const wanted = configuredProvider();
   if (wanted === "docker") {
-    const result = await runDocker(root, trimmed);
+    const result = await runDocker(root, plan.argv);
     if (result.exitCode === 0 || !result.output.includes("Unable to find image")) {
       appendTerminal(agentId, result.output);
       upsertComputer(agentId, "docker", "running", providerNote("docker"));
@@ -223,7 +279,7 @@ export async function execInSandbox(agentId: string, command: string, city = "th
     appendTerminal(agentId, "Docker image unavailable. Using the local sandbox.");
   }
 
-  const result = await runLocal(root, trimmed);
+  const result = await runLocal(root, plan.argv);
   appendTerminal(agentId, result.output);
   upsertComputer(agentId, "local", "running", providerNote("local"));
   return { ...result, provider: "local" as const };

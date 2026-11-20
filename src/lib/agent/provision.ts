@@ -2,19 +2,31 @@ import { businessName, cityOf, type TemplateId } from "../copy";
 import { newId } from "../ids";
 import {
   getAgent,
+  getBusiness,
   insertAgent,
   insertBusiness,
   insertLead,
   insertRoutine,
   listAgents,
+  recordAudit,
+  setAgentOrgoComputer,
+  setAgentSpecialty,
+  setAgentTools,
+  setBusinessWorkspace,
   slugTaken,
   upsertComputer,
+  upsertConnection,
 } from "../store";
 import type { Agent, Business, Profile } from "../types";
-import { configuredProvider, ensureWorkspace, providerNote } from "./sandbox";
-import { runRoutine } from "./scheduler";
+import { ORGO_SMALL, orgoConfigured } from "./adapters";
+import { blueprintFor, validateBlueprint, type BusinessBlueprint, type BlueprintContext } from "./blueprint";
+import { orgo } from "./orgo";
+import { ensureWorkspace } from "./sandbox";
 
-const DAY = 24 * 60 * 60 * 1000;
+export const LOCAL_COMPUTER_NOTE =
+  "Orgo is not connected. This folder is a local sandbox, not an Orgo computer.";
+export const ORGO_COMPUTER_NOTE =
+  "Orgo Small computer (0.5 vCPU, 4 GB RAM, 20 GB disk). App secrets are not on this VM.";
 
 function slugify(input: string) {
   const base = input
@@ -32,137 +44,61 @@ function uniqueSlug(name: string) {
   return `${base}-${newId("s").slice(-4)}`;
 }
 
-interface DeskBlueprint {
-  scoutName: string;
-  scoutTitle: string;
-  scoutInstructions: (city: string) => string;
-  scoutRoutineName: string;
-  scoutRoutinePrompt: (city: string) => string;
-  scoutRoutineLabel: string;
-  matcherName: string;
-  matcherTitle: string;
-  matcherInstructions: (city: string) => string;
-  matcherRoutineName: string;
-  matcherRoutinePrompt: string;
-  matcherRoutineLabel: string;
-  exampleLead: (city: string) => { name: string; phone: string; address: string; service: string };
+function textOf(value: string | ((ctx: BlueprintContext) => string), ctx: BlueprintContext) {
+  return typeof value === "function" ? value(ctx) : value;
 }
 
-const BLUEPRINTS: Record<string, DeskBlueprint> = {
-  "home-services": {
-    scoutName: "Mara",
-    scoutTitle: "Tradie scout",
-    scoutInstructions: (city) =>
-      `Find tradies who work in ${city}. Save notes on your computer. Draft one partnership email and wait for approval before any send. Never spend money.`,
-    scoutRoutineName: "Weekday tradie sweep",
-    scoutRoutinePrompt: (city) =>
-      `Search tradies in ${city}, save notes/tradies.md, and draft one partnership email. Do not send it.`,
-    scoutRoutineLabel: "Weekdays at 8:00",
-    matcherName: "Jules",
-    matcherTitle: "Lead matcher",
-    matcherInstructions: (city) =>
-      `Read homeowner leads for ${city}. Save a short match note. Draft one introduction to a tradie and wait for approval. Example leads are not real customers.`,
-    matcherRoutineName: "New lead check",
-    matcherRoutinePrompt: "Read the newest homeowner lead, save a match note, and draft an introduction. Do not send it.",
-    matcherRoutineLabel: "Every morning",
-    exampleLead: (city) => ({
-      name: "Alex Rivera",
-      phone: "555-0100",
-      address: `12 Pine Street, ${city}`,
-      service: "Kitchen faucet leak",
-    }),
-  },
-  "mobile-detailing": {
-    scoutName: "Riley",
-    scoutTitle: "Partnership drafts",
-    scoutInstructions: (city) =>
-      `Find mobile detailers who serve ${city}. Save notes on your computer. Draft one shop partnership email and wait for approval before any send. Never spend money.`,
-    scoutRoutineName: "Weekday detailer sweep",
-    scoutRoutinePrompt: (city) =>
-      `Search detailers in ${city}, save notes/detailers.md, and draft one partnership email. Do not send it.`,
-    scoutRoutineLabel: "Weekdays at 8:00",
-    matcherName: "Sam",
-    matcherTitle: "Job match",
-    matcherInstructions: (city) =>
-      `Read driveway booking leads for ${city}. Save a short match note. Draft one introduction to a detailer and wait for approval. Example leads are not real customers.`,
-    matcherRoutineName: "New booking check",
-    matcherRoutinePrompt: "Read the newest driveway booking, save a match note, and draft an introduction. Do not send it.",
-    matcherRoutineLabel: "Every morning",
-    exampleLead: (city) => ({
-      name: "Jordan Lee",
-      phone: "555-0142",
-      address: `88 Maple Drive, ${city}`,
-      service: "Full exterior wash, Saturday 9am",
-    }),
-  },
-};
-
-function blueprintFor(templateId: string): DeskBlueprint {
-  return BLUEPRINTS[templateId] ?? BLUEPRINTS["home-services"]!;
-}
-
-export async function openDesk(
+export async function provisionBlueprint(
   userId: string,
   profile: Profile,
-  templateId: TemplateId | string = "home-services",
+  blueprint: BusinessBlueprint,
+  name?: string,
 ): Promise<{ business: Business; agents: Agent[] }> {
+  const check = validateBlueprint(blueprint);
+  if (!check.ok) throw new Error(check.reason);
   const city = cityOf(profile.location);
-  const name = businessName(profile, templateId as TemplateId);
-  const plan = blueprintFor(templateId);
+  const businessNameText = name ?? `${city} Desk`;
+  const ctx: BlueprintContext = { city, businessName: businessNameText };
   const business = insertBusiness({
     userId,
-    templateId,
-    name,
-    slug: uniqueSlug(name),
+    templateId: blueprint.templateId,
+    name: businessNameText,
+    slug: uniqueSlug(businessNameText),
     city,
     profileJson: JSON.stringify(profile),
+    orgoWorkspaceId: null,
   });
 
-  const scout = insertAgent({
-    businessId: business.id,
-    userId,
-    role: "scout",
-    name: plan.scoutName,
-    title: plan.scoutTitle,
-    instructions: plan.scoutInstructions(city),
-    status: "active",
-  });
-  const matcher = insertAgent({
-    businessId: business.id,
-    userId,
-    role: "matcher",
-    name: plan.matcherName,
-    title: plan.matcherTitle,
-    instructions: plan.matcherInstructions(city),
-    status: "active",
-  });
-
-  for (const agent of [scout, matcher]) {
+  const agents: Agent[] = [];
+  for (const role of blueprint.roles) {
+    const agent = insertAgent({
+      businessId: business.id,
+      userId,
+      role: role.role,
+      name: role.name,
+      title: role.title,
+      specialty: role.specialty,
+      instructions: role.instructions(ctx),
+      status: "active",
+      tools: role.tools,
+    });
     ensureWorkspace(agent.id);
-    const provider = configuredProvider();
-    upsertComputer(agent.id, provider, "running", providerNote(provider));
+    upsertComputer(agent.id, "local", "not_connected", LOCAL_COMPUTER_NOTE);
+    for (const routine of role.routines) {
+      insertRoutine({
+        agentId: agent.id,
+        name: routine.name,
+        prompt: textOf(routine.prompt, ctx),
+        scheduleLabel: routine.scheduleLabel,
+        intervalMs: routine.intervalMs,
+        enabled: true,
+        nextRunAt: Date.now() + routine.intervalMs,
+      });
+    }
+    agents.push(agent);
   }
 
-  const scoutRoutine = insertRoutine({
-    agentId: scout.id,
-    name: plan.scoutRoutineName,
-    prompt: plan.scoutRoutinePrompt(city),
-    scheduleLabel: plan.scoutRoutineLabel,
-    intervalMs: DAY,
-    enabled: true,
-    nextRunAt: null,
-  });
-  const matchRoutine = insertRoutine({
-    agentId: matcher.id,
-    name: plan.matcherRoutineName,
-    prompt: plan.matcherRoutinePrompt,
-    scheduleLabel: plan.matcherRoutineLabel,
-    intervalMs: DAY,
-    enabled: true,
-    nextRunAt: null,
-  });
-
-  const lead = plan.exampleLead(city);
+  const lead = blueprint.exampleLead(city);
   insertLead({
     businessId: business.id,
     name: lead.name,
@@ -171,12 +107,136 @@ export async function openDesk(
     service: lead.service,
     source: "example",
   });
-
-  await runRoutine(scoutRoutine.id);
-  await runRoutine(matchRoutine.id);
-
+  upsertConnection({
+    businessId: business.id,
+    toolkit: "gmail",
+    status: "not_configured",
+    connectedAccountId: null,
+  });
+  recordAudit({
+    businessId: business.id,
+    userId,
+    actor: "owner",
+    kind: "team.provisioned",
+    summary: `Provisioned ${agents.map((agent) => agent.name).join(", ")}. Routines are planned, not running.`,
+  });
+  await provisionOrgo(business, agents);
   return {
-    business,
-    agents: [getAgent(scout.id), getAgent(matcher.id)].filter((agent): agent is Agent => Boolean(agent)),
+    business: { ...business, orgoWorkspaceId: business.orgoWorkspaceId ?? null },
+    agents: agents.map((agent) => getAgent(agent.id) ?? agent),
   };
+}
+
+export async function openDesk(
+  userId: string,
+  profile: Profile,
+  templateId: TemplateId | string = "home-services",
+): Promise<{ business: Business; agents: Agent[] }> {
+  const blueprint = blueprintFor(templateId);
+  if (!blueprint) throw new Error("No blueprint for that template.");
+  const name = businessName(profile, templateId as TemplateId);
+  return provisionBlueprint(userId, profile, blueprint, name);
+}
+
+/**
+ * Older desks have scout and matcher only. Add Quinn so the workspace still has one owner thread.
+ * A business with zero agents (the seeded public sample) is left alone.
+ */
+export function ensureTeamShape(businessId: string): Agent[] {
+  const business = getBusiness(businessId);
+  if (!business) return [];
+  let agents = listAgents(businessId);
+  if (agents.length === 0) return agents;
+  const blueprint = blueprintFor(business.templateId);
+  if (!agents.some((agent) => agent.role === "orchestrator")) {
+    const role = blueprint?.roles.find((item) => item.role === "orchestrator");
+    const ctx: BlueprintContext = { city: business.city, businessName: business.name };
+    let created;
+    try {
+      created = insertAgent({
+        businessId: business.id,
+        userId: business.userId,
+        role: "orchestrator",
+        name: role?.name ?? "Quinn",
+        title: role?.title ?? "Chief of staff",
+        specialty: role?.specialty ?? "Routes the owner's requests to the specialists",
+        instructions: role
+          ? role.instructions(ctx)
+          : "You are the only agent the owner messages. Delegate work. Do not send, spend, or use a computer.",
+        status: "active",
+        tools: role?.tools ?? ["delegate", "list_leads"],
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (!message.includes("UNIQUE")) throw error;
+      return listAgents(businessId);
+    }
+    const routine = role?.routines[0];
+    insertRoutine({
+      agentId: created.id,
+      name: routine?.name ?? "Morning owner brief",
+      prompt: routine ? textOf(routine.prompt, ctx) : "Summarize queued specialist work. Do not send anything.",
+      scheduleLabel: routine?.scheduleLabel ?? "Every morning",
+      intervalMs: routine?.intervalMs ?? 86_400_000,
+      enabled: true,
+      nextRunAt: Date.now() + (routine?.intervalMs ?? 86_400_000),
+    });
+    ensureWorkspace(created.id);
+    upsertComputer(created.id, "local", "not_connected", LOCAL_COMPUTER_NOTE);
+    recordAudit({
+      businessId: business.id,
+      userId: business.userId,
+      agentId: created.id,
+      actor: "orchestrator",
+      kind: "team.backfilled",
+      summary: `Added ${created.name} so this existing desk has an owner-facing orchestrator.`,
+    });
+    agents = listAgents(businessId);
+  }
+  if (blueprint) {
+    for (const agent of agents) {
+      const role = blueprint.roles.find((item) => item.role === agent.role);
+      if (!role) continue;
+      if (!agent.specialty) setAgentSpecialty(agent.id, role.specialty);
+      if (!agent.tools.length) setAgentTools(agent.id, role.tools);
+    }
+  }
+  return listAgents(businessId);
+}
+
+async function provisionOrgo(business: Business, agents: Agent[]) {
+  if (!orgoConfigured()) return;
+  const specialists = agents.filter((agent) => agent.role !== "orchestrator");
+  try {
+    let workspaceId = business.orgoWorkspaceId || "";
+    if (!workspaceId) {
+      const created = await orgo.createWorkspace(`cnstrct-${business.id}`);
+      workspaceId = created.id;
+      setBusinessWorkspace(business.id, workspaceId);
+    }
+    for (const agent of specialists) {
+      const name = `${agent.role}-${agent.id.slice(-8)}`.slice(0, 80);
+      const computer = await orgo.createComputer({ workspaceId, name });
+      setAgentOrgoComputer(agent.id, computer.id);
+      upsertComputer(agent.id, "orgo", "connected", ORGO_COMPUTER_NOTE);
+      recordAudit({
+        businessId: business.id,
+        userId: business.userId,
+        agentId: agent.id,
+        actor: agent.role,
+        kind: "computer.created",
+        summary: `${agent.name} has Orgo computer ${computer.id} (${ORGO_SMALL.label}). Secrets were not synced.`,
+        refId: computer.id,
+      });
+    }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Orgo create failed";
+    recordAudit({
+      businessId: business.id,
+      userId: business.userId,
+      actor: "owner",
+      kind: "computer.create_failed",
+      summary: `Orgo computer was not created. ${detail}`,
+    });
+  }
 }

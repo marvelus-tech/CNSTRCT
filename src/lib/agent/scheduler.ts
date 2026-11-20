@@ -1,4 +1,4 @@
-import { getRoutine, markRoutineRan, dueRoutines } from "../store";
+import { getAgent, getRoutine, insertTask, listAgents, markRoutineRan, recordAudit } from "../store";
 import { enqueue } from "./loop";
 
 /**
@@ -9,23 +9,53 @@ import { enqueue } from "./loop";
  */
 
 export async function runRoutine(id: string) {
+  return queueRoutine(id);
+}
+
+/**
+ * Owner-triggered only. The process timer is gone so a routine cannot fire
+ * because the server stayed up. Queueing still runs the same turn loop.
+ */
+export async function queueRoutine(id: string) {
   const routine = getRoutine(id);
   if (!routine || !routine.enabled) return;
+  const agent = getAgent(routine.agentId);
+  if (!agent) return;
   markRoutineRan(id, Date.now() + routine.intervalMs);
-  return enqueue(routine.agentId, {
-    type: "routine",
-    routineId: routine.id,
-    name: routine.name,
-    prompt: routine.prompt,
+  if (agent.role === "orchestrator") {
+    recordAudit({
+      businessId: agent.businessId,
+      userId: agent.userId,
+      agentId: agent.id,
+      actor: "owner",
+      kind: "routine.queued",
+      summary: `Queued ${routine.name} on ${agent.name}.`,
+    });
+    return enqueue(agent.id, {
+      type: "routine",
+      routineId: routine.id,
+      name: routine.name,
+      prompt: routine.prompt,
+    });
+  }
+  const orchestrator = listAgents(agent.businessId).find((item) => item.role === "orchestrator");
+  const task = insertTask({
+    businessId: agent.businessId,
+    fromAgentId: orchestrator?.id ?? agent.id,
+    toAgentId: agent.id,
+    instruction: routine.prompt,
   });
+  recordAudit({
+    businessId: agent.businessId,
+    userId: agent.userId,
+    agentId: agent.id,
+    actor: "owner",
+    kind: "routine.queued",
+    summary: `Queued ${routine.name} for ${agent.name}. It will not run on a timer.`,
+  });
+  return enqueue(agent.id, { type: "task", taskId: task.id, instruction: routine.prompt });
 }
 
 export function startScheduler() {
-  const scope = globalThis as typeof globalThis & { __cnstrctScheduler?: ReturnType<typeof setInterval> };
-  if (scope.__cnstrctScheduler) return;
-  const timer = setInterval(() => {
-    for (const routine of dueRoutines()) void runRoutine(routine.id);
-  }, 30_000);
-  timer.unref?.();
-  scope.__cnstrctScheduler = timer;
+  // Planned routines are visible in the workspace. Nothing here executes them.
 }
