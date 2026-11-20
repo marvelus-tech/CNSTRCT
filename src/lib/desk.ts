@@ -84,7 +84,7 @@ export function loadDesk(userId: string, businessId?: string) {
       size: agent.role === "orchestrator" ? ("none" as const) : ("Small" as const),
       localNote:
         agent.role === "orchestrator"
-          ? "Quinn does not get an Orgo computer."
+          ? `${agent.name} does not get an Orgo computer.`
           : agent.computer.note,
       terminal: agent.computer.terminal,
       files: agent.computer.files,

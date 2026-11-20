@@ -1,9 +1,9 @@
 export const SITE_NAME = "BizOS";
 
-export const HOME_TITLE = "BizOS app | Start a real business with almost nothing";
+export const HOME_TITLE = "BizOS | Your founding team ships on your desk today";
 
 export const HOME_DESCRIPTION =
-  "BizOS gives you an orchestrator and specialists to start a real micro-business. Short triage, a path that fits you, and you approve every outbound draft.";
+  "BizOS finds a business that fits you, then starts your founding bots on your desk. Less guesswork, less friction. You approve every draft before it ships.";
 
 export const TRIAGE_TITLE = "BizOS onboarding | Your skills, cash, space, and city";
 

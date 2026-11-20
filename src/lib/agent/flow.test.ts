@@ -69,7 +69,7 @@ test("mobile detailing desk provisions Riley and Sam", async () => {
   assert.equal(desk.business.name, "Austin Driveway Detail");
   assert.deepEqual(
     desk.agents.map((agent) => agent.name).sort(),
-    ["Quinn", "Riley", "Sam"],
+    ["Bizzie", "Riley", "Sam"],
   );
 });
 

@@ -10,13 +10,13 @@ const STEPS_BY_TEMPLATE: Record<string, readonly string[]> = {
   "home-services": [
     "Blueprint from your answers",
     "Public site and lead form",
-    "Agents Mara and Jules",
+    "Your founding bots",
     "Routines and approval cards",
   ],
   "mobile-detailing": [
     "Blueprint from your answers",
     "Public booking page and lead form",
-    "Agents Riley and Sam",
+    "Your founding bots",
     "Routines and approval cards",
   ],
 };

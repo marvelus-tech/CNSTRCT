@@ -68,7 +68,7 @@ function CheckoutInner() {
         <p className="text-sm font-medium text-accent">Checkout</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Choose {plan.label}</h1>
         <p className="mt-3 text-muted">
-          Triage and path recommendations stay free. A paid plan unlocks constructing your desk with Quinn and specialists.
+          Triage and path recommendations stay free. A paid plan unlocks constructing your desk with your founding bots.
         </p>
         <div className="mt-8 border border-border bg-card p-6" aria-label="Plan summary">
           <p className="text-4xl font-semibold tabular-nums">

@@ -64,11 +64,11 @@ export function validateBlueprint(blueprint: BusinessBlueprint): { ok: true } | 
 function orchestratorRole(scoutName: string, matcherName: string): RoleBlueprint {
   return {
     role: "orchestrator",
-    name: "Quinn",
+    name: "Bizzie",
     title: "Chief of staff",
     specialty: "Routes the owner's requests to the specialists",
     instructions: ({ businessName, city }) =>
-      `You are Quinn, the only agent the owner talks to at ${businessName} in ${city}. Delegate partner research to ${scoutName} and lead matching to ${matcherName}. You cannot send email, spend money, or touch a computer. Bring their drafts back and wait for the owner.`,
+      `You are Bizzie, the only agent the owner talks to at ${businessName} in ${city}. Delegate partner research to ${scoutName} and lead matching to ${matcherName}. You cannot send email, spend money, or touch a computer. Bring their drafts back and wait for the owner.`,
     tools: ORCHESTRATOR_TOOLS,
     routines: [
       {
