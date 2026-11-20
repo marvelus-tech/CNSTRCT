@@ -51,21 +51,26 @@ export function HeroCrosshairShowcase() {
       aria-label="Custom-made business examples"
     >
       <div className="hero-artifact" data-reduced-motion={reducedMotion || undefined}>
-        <div className="hero-artifact__color-field" aria-hidden />
-        <div className="hero-artifact__core">
-          <Image
-            src={slide.src}
-            alt={slide.alt}
-            fill
-            sizes="(max-width: 767px) 78vw, 460px"
-            className="hero-artifact__image"
-            preload={slideIndex === 0}
-            style={{ opacity: imageVisible ? 1 : 0 }}
-          />
-          <span className="hero-artifact__image-tint" aria-hidden />
+        <span className="hero-artifact__shadow" aria-hidden />
+        <span className="hero-artifact__top" aria-hidden />
+        <span className="hero-artifact__side" aria-hidden />
+        <div className="hero-artifact__face">
+          <div className="hero-artifact__color-field" aria-hidden />
+          <div className="hero-artifact__core">
+            <Image
+              src={slide.src}
+              alt={slide.alt}
+              fill
+              sizes="(max-width: 767px) 78vw, 460px"
+              className="hero-artifact__image"
+              preload={slideIndex === 0}
+              style={{ opacity: imageVisible ? 1 : 0 }}
+            />
+            <span className="hero-artifact__image-tint" aria-hidden />
+          </div>
+          <span className="hero-artifact__frost" aria-hidden />
+          <span className="hero-artifact__refraction" aria-hidden />
         </div>
-        <span className="hero-artifact__frost" aria-hidden />
-        <span className="hero-artifact__refraction" aria-hidden />
       </div>
       <span className="sr-only">{slide.label}</span>
     </div>
