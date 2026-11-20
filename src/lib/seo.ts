@@ -3,7 +3,7 @@ export const SITE_NAME = "CNSTRCT";
 export const HOME_TITLE = "CNSTRCT | Start a real business with almost nothing";
 
 export const HOME_DESCRIPTION =
-  "CNSTRCT helps people with little cash start a real micro-business. Answer a short triage, pick a path that fits you, and approve every message agents draft.";
+  "CNSTRCT gives you an orchestrator and specialists to start a real micro-business. Short triage, a path that fits you, and you approve every outbound draft.";
 
 export const TRIAGE_TITLE = "CNSTRCT onboarding | Skills, cash, space, and city";
 

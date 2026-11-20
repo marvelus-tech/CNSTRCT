@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroCrosshairShowcase } from "@/components/hero-crosshair-showcase";
+import { LandingProofStrip } from "@/components/landing-proof-strip";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { Wordmark } from "@/components/wordmark";
@@ -57,6 +58,10 @@ export default function HomePage() {
               <h1 className="max-w-xl text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-foreground sm:text-4xl sm:leading-[1.08] md:text-6xl md:leading-[1.05]">
                 Spin up a real business from almost nothing.
               </h1>
+              <p className="mt-4 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
+                The work is shifting to agents. Leaders are wiring orchestrators and specialists into daily
+                operations. CNSTRCT gives you that desk on day one.
+              </p>
               <div className="mt-8">
                 <Button size="lg" asChild>
                   <Link href="/triage">See what fits you</Link>
@@ -68,6 +73,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <LandingProofStrip />
         <section className="border-y border-border bg-card px-5 py-14 md:px-10">
           <ol className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
             {[
@@ -77,7 +83,7 @@ export default function HomePage() {
               ],
               [
                 "Custom engine matches and presents suitable business ideas",
-                "CNSTRCT surfaces paths that fit you—not a one-size-fits-all template.",
+                "CNSTRCT surfaces paths that fit you, not a one-size-fits-all template.",
               ],
               [
                 "Build it and start your business journey",

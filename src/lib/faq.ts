@@ -14,4 +14,9 @@ export const FAQS = [
     answer:
       "No. Partnership notes and match introductions stop on an approval card. Until you choose Allow, nothing is marked sent. With no email provider configured, an approval only writes a file on the agent computer.",
   },
+  {
+    question: "Why agents instead of another chatbot?",
+    answer:
+      "A chatbot answers one thread. CNSTRCT gives you an orchestrator you talk to, specialists that do focused work behind it, and approval gates before anything sensitive is marked sent. You can connect more apps over time; in this MVP, outbound actions still stop on your approval card.",
+  },
 ];
