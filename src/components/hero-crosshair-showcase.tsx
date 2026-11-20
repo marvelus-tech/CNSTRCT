@@ -1,329 +1,73 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { HERO_BUSINESS_SLIDES, HERO_CROSSHAIR_COORDS } from "@/lib/hero-business-slides";
+import { useEffect, useRef, useState } from "react";
+import { HERO_BUSINESS_SLIDES } from "@/lib/hero-business-slides";
 
-const FADE_MS = 380;
-const MOVE_MS = 1100;
-const HOLD_MS = 320;
-const DISPLAY_MS = 2400;
-/** Crosshair-only beat on first paint before image/caption mount. */
-const INITIAL_EMPTY_MS = 650;
-/** Fallback half-extent (percent of panel) until content is measured. */
-const VOID_GAP_PCT = 5.2;
-/** Extra clearance between line ends and measured content box (each side). */
-const VOID_PADDING_PX = 4;
-
-const MOVE_EASE = "cubic-bezier(0.4, 0, 0.15, 1)";
-const POSITION_TRANSITION = `left ${MOVE_MS}ms ${MOVE_EASE}, top ${MOVE_MS}ms ${MOVE_EASE}, width ${MOVE_MS}ms ${MOVE_EASE}, height ${MOVE_MS}ms ${MOVE_EASE}`;
-
-function clampCoord(value: number) {
-  return Math.min(88, Math.max(12, value));
-}
+const DISPLAY_MS = 5200;
+const FADE_MS = 700;
 
 export function HeroCrosshairShowcase() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
-  const [coordIndex, setCoordIndex] = useState(0);
-  const [imageVisible, setImageVisible] = useState(false);
-  const [contentMounted, setContentMounted] = useState(false);
-  const timeoutsRef = useRef<number[]>([]);
-  const initialRevealAfterRef = useRef(0);
-  const slideIndexRef = useRef(0);
-  const coordIndexRef = useRef(0);
-  const runCycleRef = useRef<() => void>(() => {});
-  const slideReadyRef = useRef(false);
-  const pendingRevealRef = useRef<(() => void) | null>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [voidHalfPct, setVoidHalfPct] = useState({ w: 0, h: 0 });
-
+  const [imageVisible, setImageVisible] = useState(true);
+  const timeoutRef = useRef<number | null>(null);
   const slide = HERO_BUSINESS_SLIDES[slideIndex] ?? HERO_BUSINESS_SLIDES[0];
-  const coord = reducedMotion
-    ? HERO_CROSSHAIR_COORDS[0]
-    : (HERO_CROSSHAIR_COORDS[coordIndex] ?? HERO_CROSSHAIR_COORDS[0]);
-
-  const clearTimeouts = useCallback(() => {
-    timeoutsRef.current.forEach((id) => window.clearTimeout(id));
-    timeoutsRef.current = [];
-  }, []);
-
-  const schedule = useCallback((fn: () => void, ms: number) => {
-    const id = window.setTimeout(fn, ms);
-    timeoutsRef.current.push(id);
-  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setReducedMotion(mq.matches);
+    const apply = () => {
+      setReducedMotion(mq.matches);
+      if (mq.matches) {
+        setSlideIndex(0);
+        setImageVisible(true);
+      }
+    };
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  const revealWhenAllowed = useCallback(
-    (reveal: () => void) => {
-      const delay = Math.max(0, initialRevealAfterRef.current - Date.now());
-      if (delay > 0) {
-        schedule(reveal, delay);
-        return;
-      }
-      reveal();
-    },
-    [schedule],
-  );
-
-  const tryRevealAfterSwap = useCallback(() => {
-    const reveal = () => {
-      pendingRevealRef.current = null;
-      setContentMounted(true);
-      setImageVisible(true);
-      schedule(() => {
-        runCycleRef.current();
-      }, DISPLAY_MS);
-    };
-    if (slideReadyRef.current) {
-      revealWhenAllowed(reveal);
-    } else {
-      pendingRevealRef.current = () => revealWhenAllowed(reveal);
-    }
-  }, [revealWhenAllowed, schedule]);
-
-  const runCycle = useCallback(() => {
-    clearTimeouts();
-    setImageVisible(false);
-
-    const nextCoord = (coordIndexRef.current + 1) % HERO_CROSSHAIR_COORDS.length;
-    const nextSlide = (slideIndexRef.current + 1) % HERO_BUSINESS_SLIDES.length;
-
-    schedule(() => {
-      coordIndexRef.current = nextCoord;
-      slideIndexRef.current = nextSlide;
-      setCoordIndex(nextCoord);
-      slideReadyRef.current = false;
-      setSlideIndex(nextSlide);
-
-      schedule(() => {
-        schedule(tryRevealAfterSwap, HOLD_MS);
-      }, MOVE_MS);
-    }, FADE_MS);
-  }, [clearTimeouts, schedule, tryRevealAfterSwap]);
-
   useEffect(() => {
-    runCycleRef.current = runCycle;
-  }, [runCycle]);
-
-  const revealFirstSlide = useCallback(() => {
-    const reveal = () => {
-      pendingRevealRef.current = null;
-      setContentMounted(true);
-      setImageVisible(true);
-      if (!reducedMotion) {
-        schedule(() => runCycle(), DISPLAY_MS);
-      }
-    };
-    if (slideReadyRef.current) {
-      revealWhenAllowed(reveal);
-    } else {
-      pendingRevealRef.current = () => revealWhenAllowed(reveal);
-    }
-  }, [reducedMotion, revealWhenAllowed, schedule, runCycle]);
-
-  useEffect(() => {
-    initialRevealAfterRef.current = Date.now() + INITIAL_EMPTY_MS;
-    slideReadyRef.current = false;
-    const firstSrc = HERO_BUSINESS_SLIDES[0]?.src;
-    if (!firstSrc) return;
-    const preload = new window.Image();
-    preload.src = firstSrc;
-    const onReady = () => {
-      slideReadyRef.current = true;
-      pendingRevealRef.current?.();
-    };
-    preload.onload = onReady;
-    if (preload.complete) onReady();
-    return () => {
-      preload.onload = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (reducedMotion) {
-      revealFirstSlide();
-      return () => clearTimeouts();
-    }
-    revealFirstSlide();
-    return () => clearTimeouts();
-  }, [reducedMotion, clearTimeouts, revealFirstSlide]);
-
-  const measureVoid = useCallback(() => {
-    const panel = panelRef.current;
-    const content = contentRef.current;
-    if (!panel || !content) return;
-
-    const panelWidth = panel.clientWidth;
-    const panelHeight = panel.clientHeight;
-    const contentWidth = content.offsetWidth;
-    const contentHeight = content.offsetHeight;
-
-    if (panelWidth <= 0 || panelHeight <= 0 || contentWidth <= 0 || contentHeight <= 0) {
-      return;
-    }
-
-    const paddedW = contentWidth + VOID_PADDING_PX * 2;
-    const paddedH = contentHeight + VOID_PADDING_PX * 2;
-
-    setVoidHalfPct({
-      w: (paddedW / 2 / panelWidth) * 100,
-      h: (paddedH / 2 / panelHeight) * 100,
-    });
-  }, []);
-
-  useEffect(() => {
-    measureVoid();
-
-    const panel = panelRef.current;
-    const content = contentRef.current;
-    if (!panel || !content) return;
-
-    const ro = new ResizeObserver(() => measureVoid());
-    ro.observe(panel);
-    ro.observe(content);
-
-    const onWindowResize = () => measureVoid();
-    window.addEventListener("resize", onWindowResize);
+    if (reducedMotion) return;
+    const intervalId = window.setInterval(() => {
+      setImageVisible(false);
+      timeoutRef.current = window.setTimeout(() => {
+        setSlideIndex((current) => (current + 1) % HERO_BUSINESS_SLIDES.length);
+        setImageVisible(true);
+      }, FADE_MS);
+    }, DISPLAY_MS);
 
     return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", onWindowResize);
+      window.clearInterval(intervalId);
+      if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
     };
-  }, [measureVoid, slideIndex, contentMounted]);
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => measureVoid());
-    return () => cancelAnimationFrame(id);
-  }, [slideIndex, imageVisible, measureVoid]);
-
-  const x = clampCoord(coord.x);
-  const y = clampCoord(coord.y);
-  const halfWpct = voidHalfPct.w > 0 ? voidHalfPct.w : VOID_GAP_PCT;
-  const halfHpct = voidHalfPct.h > 0 ? voidHalfPct.h : VOID_GAP_PCT;
-
-  const leftHWidth = Math.max(0, x - halfWpct);
-  const rightHLeft = Math.min(100, x + halfWpct);
-  const rightHWidth = Math.max(0, 100 - rightHLeft);
-  const topVHeight = Math.max(0, y - halfHpct);
-  const bottomVTop = Math.min(100, y + halfHpct);
-  const bottomVHeight = Math.max(0, 100 - bottomVTop);
-
-  const lineMotionStyle = reducedMotion ? undefined : { transition: POSITION_TRANSITION };
-  const anchorMotionStyle = reducedMotion
-    ? undefined
-  : {
-      transition: `left ${MOVE_MS}ms ${MOVE_EASE}, top ${MOVE_MS}ms ${MOVE_EASE}`,
-    };
-
-  const lineBase = "pointer-events-none absolute bg-foreground/22";
+  }, [reducedMotion]);
 
   return (
     <div
-      ref={panelRef}
-      className="hero-crosshair-panel relative min-h-[360px] w-full md:min-h-[480px]"
+      className="hero-artifact-stage"
       role="region"
-      aria-label="Business types BizOS can spin up"
+      aria-label="Custom-made business examples"
     >
-      <span
-        aria-hidden
-        className={`${lineBase} left-0 h-px`}
-        style={{
-          top: `${y}%`,
-          width: `${leftHWidth}%`,
-          transform: "translateY(-50%)",
-          ...lineMotionStyle,
-        }}
-      />
-      <span
-        aria-hidden
-        className={`${lineBase} h-px`}
-        style={{
-          left: `${rightHLeft}%`,
-          top: `${y}%`,
-          width: `${rightHWidth}%`,
-          transform: "translateY(-50%)",
-          ...lineMotionStyle,
-        }}
-      />
-      <span
-        aria-hidden
-        className={`${lineBase} top-0 w-px`}
-        style={{
-          left: `${x}%`,
-          height: `${topVHeight}%`,
-          transform: "translateX(-50%)",
-          ...lineMotionStyle,
-        }}
-      />
-      <span
-        aria-hidden
-        className={`${lineBase} w-px`}
-        style={{
-          left: `${x}%`,
-          top: `${bottomVTop}%`,
-          height: `${bottomVHeight}%`,
-          transform: "translateX(-50%)",
-          ...lineMotionStyle,
-        }}
-      />
-
-      <div
-        ref={contentRef}
-        className="pointer-events-none absolute flex flex-col items-center"
-        style={{
-          left: `${x}%`,
-          top: `${y}%`,
-          transform: "translate(-50%, -50%)",
-          ...anchorMotionStyle,
-        }}
-      >
-        {contentMounted ? (
-          <>
-            <div
-              className="relative shrink-0 overflow-hidden bg-background"
-              style={{
-                width: "var(--hero-void-size, 5.5rem)",
-                height: "var(--hero-void-size, 5.5rem)",
-                opacity: imageVisible ? 1 : 0,
-                visibility: imageVisible ? "visible" : "hidden",
-                transition: reducedMotion ? undefined : "opacity 0.38s ease",
-              }}
-            >
-              <Image
-                src={slide.src}
-                alt={slide.alt}
-                fill
-                sizes="(max-width: 768px) 56px, 88px"
-                className="object-cover"
-                priority={slideIndex === 0 && imageVisible}
-                onLoad={() => {
-                  slideReadyRef.current = true;
-                  pendingRevealRef.current?.();
-                }}
-              />
-            </div>
-            <p
-              className="landing-caption mt-2 max-w-[11rem] text-center"
-              style={{
-                opacity: imageVisible ? 1 : 0,
-                visibility: imageVisible ? "visible" : "hidden",
-                transition: reducedMotion ? undefined : "opacity 0.38s ease",
-              }}
-            >
-              {slide.label}
-            </p>
-          </>
-        ) : null}
+      <div className="hero-artifact" data-reduced-motion={reducedMotion || undefined}>
+        <div className="hero-artifact__color-field" aria-hidden />
+        <div className="hero-artifact__core">
+          <Image
+            src={slide.src}
+            alt={slide.alt}
+            fill
+            sizes="(max-width: 767px) 78vw, 460px"
+            className="hero-artifact__image"
+            preload={slideIndex === 0}
+            style={{ opacity: imageVisible ? 1 : 0 }}
+          />
+          <span className="hero-artifact__image-tint" aria-hidden />
+        </div>
+        <span className="hero-artifact__frost" aria-hidden />
+        <span className="hero-artifact__refraction" aria-hidden />
       </div>
+      <span className="sr-only">{slide.label}</span>
     </div>
   );
 }
