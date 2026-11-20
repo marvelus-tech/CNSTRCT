@@ -10,8 +10,7 @@ export function LandingPricing() {
     <LandingSection aria-label="BizOS pricing">
       <h2 className="landing-section-title">Plans to construct your desk</h2>
       <p className="landing-section-lead mt-2 max-w-2xl">
-        The questionnaire and path recommendations stay free. Constructing a digital business with founding bots and
-        specialists requires a paid plan.
+        Questionnaire free. You pay when BizOS spins up your bots and desk.
       </p>
       <ul className="mt-8 grid gap-4 md:grid-cols-2">
         {cards.map((plan) => (

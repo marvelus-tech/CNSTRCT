@@ -40,12 +40,12 @@ export const LANDING_PROOF_STATS: readonly LandingStat[] = [
   {
     kind: "product",
     value: "3",
-    label: "Digital workers on your desk: one orchestrator you talk to, two specialists behind it",
+    label: "Bots on your desk. They work. You approve.",
   },
 ] as const;
 
 export const LANDING_PROOF_KICKER =
-  "Bot-led businesses are pulling ahead on enterprise AI value. BizOS gives you the same shape: work gets done, nothing sensitive ships without your yes.";
+  "Bot-led businesses are pulling ahead. BizOS gives you the same shape: work gets done, nothing sensitive ships without your yes.";
 
 export const LANDING_PROOF_SOURCES: readonly { name: string; url: string }[] = [
   {

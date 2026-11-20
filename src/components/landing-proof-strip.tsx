@@ -13,7 +13,7 @@ export function LandingProofStrip() {
       className="[&>div]:max-w-6xl"
     >
       <h2 className="landing-section-title max-w-3xl">
-        The market already moved. Most owners are still behind.
+        Most people are still guessing. You do not have to.
       </h2>
       <ul className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {LANDING_PROOF_STATS.map((stat) => (
