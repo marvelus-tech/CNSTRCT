@@ -14,7 +14,24 @@ import { getAgent, getComputer, upsertComputer } from "../store";
  * The local folder is the default on this machine.
  */
 
-const ALLOW = new Set(["ls", "cat", "mkdir", "head", "tail", "wc", "find", "printf", "echo", "pwd", "touch", "cp", "mv", "rm"]);
+const ALLOW = new Set(["ls", "cat", "mkdir", "head", "tail", "wc", "printf", "echo", "pwd", "touch", "cp", "mv", "rm"]);
+
+/** Flags that do not run another program or point a write at an arbitrary directory. `find` is omitted. */
+const SAFE_FLAGS: Record<string, Set<string>> = {
+  ls: new Set(["-l", "-a", "-h", "-1", "-la", "-al", "-lh", "-ahl", "-lah", "-hal"]),
+  cat: new Set(["-n", "-A", "-b", "-E", "-T", "-s", "-v"]),
+  mkdir: new Set(["-p", "-v"]),
+  head: new Set(["-n", "-c", "-q", "-v"]),
+  tail: new Set(["-n", "-c", "-q", "-v"]),
+  wc: new Set(["-l", "-w", "-c", "-m", "-L"]),
+  printf: new Set(),
+  echo: new Set(["-n", "-E"]),
+  pwd: new Set(["-L", "-P"]),
+  touch: new Set(),
+  cp: new Set(["-r", "-R", "-v", "-n"]),
+  mv: new Set(["-n", "-v"]),
+  rm: new Set(["-r", "-R", "-f", "-v", "-rf", "-fr", "-Rf", "-fR"]),
+};
 
 let dockerCache: boolean | null = null;
 
@@ -111,7 +128,33 @@ function blocked(command: string) {
   return null;
 }
 
-/** Exact argv allowlist. Rejects chaining, newlines, and interpreters before any machine sees the string. */
+function executionFlag(token: string) {
+  const lower = token.toLowerCase();
+  if (/^--?(exec|execdir|okdir|delete)(=|$)/.test(lower)) return true;
+  if (lower === "-ok" || lower === "--ok" || lower.startsWith("-ok=") || lower.startsWith("--ok=")) return true;
+  if (/^--?fprint/.test(lower) || /^--?fprintf/.test(lower) || /^--?fls(=|$)/.test(lower)) return true;
+  return false;
+}
+
+function flagAllowed(bin: string, token: string) {
+  if (token === "--") return true;
+  if (SAFE_FLAGS[bin]?.has(token)) return true;
+  if ((bin === "head" || bin === "tail") && /^-(n|c)\d+$/.test(token)) return true;
+  if (bin === "ls" && /^-[1lah]+$/.test(token)) return true;
+  if (bin === "rm" && /^-[rRf]+$/.test(token)) return true;
+  if (bin === "wc" && /^-[lwcLm]+$/.test(token)) return true;
+  return false;
+}
+
+function pathEscapes(token: string) {
+  if (token.startsWith("/") || token.startsWith("~")) return true;
+  return token.split(/[\\/]/).includes("..");
+}
+
+/**
+ * Allowlisted executable plus safe flags. `always` does not skip this.
+ * `find` is not allowed: `-exec`, `-ok`, `-delete`, and `-fprint` run other programs or write outside the folder.
+ */
 export function planCommand(command: string): { ok: true; argv: string[] } | { ok: false; reason: string } {
   const reason = blocked(command);
   if (reason) return { ok: false, reason };
@@ -120,8 +163,15 @@ export function planCommand(command: string): { ok: true; argv: string[] } | { o
   if (!bin || !ALLOW.has(bin)) {
     return { ok: false, reason: `Command not allowed: ${bin || command}. Interpreters and network tools are blocked.` };
   }
-  if (bin === "rm" && argv.some((token) => token === "/" || token.includes(".."))) {
-    return { ok: false, reason: "Refusing to delete outside this folder." };
+  for (const token of argv.slice(1)) {
+    if (executionFlag(token)) {
+      return { ok: false, reason: "Flags that run another program or write an outside file are blocked." };
+    }
+    if (token.startsWith("-")) {
+      if (!flagAllowed(bin, token)) return { ok: false, reason: `Flag not allowed: ${token}.` };
+      continue;
+    }
+    if (pathEscapes(token)) return { ok: false, reason: "Paths must stay inside this folder." };
   }
   return { ok: true, argv };
 }

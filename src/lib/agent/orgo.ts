@@ -61,4 +61,7 @@ export const orgo = {
       timeout: 30,
     });
   },
+  deleteComputer(id: string) {
+    return call<{ success?: boolean }>("DELETE", `/computers/${id}`);
+  },
 };

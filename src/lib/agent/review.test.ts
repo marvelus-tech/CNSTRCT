@@ -220,3 +220,127 @@ test("blueprint tools are the runtime list, always is per agent, and start over 
   assert.ok(getBusiness(second.business.id));
   assert.ok(getProfile(user.id));
 });
+
+test("find -exec stays rejected, including when shell is always allowed", async () => {
+  const { planCommand, execInSandbox } = await import("./sandbox");
+  const { createUser, saveProfile, setActionPolicy } = await import("../store");
+  const { openDesk } = await import("./provision");
+  const { policyFor } = await import("./policy");
+  const { runTool } = await import("./tools");
+  const user = createUser({ email: "exec@cnstrct.local", name: "Exec" });
+  const local = { ...profile, userId: user.id };
+  saveProfile(local);
+  const { business, agents } = await openDesk(user.id, local);
+  const scout = agents.find((agent) => agent.role === "scout");
+  assert.ok(scout);
+  for (const command of [
+    "find . -exec /usr/bin/id {} +",
+    "find . -execdir /bin/id {} +",
+    "find . -ok id {} +",
+    "find . -delete",
+    "find . -fprint /tmp/out",
+    "ls -exec id",
+    "cp notes/a /tmp/b",
+    "rm -rf ../secret",
+  ]) {
+    const plan = planCommand(command);
+    assert.equal(plan.ok, false, command);
+    const ran = await execInSandbox(scout.id, command);
+    assert.equal(ran.exitCode, 126, command);
+    assert.equal(ran.output.includes("uid="), false);
+  }
+  assert.equal(planCommand("echo hi").ok, true);
+  assert.equal(planCommand("ls -la notes").ok, true);
+
+  setActionPolicy(business.id, scout.id, "shell", "always_allow");
+  assert.equal(policyFor(user.id, "shell", { businessId: business.id, agentId: scout.id }).decision, "allow");
+  const ctx = { agent: scout, business, city: "Austin" };
+  const first = await runTool("shell", { command: "find . -exec /usr/bin/id {} +" }, ctx);
+  const replay = await runTool("shell", { command: "find . -exec /usr/bin/id {} +" }, ctx);
+  assert.equal(first.status, "error");
+  assert.equal(replay.status, "error");
+  assert.equal(`${first.output}${replay.output}`.includes("uid="), false);
+  const safe = await runTool("shell", { command: "echo hi" }, ctx);
+  assert.equal(safe.status, "done");
+  assert.match(String(safe.output), /hi/);
+});
+
+test("start over deletes Orgo computers before local rows, and a failed delete keeps the ids", async () => {
+  const previous = globalThis.fetch;
+  const key = "sk_test_reset_secret";
+  const { createUser, getAgent, getBusiness, saveProfile, setAgentOrgoComputer } = await import("../store");
+  const { openDesk } = await import("./provision");
+  const { cleanupOrgoComputers, resetBusiness } = await import("./reset");
+  const calls: string[] = [];
+  try {
+    const user = createUser({ email: "reset-orgo@cnstrct.local", name: "Reset" });
+    const local = { ...profile, userId: user.id };
+    saveProfile(local);
+    const { business, agents } = await openDesk(user.id, local);
+    const specialists = agents.filter((agent) => agent.role !== "orchestrator");
+    assert.equal(specialists.length, 2);
+    specialists.forEach((agent, index) => setAgentOrgoComputer(agent.id, `comp_reset_${index}`));
+    const keptUser = createUser({ email: "reset-fail@cnstrct.local", name: "Keep" });
+    const keptProfile = { ...profile, userId: keptUser.id };
+    saveProfile(keptProfile);
+    const kept = await openDesk(keptUser.id, keptProfile);
+    const keptSpecialists = kept.agents.filter((agent) => agent.role !== "orchestrator");
+    keptSpecialists.forEach((agent, index) => setAgentOrgoComputer(agent.id, `comp_keep_${index}`));
+
+    const blocked = await resetBusiness(user.id, business.id);
+    assert.equal(blocked.ok, false);
+    if (!blocked.ok) {
+      assert.match(blocked.error, /no API key/i);
+      assert.equal(blocked.error.includes(key), false);
+      assert.deepEqual(blocked.computerIds, ["comp_reset_0", "comp_reset_1"]);
+    }
+    assert.ok(getBusiness(business.id));
+
+    process.env.ORGO_API_KEY = key;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      calls.push(`${init?.method || "GET"} ${url}`);
+      const headers = init?.headers as Record<string, string> | undefined;
+      assert.equal(headers?.Authorization, `Bearer ${key}`);
+      const status = url.endsWith("/comp_reset_1") ? 404 : 200;
+      const body = status === 404 ? { error: "Computer not found" } : { success: true };
+      return { ok: status === 200, status, statusText: status === 200 ? "OK" : "Not Found", text: async () => JSON.stringify(body) } as Response;
+    }) as typeof fetch;
+    const cleared = await resetBusiness(user.id, business.id);
+    assert.equal(cleared.ok, true);
+    assert.equal(getBusiness(business.id), null);
+    assert.deepEqual(calls, [
+      "DELETE https://www.orgo.ai/api/computers/comp_reset_0",
+      "DELETE https://www.orgo.ai/api/computers/comp_reset_1",
+    ]);
+    assert.equal(JSON.stringify(cleared).includes(key), false);
+
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/comp_keep_1")) {
+        return { ok: false, status: 500, statusText: "ERR", text: async () => JSON.stringify({ error: `nope ${key}` }) } as Response;
+      }
+      return { ok: true, status: 200, statusText: "OK", text: async () => JSON.stringify({ success: true }) } as Response;
+    }) as typeof fetch;
+    const failed = await resetBusiness(keptUser.id, kept.business.id);
+    assert.equal(failed.ok, false);
+    if (!failed.ok) {
+      assert.equal(failed.error.includes(key), false);
+      assert.match(failed.error, /kept so you can retry/i);
+      assert.deepEqual(failed.computerIds, ["comp_keep_1"]);
+    }
+    assert.ok(getBusiness(kept.business.id));
+    assert.equal(getAgent(keptSpecialists[0].id)?.orgoComputerId, "comp_keep_0");
+    assert.equal(getAgent(keptSpecialists[1].id)?.orgoComputerId, "comp_keep_1");
+
+    const unsafe = await cleanupOrgoComputers(["comp/../secret"]);
+    assert.equal(unsafe.ok, false);
+    if (!unsafe.ok) {
+      assert.deepEqual(unsafe.remaining, ["comp/../secret"]);
+      assert.equal(unsafe.error.includes(key), false);
+    }
+  } finally {
+    globalThis.fetch = previous;
+    delete process.env.ORGO_API_KEY;
+  }
+});

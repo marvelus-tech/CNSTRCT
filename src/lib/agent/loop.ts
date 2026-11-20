@@ -225,6 +225,7 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
       continue;
     }
 
+    // allow and always_allow both land here. Shell still goes through planCommand.
     const outcome = await runTool(call.name, args, { agent, business, city: business.city });
     if (outcome.handoff && agent.role === "orchestrator") {
       const target = listAgents(business.id).find((item) => item.role === outcome.handoff?.role);

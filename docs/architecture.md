@@ -42,7 +42,7 @@ Nothing in those three gated tools opens a network socket. Approve writes `outbo
 
 `configuredProvider()` picks Orgo when both Orgo env vars are set, otherwise Docker if `docker version` succeeds, otherwise a folder under `data/sandboxes/<agentId>`.
 
-The local sandbox allows a short command list (`ls`, `cat`, `mkdir`, and similar) plus `cnstrct-search`, which reads a built-in tradie directory. Chaining, newlines, pipes, redirects, curl, and interpreters are rejected. The same allowlist is what Orgo bash receives, as quoted argv, with no `cd /root`. The dashboard computer view shows each agent's terminal log, files, and computer hours. It is not a fake screenshot of a desktop the process never had.
+The local sandbox allows a short command list (`ls`, `cat`, `mkdir`, `echo`, and similar) plus `cnstrct-search`, which reads a built-in tradie directory. `find` is not allowed. Chaining, newlines, pipes, redirects, curl, interpreters, execution flags (`-exec`, `-ok`, `-delete`, `-fprint`), and paths outside the folder are rejected. Always-allow skips the card only. The same check runs before local spawn and before Orgo bash. The dashboard computer view shows each agent's terminal log, files, and computer hours. It is not a fake screenshot of a desktop the process never had. Start over deletes each recorded Orgo computer first. If that call fails, the business and the computer ids stay so the owner can retry.
 
 Orgo, when `ORGO_API_KEY` is set, creates one workspace per business and one Small computer per specialist. Quinn has no machine. Bash calls `GET /computers/{id}` and resumes unless the status is running. If bash fails, the computer row stays on Orgo.
 

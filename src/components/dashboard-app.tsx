@@ -82,11 +82,17 @@ export function DashboardApp({ businessId }: { businessId: string }) {
       setConfirmReset(true);
       return;
     }
-    await fetch("/api/desk/reset", {
+    const response = await fetch("/api/desk/reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ businessId: desk?.business?.id }),
     });
+    if (!response.ok) {
+      const json = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(json?.error || "Could not reset this business. Orgo computers were kept so you can retry.");
+      setConfirmReset(false);
+      return;
+    }
     router.push("/triage");
   }
 
