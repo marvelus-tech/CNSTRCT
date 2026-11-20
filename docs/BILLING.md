@@ -1,68 +1,45 @@
 # BizOS billing (Stripe)
 
-Construction (`POST /api/business`) requires an active subscription entitlement **when the paywall is enforced**. Triage, opportunity preview, and signed-in recommendations stay free.
+Construction (`POST /api/business`) requires a paid entitlement **only when Stripe is fully configured** and the paywall is enforced. Triage and opportunity preview stay free.
 
-Paywall decisions are made in **`src/lib/billing/policy.ts`** (server env only). No header, cookie, or query string can bypass billing.
+Paywall decisions live in **`src/lib/billing/policy.ts`** (server env only). Headers, cookies, and query strings cannot change billing.
 
-## Environment behavior
+## Launch mode (Stripe not configured)
 
-| Deployment | `VERCEL_ENV` | `BILLING_MODE` | Stripe keys | Construction |
-| --- | --- | --- | --- | --- |
-| **Vercel production** | `production` | ignored (`enforce` always) | missing | **503** `payments_not_configured` |
-| **Vercel production** | `production` | ignored | set, no entitlement | **402** `payment_required` |
-| **Vercel production** | `production` | ignored | set, active entitlement | **200** (plan limits apply) |
-| **Vercel preview** | `preview` | unset, Stripe unset | missing | **Bypass** (default dev-friendly) |
-| **Vercel preview** | `preview` | `bypass` | set or unset | **Bypass** |
-| **Vercel preview** | `preview` | `enforce` | set, no entitlement | **402** |
-| **Local dev** | unset | unset, Stripe unset | missing | **Bypass** (default) |
-| **Local dev** | unset | `bypass` | set | **Bypass** |
-| **Local dev** | unset | `enforce` | set | Enforced (needs entitlement) |
-| **Local dev** | unset | `enforce` | missing | **503** |
+When `paymentsConfigured()` is false (missing secret key or either price ID):
 
-**`BILLING_MODE=bypass` on production is never honored.**
+- Construction is **allowed** on local, preview, and **production** (no 503, no checkout required).
+- A site banner shows: **Billing activates soon.** (non-alarming).
+- Set Stripe env vars when ready; once all three are present, unpaid users on production must choose a plan.
 
-### Defaults (when `BILLING_MODE` is unset)
+## When Stripe is configured
 
-- **Production:** always **enforce**.
-- **Local / preview:** **bypass** if Stripe is not fully configured; otherwise **enforce** (so you can test Checkout when keys exist).
+| Deployment | `BILLING_MODE` | Unpaid user |
+| --- | --- | --- |
+| **Production** | ignored | **402** `payment_required` |
+| **Production** | entitled | Construct (plan limits) |
+| **Preview / local** | `bypass` | Construct (dev test bypass banner) |
+| **Preview / local** | `enforce` or unset | **402** unless entitled |
 
-Set `BILLING_MODE=enforce` locally to exercise the paywall even without Stripe keys (expect **503**).
+`BILLING_MODE=bypass` on production **does not** bypass unpaid users when Stripe is configured.
 
-### UI signal
-
-When bypass is active (non-production only), a sky **Billing bypass active** banner appears (from `billingPublicState()`). `GET /api/billing/status` exposes `devBypassActive`, `paywallEnforced`, `deployment`, and `billingMode` (non-secret).
-
-### Dev bypass limits
-
-Bypass grants **Pro-style construction access** (up to **3 businesses**) without Stripe. Still enforced server-side on `POST /api/business`.
-
-## Stripe variables
+## Environment variables
 
 | Variable | Purpose |
 | --- | --- |
-| `STRIPE_SECRET_KEY` | Stripe API secret (`sk_live_...` or `sk_test_...`) |
-| `STRIPE_PRICE_STARTER` | Price ID for Starter ($39/mo) |
-| `STRIPE_PRICE_PRO` | Price ID for Pro ($79/mo) |
-| `STRIPE_WEBHOOK_SECRET` | Signing secret for `POST /api/billing/webhook` |
-| `NEXT_PUBLIC_SITE_URL` | Public origin for Checkout success/cancel URLs |
-| `BILLING_MODE` | `enforce` or `bypass` (non-production only; see table above) |
+| `STRIPE_SECRET_KEY` | Server Stripe client |
+| `STRIPE_PRICE_STARTER` | Starter price ID |
+| `STRIPE_PRICE_PRO` | Pro price ID |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signature (entitlements after pay) |
+| `NEXT_PUBLIC_SITE_URL` | Checkout return URLs |
+| `BILLING_MODE` | `enforce` or `bypass` on non-production when Stripe is configured |
 
 ## Webhook setup
 
-1. In Stripe Dashboard → Developers → Webhooks, add endpoint: `https://<your-host>/api/billing/webhook`
-2. Listen for: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
-3. Copy the signing secret into `STRIPE_WEBHOOK_SECRET`
-4. Subscription metadata includes `userId` and `planId` (set at Checkout creation)
+1. Endpoint: `https://<your-host>/api/billing/webhook`
+2. Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+3. Set `STRIPE_WEBHOOK_SECRET`
 
-## Test mode ergonomics
+## Tests
 
-`node:test` only:
-
-- `NODE_ENV=test` and `BILLING_TEST_MODE=true` disable dev bypass and allow `grantTestEntitlement()` without Stripe.
-- Never set `BILLING_TEST_MODE` outside tests.
-
-## Plans (product copy)
-
-- **Starter**: $39/mo, 1 business, 3 agents, 400k credits, 4 computer hours
-- **Pro**: $79/mo, up to 3 businesses, 1.2M credits, 12 computer hours
-- Overage: $12 per 100k credits, $4 per extra computer hour (messaging only in MVP; metered billing TBD)
+`BILLING_TEST_MODE=true` with `NODE_ENV=test` disables launch bypass and uses `grantTestEntitlement()` for paid-path tests.

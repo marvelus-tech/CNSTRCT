@@ -1,6 +1,6 @@
-# Deploy CNSTRCT on Vercel
+# Deploy BizOS on Vercel
 
-CNSTRCT is a Next.js app with API routes and SQLite (`node:sqlite`). It runs in **demo mode** with no API keys. Production needs a Vercel project linked to this GitHub repo.
+BizOS (repo **CNSTRCT**) is a Next.js app with API routes and SQLite (`node:sqlite`). It runs in **demo mode** with no API keys. Production: [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app).
 
 ## Why `https://cnstrct.vercel.app` is not CNSTRCT
 
@@ -10,7 +10,7 @@ This repo does not ship `middleware.ts` or auth gates on `/` or `/triage`. After
 
 **Fix options:**
 
-1. **Recommended:** Create a new Vercel project named `cnstrct-app` (or similar). Production URL becomes `https://cnstrct-app.vercel.app`.
+1. **Recommended:** Use the linked project **cnstrct-mu** with production URL `https://cnstrct-mu.vercel.app`.
 2. **Reuse the name:** In the Vercel team that owns `cnstrct.vercel.app`, delete or rename the old project, then attach `cnstrct.vercel.app` to the CNSTRCT deployment (Project → Settings → Domains).
 
 ## One-time import (marvelus-tech)
@@ -19,7 +19,7 @@ You only need to do this once per Vercel team. After that, every push to `main` 
 
 1. Sign in at [vercel.com](https://vercel.com) with the **marvelus-tech** GitHub account (or a team that should own the app).
 2. **Add New… → Project → Import** `marvelus-tech/CNSTRCT`.
-3. **Project name:** `cnstrct-app` (avoids the wrong app on `cnstrct.vercel.app`).
+3. **Project name:** `cnstrct-mu` (production URL `https://cnstrct-mu.vercel.app`).
 4. **Framework:** Next.js (auto-detected). **Root directory:** repository root.
 5. **Production branch:** `main`.
 6. **Build settings:** `vercel.json` in the repo already sets:
@@ -30,7 +30,7 @@ You only need to do this once per Vercel team. After that, every push to `main` 
    | Name | Value |
    | --- | --- |
    | `CNSTRCT_DATA_DIR` | `/tmp/cnstrct-data` (ephemeral on serverless; see README **Hosted demo: what persists**) |
-   | `NEXT_PUBLIC_SITE_URL` | `https://cnstrct-app.vercel.app` (no trailing slash) |
+   | `NEXT_PUBLIC_SITE_URL` | `https://cnstrct-mu.vercel.app` (no trailing slash) |
 
 8. **Deployment Protection:** Project → Settings → Deployment Protection → set **Production** to **None** (or "Only Preview Deployments") so colleagues can open the demo without a Vercel login.
 9. Click **Deploy**. When the build finishes, copy **Visit** on the Production deployment. That URL is the shareable app link.
@@ -55,4 +55,4 @@ pnpm start
 
 ## Updating marvelus-tech.github.io
 
-After the first production deploy, set the homepage **CNSTRCT (app)** link to your Production URL (default target documented in the repo: `https://cnstrct-app.vercel.app`).
+After the first production deploy, set public links to **https://cnstrct-mu.vercel.app**.

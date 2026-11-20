@@ -1,16 +1,14 @@
-# CNSTRCT
+# BizOS
 
-CNSTRCT spins up a real micro-business from almost nothing. You answer a short triage, pick a live desk, and get a public site plus three agents: Quinn and two specialists. You talk only to Quinn. Nothing is emailed, posted, spent, or run on a computer until you approve it.
+BizOS spins up a real micro-business from almost nothing. You answer a short triage, pick a live desk, and get a public site plus three agents: Quinn and two specialists. You talk only to Quinn. Nothing is emailed, posted, spent, or run on a computer until you approve it.
 
 This app adapts the agent loop from [grokbot-clone](https://github.com/nickvasilescu/grokbot-clone) (MIT). Why that base, and how to add the next business type, is in [docs/architecture.md](docs/architecture.md). The MIT notice is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Deploy (Vercel)
 
-**Stable production URL (after one-time GitHub import):** `https://cnstrct-app.vercel.app`
+**Production:** [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app)
 
-Step-by-step import, env vars, and why `https://cnstrct.vercel.app` shows another app's login page: [docs/DEPLOY.md](docs/DEPLOY.md).
-
-Until that import finishes, use the latest anonymous demo from the claim/deploy notes in DEPLOY.md or run locally.
+Step-by-step import and env vars: [docs/DEPLOY.md](docs/DEPLOY.md). Billing setup: [docs/BILLING.md](docs/BILLING.md).
 
 ## Run
 
@@ -52,6 +50,7 @@ A new chat message closes an approval that is still open. Approve or reject befo
 | Agent chat and routines | Scripted model. Owner chats with the orchestrator. Routines stay planned until queued |
 | Computer | Orgo status is not configured. A local folder is labeled as a sandbox, not a VM |
 | Outreach, match, shell | Approval card, then a local outbox or a local command. No Composio or Orgo call |
+| Billing | Stripe optional at launch. Without Stripe keys, construction stays open (see banner on site). |
 
 ## Env vars
 
@@ -65,21 +64,22 @@ Copy `.env.example` to `.env.local` only when you want a live provider. Every va
 | Docker | Used only when the daemon answers `docker version`, Orgo is unset, and the owner already approved the command. The container is `alpine` with `--network none`. |
 | `COMPOSIO_API_KEY` | Reserved. This MVP does not send Gmail. A set key is still not a sent message. Approved drafts stay in the local outbox with `network: false`. |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Email magic link. The template should land on `/auth/callback` with `token_hash` and `type`. Without the keys, the demo session is the path that always works. |
-| `NEXT_PUBLIC_SITE_URL` | Canonical origin. Defaults to `http://localhost:3000`. |
+| `NEXT_PUBLIC_SITE_URL` | Canonical origin. Production: `https://cnstrct-mu.vercel.app`. Local default `http://localhost:3000`. |
 | `CNSTRCT_DATA_DIR` | Where sqlite and sandboxes live. Defaults to `./data`. |
+| Stripe / `BILLING_MODE` | See [docs/BILLING.md](docs/BILLING.md). |
 
 Token and computer-hour meters are a hardcoded demo cap: 50,000 tokens and 2 hours per agent.
 
 ## Hosted demo: what persists
 
-**Canonical production URL:** [https://cnstrct-app.vercel.app](https://cnstrct-app.vercel.app) (see [docs/DEPLOY.md](docs/DEPLOY.md)).
+**Canonical production URL:** [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app)
 
 Vercel sets `CNSTRCT_DATA_DIR` to `/tmp/cnstrct-data`. That directory is **ephemeral** on serverless: triage answers, demo sessions, workspaces, and agent sandboxes can disappear after a cold start, a new deployment, or when the instance is recycled.
 
 What **does** persist without signing in:
 
 - The app code and UI on each deploy.
-- A **seeded sample desk** at [`/b/harbor-tradie-desk`](https://cnstrct-app.vercel.app/b/harbor-tradie-desk). The first request on a fresh sqlite file inserts `user_sample` and that business. You can always open it to walk the public site and lead form.
+- A **seeded sample desk** at [`/b/harbor-tradie-desk`](https://cnstrct-mu.vercel.app/b/harbor-tradie-desk). The first request on a fresh sqlite file inserts `user_sample` and that business. You can always open it to walk the public site and lead form.
 
 What **does not** persist reliably on hosted demo:
 

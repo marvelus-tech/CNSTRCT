@@ -55,27 +55,31 @@ test("construction allows paid starter and enforces business limit", async () =>
   if (!blocked.ok) assert.equal(blocked.code, "plan_limit");
 });
 
-test("construction fails closed without Stripe keys or billing test mode", async () => {
+test("production enforces payment when Stripe is configured", async () => {
   const prevTest = process.env.BILLING_TEST_MODE;
   const prevVercel = process.env.VERCEL_ENV;
   const prevMode = process.env.BILLING_MODE;
   delete process.env.BILLING_TEST_MODE;
   process.env.VERCEL_ENV = "production";
   process.env.BILLING_MODE = "bypass";
-  delete process.env.STRIPE_SECRET_KEY;
-  delete process.env.STRIPE_PRICE_STARTER;
-  delete process.env.STRIPE_PRICE_PRO;
-  const { createUser } = await import("../store");
+  process.env.STRIPE_SECRET_KEY = "sk_test_x";
+  process.env.STRIPE_PRICE_STARTER = "price_starter";
+  process.env.STRIPE_PRICE_PRO = "price_pro";
+  const { createUser, saveProfile } = await import("../store");
   const { constructionAccess } = await import("./access");
   const user = createUser({ email: "prod@bizos.local", name: "Prod" });
+  saveProfile({ userId: user.id, ...profileBody });
   const gate = constructionAccess(user.id);
   assert.equal(gate.ok, false);
-  if (!gate.ok) assert.equal(gate.code, "payments_not_configured");
+  if (!gate.ok) assert.equal(gate.code, "payment_required");
   process.env.BILLING_TEST_MODE = prevTest ?? "true";
   if (prevVercel === undefined) delete process.env.VERCEL_ENV;
   else process.env.VERCEL_ENV = prevVercel;
   if (prevMode === undefined) delete process.env.BILLING_MODE;
   else process.env.BILLING_MODE = prevMode;
+  delete process.env.STRIPE_SECRET_KEY;
+  delete process.env.STRIPE_PRICE_STARTER;
+  delete process.env.STRIPE_PRICE_PRO;
 });
 
 test("opportunity recommendations stay available without billing", async () => {

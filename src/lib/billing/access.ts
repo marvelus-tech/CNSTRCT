@@ -1,7 +1,7 @@
 import { billingTestModeEnabled, paymentsConfigured } from "./config";
 import { businessLimitForUser, getEntitlement } from "./entitlements";
 import { listBusinessesForUser } from "../store";
-import { billingDevBypassActive } from "./policy";
+import { billingConstructionBypassActive } from "./policy";
 import type { PlanId } from "./plans";
 import { PLANS } from "./plans";
 
@@ -10,7 +10,7 @@ export type ConstructionAccess =
   | { ok: false; status: number; code: string; error: string };
 
 export function constructionAccess(userId: string): ConstructionAccess {
-  if (billingDevBypassActive()) {
+  if (billingConstructionBypassActive()) {
     const used = listBusinessesForUser(userId).length;
     const max = PLANS.pro.maxBusinesses;
     if (used >= max) {
