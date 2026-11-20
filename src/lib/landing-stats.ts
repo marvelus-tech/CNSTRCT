@@ -45,7 +45,7 @@ export const LANDING_PROOF_STATS: readonly LandingStat[] = [
 ] as const;
 
 export const LANDING_PROOF_KICKER =
-  "Agent-led businesses are pulling ahead. BizOS gives you the same shape: work gets done, nothing sensitive ships without your yes.";
+  "Bot-led businesses are pulling ahead. BizOS gives you the same shape: work gets done, nothing sensitive ships without your yes.";
 
 export const LANDING_PROOF_SOURCES: readonly { name: string; url: string }[] = [
   {

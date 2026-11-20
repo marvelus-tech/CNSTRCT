@@ -259,3 +259,65 @@ h4 {
 .hud-btn-frame--plain .hud-corner {
   display: none;
 }
+
+/* Landing marketing typography */
+.landing-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .landing-eyebrow {
+    font-size: 0.75rem;
+  }
+}
+
+.landing-section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+@media (min-width: 768px) {
+  .landing-section-title {
+    font-size: 1.875rem;
+  }
+}
+
+.landing-section-lead {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .landing-section-lead {
+    font-size: 1rem;
+  }
+}
+
+.landing-caption {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.landing-fine-print {
+  font-size: 0.625rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .landing-fine-print {
+    font-size: 0.6875rem;
+  }
+}

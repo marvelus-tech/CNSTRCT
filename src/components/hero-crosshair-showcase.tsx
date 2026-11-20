@@ -312,7 +312,7 @@ export function HeroCrosshairShowcase() {
               />
             </div>
             <p
-              className="mt-2 max-w-[11rem] text-center text-[11px] font-medium leading-snug tracking-wide text-muted"
+              className="landing-caption mt-2 max-w-[11rem] text-center"
               style={{
                 opacity: imageVisible ? 1 : 0,
                 visibility: imageVisible ? "visible" : "hidden",

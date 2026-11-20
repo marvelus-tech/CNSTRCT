@@ -3,6 +3,7 @@ import Link from "next/link";
 import { HeroCrosshairShowcase } from "@/components/hero-crosshair-showcase";
 import { LandingPricing } from "@/components/landing-pricing";
 import { LandingProofStrip } from "@/components/landing-proof-strip";
+import { LandingSection } from "@/components/landing-section";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { Wordmark } from "@/components/wordmark";
@@ -51,7 +52,7 @@ export default function HomePage() {
             Log in
           </Link>
           <Link href="/triage" className="font-medium">
-            Start
+            Find my business
           </Link>
         </nav>
       </header>
@@ -59,7 +60,10 @@ export default function HomePage() {
         <section className="px-4 pb-12 pt-6 sm:px-5 sm:pb-16 sm:pt-8 md:px-10 md:pt-16">
           <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-12">
             <div className="rise">
-              <h1 className="max-w-xl text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-foreground sm:text-4xl sm:leading-[1.08] md:text-6xl md:leading-[1.05]">
+              <p className="landing-eyebrow">
+                <span className="text-accent">Business</span> operating system
+              </p>
+              <h1 className="mt-3 max-w-xl text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-foreground sm:text-4xl sm:leading-[1.08] md:text-6xl md:leading-[1.05]">
                 Your founding team ships on day one.
               </h1>
               <p className="mt-4 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
@@ -78,8 +82,9 @@ export default function HomePage() {
         </section>
         <LandingProofStrip />
         <LandingPricing />
-        <section className="border-y border-border bg-card px-5 py-14 md:px-10">
-          <ol className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
+        <LandingSection variant="card">
+          <h2 className="landing-section-title">How it works</h2>
+          <ol className="mt-8 grid gap-8 md:grid-cols-3">
             {[
               ["Tell us who you are", "Short triage. Skills, time, goal."],
               ["Get a business that fits", "Matched ideas, not a generic list."],
@@ -87,25 +92,26 @@ export default function HomePage() {
             ].map(([title, body], index) => (
               <li key={title}>
                 <p className="text-sm font-medium text-accent">0{index + 1}</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight">{title}</h2>
-                <p className="mt-2 text-muted">{body}</p>
+                <h3 className="landing-section-title mt-2 text-xl md:text-2xl">{title}</h3>
+                <p className="landing-section-lead mt-2">{body}</p>
               </li>
             ))}
           </ol>
-        </section>
-        <section className="px-5 py-16 md:px-10">
+        </LandingSection>
+        <LandingSection variant="plain">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Questions people ask first</h2>
+            <p className="landing-eyebrow">FAQ</p>
+            <h2 className="landing-section-title mt-2">Questions people ask first</h2>
             <div className="mt-8 divide-y divide-border">
               {FAQS.map((item) => (
                 <article key={item.question} className="py-5">
                   <h3 className="text-lg font-medium">{item.question}</h3>
-                  <p className="mt-2 text-muted">{item.answer}</p>
+                  <p className="landing-section-lead mt-2">{item.answer}</p>
                 </article>
               ))}
             </div>
           </div>
-        </section>
+        </LandingSection>
       </main>
       <SiteFooter />
     </div>
