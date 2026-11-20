@@ -16,7 +16,7 @@ When `NEXT_PUBLIC_SITE_URL` is not localhost and `CNSTRCT_DATA_DIR` is under `/t
 4. **`/opportunities`** — Three cards; **home-services** and **mobile-detailing** are **Live** and start constructing. **estate-clearance** is **Soon**.
 5. **`/constructing?template=home-services`** — Finishes and lands on command center with a new business.
 6. Repeat **Start new business** to try **`/constructing?template=mobile-detailing`** — Riley + Sam agents, detailing site copy.
-7. **`/command-center`** — Lists your businesses with workspace and public site links.
+7. **`/command-center`** — Lists your businesses with workspace and public site links. Below `md`, use the bottom tab bar (Businesses, Profile, Settings).
 8. **`/workspace/[businessId]`** — Chat, approvals, computer, leads load for the chosen desk.
 9. **`/b/[slug]`** — Public site and lead form for your business slug.
 10. **`/b/harbor-tradie-desk`** — Seeded sample desk always available (no prior session). Lead form saves to sqlite.
