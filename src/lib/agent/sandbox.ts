@@ -4,7 +4,7 @@ import path from "node:path";
 import { dataDir } from "../db";
 import { searchDetailers, searchTradies } from "./directory";
 import { orgo } from "./orgo";
-import { getComputer, upsertComputer } from "../store";
+import { getAgent, getComputer, upsertComputer } from "../store";
 
 /**
  * Computer backend.
@@ -173,8 +173,6 @@ async function runDocker(root: string, command: string) {
   });
 }
 
-const orgoIds = new Map<string, string>();
-
 export async function execInSandbox(agentId: string, command: string, city = "the area") {
   const root = ensureWorkspace(agentId);
   const trimmed = command.trim();
@@ -193,26 +191,22 @@ export async function execInSandbox(agentId: string, command: string, city = "th
     return { exitCode: 126, output: reason, provider: "local" as const };
   }
 
-  const wanted = configuredProvider();
-  if (wanted === "orgo") {
+  const savedComputer = getAgent(agentId)?.orgoComputerId;
+  if (savedComputer && process.env.ORGO_API_KEY) {
     try {
-      let id = orgoIds.get(agentId);
-      if (!id) {
-        const created = await orgo.createComputer(`cnstrct-${agentId.slice(-6)}`);
-        id = created.id;
-        orgoIds.set(agentId, id);
-      }
-      const result = await orgo.bash(id, `cd /root && ${trimmed}`);
+      const result = await orgo.bash(savedComputer, `cd /root && ${trimmed}`);
       const output = result.output || "(no output)";
       appendTerminal(agentId, output);
-      upsertComputer(agentId, "orgo", "running", providerNote("orgo"));
+      upsertComputer(agentId, "orgo", "connected", "Orgo Small computer. App secrets are not on this VM.");
       return { exitCode: result.exit_code ?? 0, output, provider: "orgo" as const };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Orgo failed";
       appendTerminal(agentId, `Orgo unavailable (${message}). Using the local sandbox.`);
+      upsertComputer(agentId, "local", "not_connected", "Orgo call failed. This folder is a local sandbox, not an Orgo computer.");
     }
   }
 
+  const wanted = configuredProvider();
   if (wanted === "docker") {
     const result = await runDocker(root, trimmed);
     if (result.exitCode === 0 || !result.output.includes("Unable to find image")) {

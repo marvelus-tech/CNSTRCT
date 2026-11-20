@@ -22,6 +22,9 @@ interface BusinessRow {
   createdAt: number;
   ventureSummary?: VentureSummary | null;
   ventureProfile?: Profile | null;
+  teamLabel?: string;
+  connectionLabel?: string;
+  computerLabel?: string;
 }
 
 const START_NEW_HREF = "/triage?intent=new";
@@ -104,6 +107,12 @@ function BusinessesPanel({
             <p className="mt-1 text-sm text-muted">{business.city}</p>
             {business.ventureSummary?.interestsSnippet ? (
               <p className="mt-2 line-clamp-2 text-xs text-muted">{business.ventureSummary.interestsSnippet}</p>
+            ) : null}
+            {business.teamLabel ? <p className="mt-3 text-sm">{business.teamLabel}</p> : null}
+            {business.connectionLabel || business.computerLabel ? (
+              <p className="mt-1 text-xs text-muted">
+                {[business.connectionLabel, business.computerLabel].filter(Boolean).join(" · ")}
+              </p>
             ) : null}
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Link href={`/workspace/${business.id}`} className="w-full sm:w-auto">

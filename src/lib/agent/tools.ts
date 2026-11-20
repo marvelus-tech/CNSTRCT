@@ -1,7 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { AgentRole } from "../types";
 import { COMPUTER_LIMIT_SECONDS, SECONDS_PER_COMPUTER_CALL } from "./limits";
-import { addUsage, getAgent, listLeads } from "../store";
+import { addUsage, getAgent, listConnections, listLeads } from "../store";
+import { deliverComposioSend } from "./adapters";
+import { toolsForRole } from "./blueprint";
 import type { ToolContext } from "./contracts";
 import {
   ensureWorkspace,
@@ -17,6 +20,7 @@ export interface ToolOutcome {
   summary: string;
   status: "done" | "error";
   computer: boolean;
+  handoff?: { role: string; task: string };
 }
 
 const SCHEMAS = [
@@ -26,6 +30,7 @@ const SCHEMAS = [
   { type: "function", function: { name: "list_files", description: "List files on your computer.", parameters: { type: "object", properties: {} } } },
   { type: "function", function: { name: "screenshot", description: "Describe your current screen from the files and terminal.", parameters: { type: "object", properties: {} } } },
   { type: "function", function: { name: "list_leads", description: "Read homeowner leads captured on the business site.", parameters: { type: "object", properties: {} } } },
+  { type: "function", function: { name: "delegate", description: "Hand a task to the scout or the matcher. You cannot send or use their computer yourself.", parameters: { type: "object", properties: { role: { type: "string" }, task: { type: "string" } }, required: ["role", "task"] } } },
   { type: "function", function: { name: "send_outreach", description: "Send a partnership email. Requires owner approval. In the demo this only records a local outbox file.", parameters: { type: "object", properties: { to: { type: "string" }, channel: { type: "string" }, subject: { type: "string" }, body: { type: "string" } }, required: ["to", "subject", "body"] } } },
   { type: "function", function: { name: "send_match", description: "Introduce a homeowner lead to a tradie. Requires owner approval. Demo sends stay local.", parameters: { type: "object", properties: { to: { type: "string" }, leadName: { type: "string" }, tradieName: { type: "string" }, body: { type: "string" } }, required: ["to", "leadName", "body"] } } },
   { type: "function", function: { name: "spend", description: "Spend money. Requires owner approval. The demo never charges a card.", parameters: { type: "object", properties: { amountUsd: { type: "number" }, purpose: { type: "string" } }, required: ["amountUsd", "purpose"] } } },
@@ -33,6 +38,11 @@ const SCHEMAS = [
 
 export function toolSchemas() {
   return SCHEMAS;
+}
+
+export function toolSchemasFor(role: AgentRole) {
+  const allow = new Set(toolsForRole(role));
+  return SCHEMAS.filter((schema) => allow.has(schema.function.name));
 }
 
 function charge(agentId: string) {
@@ -48,11 +58,19 @@ function recordOutbox(agentId: string, file: string, payload: Record<string, unk
   const root = ensureWorkspace(agentId);
   const abs = path.join(root, "outbox", file);
   const prior = fs.existsSync(abs) ? (JSON.parse(fs.readFileSync(abs, "utf8")) as unknown[]) : [];
-  prior.push({ ...payload, mocked: true, network: false, at: new Date().toISOString() });
+  prior.push({ mocked: true, network: false, ...payload, at: new Date().toISOString() });
   writeSandboxFile(agentId, rel, JSON.stringify(prior, null, 2));
 }
 
 export async function runTool(name: string, args: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutcome> {
+  if (!toolsForRole(ctx.agent.role).includes(name)) {
+    return {
+      output: `${name} is not on the ${ctx.agent.role} tool list.`,
+      summary: "Tool blocked",
+      status: "error",
+      computer: false,
+    };
+  }
   try {
     switch (name) {
       case "shell": {
@@ -95,17 +113,64 @@ export async function runTool(name: string, args: Record<string, unknown>, ctx: 
           : "No leads yet.";
         return { output, summary: `${leads.length} leads`, status: "done", computer: false };
       }
+      case "delegate": {
+        const role = String(args.role ?? "");
+        const task = String(args.task ?? "").trim();
+        if (role !== "scout" && role !== "matcher") {
+          return { output: "Delegate only to scout or matcher.", summary: "Bad role", status: "error", computer: false };
+        }
+        if (!task) return { output: "Delegation needs a task.", summary: "Empty task", status: "error", computer: false };
+        return {
+          output: `Handoff ready for ${role}.`,
+          summary: `Delegated to ${role}`,
+          status: "done",
+          computer: false,
+          handoff: { role, task },
+        };
+      }
       case "send_outreach":
       case "send_match":
       case "spend": {
         charge(ctx.agent.id);
-        const file = name === "send_outreach" ? "outreach.json" : name === "send_match" ? "matches.json" : "spend.json";
-        recordOutbox(ctx.agent.id, file, args);
+        if (name === "spend") {
+          recordOutbox(ctx.agent.id, "spend.json", args);
+          return {
+            output: "Recorded a mock charge. No card was billed.",
+            summary: "Recorded locally",
+            status: "done",
+            computer: true,
+          };
+        }
+        const connection = listConnections(ctx.business.id).find((item) => item.toolkit === "gmail");
+        const delivery = await deliverComposioSend({
+          businessId: ctx.business.id,
+          role: ctx.agent.role,
+          connectedAccountId: connection?.connectedAccountId ?? null,
+          args,
+        });
+        if (delivery.delivered) {
+          recordOutbox(ctx.agent.id, name === "send_outreach" ? "outreach.json" : "matches.json", {
+            ...args,
+            network: true,
+            mocked: false,
+            composioLogId: delivery.logId,
+          });
+          return { output: `Sent through Composio (${delivery.logId}).`, summary: "Sent", status: "done", computer: false };
+        }
+        const file = name === "send_outreach" ? "outreach.json" : "matches.json";
+        recordOutbox(ctx.agent.id, file, { ...args, composio: delivery.reason });
         const output =
-          name === "spend"
-            ? "Recorded a mock charge. No card was billed."
-            : "Recorded locally. No message was sent on any network.";
-        return { output, summary: "Recorded locally", status: "done", computer: true };
+          delivery.reason === "not_configured"
+            ? "Recorded locally. Composio is not configured. No message was sent."
+            : delivery.reason === "not_connected"
+              ? "Recorded locally. Gmail is not connected. No message was sent."
+              : `Composio did not send (${delivery.reason}). No success was recorded.`;
+        return {
+          output,
+          summary: delivery.reason === "provider_error" || delivery.reason === "sdk_not_loaded" ? "Send failed" : "Recorded locally",
+          status: delivery.reason === "provider_error" || delivery.reason === "sdk_not_loaded" ? "error" : "done",
+          computer: true,
+        };
       }
       default:
         return { output: `Unknown tool ${name}`, summary: "Unknown tool", status: "error", computer: false };

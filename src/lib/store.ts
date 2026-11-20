@@ -2,7 +2,9 @@ import { getDb } from "./db";
 import { newId } from "./ids";
 import type {
   Agent,
+  AppConnection,
   Approval,
+  AuditEvent,
   Business,
   Capital,
   Lead,
@@ -11,8 +13,10 @@ import type {
   Routine,
   Space,
   StoredMessage,
+  TaskStatus,
   Trades,
   User,
+  WorkTask,
 } from "./types";
 
 function db() {
@@ -142,7 +146,12 @@ function mapBusiness(row: Record<string, unknown>): Business {
     city: String(row.city),
     createdAt: Number(row.created_at),
     profileJson: row.profile_json == null ? null : String(row.profile_json),
+    orgoWorkspaceId: row.orgo_workspace_id == null ? null : String(row.orgo_workspace_id),
   };
+}
+
+export function setBusinessWorkspace(id: string, workspaceId: string) {
+  db().prepare("UPDATE businesses SET orgo_workspace_id = ? WHERE id = ?").run(workspaceId, id);
 }
 
 export function getBusinessBySlug(slug: string): Business | null {
@@ -167,7 +176,7 @@ export function getBusinessForUserAndTemplate(userId: string, templateId: string
 export function listBusinessesForUser(userId: string): Business[] {
   return db()
     .prepare("SELECT * FROM businesses WHERE user_id = ? ORDER BY created_at DESC")
-    .all()
+    .all(userId)
     .map((row) => mapBusiness(asRecord(row)!));
 }
 
@@ -187,18 +196,21 @@ export function slugTaken(slug: string) {
   return Boolean(db().prepare("SELECT 1 FROM businesses WHERE slug = ?").get(slug));
 }
 
-export function insertAgent(input: Omit<Agent, "id" | "createdAt" | "tokensUsed" | "computerSeconds">): Agent {
+export function insertAgent(
+  input: Omit<Agent, "id" | "createdAt" | "tokensUsed" | "computerSeconds" | "orgoComputerId">,
+): Agent {
   const agent: Agent = {
     ...input,
     id: newId("agt"),
     tokensUsed: 0,
     computerSeconds: 0,
+    orgoComputerId: null,
     createdAt: Date.now(),
   };
   db()
     .prepare(
-      `INSERT INTO agents (id, business_id, user_id, role, name, title, instructions, status, tokens_used, computer_seconds, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?)`,
+      `INSERT INTO agents (id, business_id, user_id, role, name, title, specialty, instructions, status, tokens_used, computer_seconds, created_at, orgo_computer_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, NULL)`,
     )
     .run(
       agent.id,
@@ -207,6 +219,7 @@ export function insertAgent(input: Omit<Agent, "id" | "createdAt" | "tokensUsed"
       agent.role,
       agent.name,
       agent.title,
+      agent.specialty,
       agent.instructions,
       agent.status,
       agent.createdAt,
@@ -222,8 +235,10 @@ function mapAgent(row: Record<string, unknown>): Agent {
     role: String(row.role) as Agent["role"],
     name: String(row.name),
     title: String(row.title),
+    specialty: row.specialty == null ? "" : String(row.specialty),
     instructions: String(row.instructions),
     status: String(row.status) as Agent["status"],
+    orgoComputerId: row.orgo_computer_id == null ? null : String(row.orgo_computer_id),
     tokensUsed: Number(row.tokens_used),
     computerSeconds: Number(row.computer_seconds),
     createdAt: Number(row.created_at),
@@ -240,6 +255,14 @@ export function listAgents(businessId: string): Agent[] {
     .prepare("SELECT * FROM agents WHERE business_id = ? ORDER BY created_at ASC")
     .all(businessId)
     .map((row) => mapAgent(asRecord(row)!));
+}
+
+export function setAgentSpecialty(id: string, specialty: string) {
+  db().prepare("UPDATE agents SET specialty = ? WHERE id = ?").run(specialty, id);
+}
+
+export function setAgentOrgoComputer(id: string, computerId: string) {
+  db().prepare("UPDATE agents SET orgo_computer_id = ? WHERE id = ?").run(computerId, id);
 }
 
 export function addUsage(agentId: string, tokens: number, computerSeconds: number) {
@@ -485,6 +508,204 @@ export function getComputer(agentId: string) {
   };
 }
 
+export function insertTask(input: {
+  businessId: string;
+  fromAgentId: string;
+  toAgentId: string;
+  instruction: string;
+}): WorkTask {
+  const now = Date.now();
+  const task: WorkTask = {
+    id: newId("task"),
+    businessId: input.businessId,
+    fromAgentId: input.fromAgentId,
+    toAgentId: input.toAgentId,
+    instruction: input.instruction,
+    status: "queued",
+    report: "",
+    createdAt: now,
+    updatedAt: now,
+  };
+  db()
+    .prepare(
+      `INSERT INTO tasks (id, business_id, from_agent_id, to_agent_id, instruction, status, report, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, '', ?, ?)`,
+    )
+    .run(task.id, task.businessId, task.fromAgentId, task.toAgentId, task.instruction, task.status, task.createdAt, task.updatedAt);
+  return task;
+}
+
+function mapTask(row: Record<string, unknown>): WorkTask {
+  return {
+    id: String(row.id),
+    businessId: String(row.business_id),
+    fromAgentId: String(row.from_agent_id),
+    toAgentId: String(row.to_agent_id),
+    instruction: String(row.instruction),
+    status: String(row.status) as TaskStatus,
+    report: String(row.report ?? ""),
+    createdAt: Number(row.created_at),
+    updatedAt: Number(row.updated_at),
+  };
+}
+
+export function getTask(id: string): WorkTask | null {
+  const row = asRecord(db().prepare("SELECT * FROM tasks WHERE id = ?").get(id));
+  return row ? mapTask(row) : null;
+}
+
+export function listTasks(businessId: string): WorkTask[] {
+  return db()
+    .prepare("SELECT * FROM tasks WHERE business_id = ? ORDER BY created_at DESC")
+    .all(businessId)
+    .map((row) => mapTask(asRecord(row)!));
+}
+
+export function openTaskForAgent(agentId: string): WorkTask | null {
+  const row = asRecord(
+    db()
+      .prepare(
+        "SELECT * FROM tasks WHERE to_agent_id = ? AND status IN ('queued', 'running', 'waiting_approval') ORDER BY created_at DESC LIMIT 1",
+      )
+      .get(agentId),
+  );
+  return row ? mapTask(row) : null;
+}
+
+export function setTaskStatus(id: string, status: TaskStatus, report?: string) {
+  if (report == null) {
+    db().prepare("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?").run(status, Date.now(), id);
+    return;
+  }
+  db()
+    .prepare("UPDATE tasks SET status = ?, report = ?, updated_at = ? WHERE id = ?")
+    .run(status, report, Date.now(), id);
+}
+
+export function recordAudit(input: {
+  businessId: string;
+  userId: string;
+  agentId?: string | null;
+  actor: string;
+  kind: string;
+  tool?: string | null;
+  decision?: string | null;
+  summary: string;
+}): AuditEvent {
+  const event: AuditEvent = {
+    id: newId("aud"),
+    businessId: input.businessId,
+    userId: input.userId,
+    agentId: input.agentId ?? null,
+    actor: input.actor,
+    kind: input.kind,
+    tool: input.tool ?? null,
+    decision: input.decision ?? null,
+    summary: input.summary,
+    createdAt: Date.now(),
+  };
+  db()
+    .prepare(
+      `INSERT INTO audit_events (id, business_id, user_id, agent_id, actor, kind, tool, decision, summary, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      event.id,
+      event.businessId,
+      event.userId,
+      event.agentId,
+      event.actor,
+      event.kind,
+      event.tool,
+      event.decision,
+      event.summary,
+      event.createdAt,
+    );
+  return event;
+}
+
+export function listAudit(businessId: string, limit = 20): AuditEvent[] {
+  return db()
+    .prepare("SELECT * FROM audit_events WHERE business_id = ? ORDER BY created_at DESC LIMIT ?")
+    .all(businessId, limit)
+    .map((row) => {
+      const record = asRecord(row)!;
+      return {
+        id: String(record.id),
+        businessId: String(record.business_id),
+        userId: String(record.user_id),
+        agentId: record.agent_id == null ? null : String(record.agent_id),
+        actor: String(record.actor),
+        kind: String(record.kind),
+        tool: record.tool == null ? null : String(record.tool),
+        decision: record.decision == null ? null : String(record.decision),
+        summary: String(record.summary),
+        createdAt: Number(record.created_at),
+      };
+    });
+}
+
+export function upsertConnection(input: {
+  businessId: string;
+  toolkit: string;
+  status: AppConnection["status"];
+  connectedAccountId?: string | null;
+}): AppConnection {
+  const existing = asRecord(
+    db().prepare("SELECT * FROM app_connections WHERE business_id = ? AND toolkit = ?").get(input.businessId, input.toolkit),
+  );
+  const now = Date.now();
+  if (!existing) {
+    const row: AppConnection = {
+      id: newId("conn"),
+      businessId: input.businessId,
+      toolkit: input.toolkit,
+      connectedAccountId: input.connectedAccountId ?? null,
+      status: input.status,
+      createdAt: now,
+      updatedAt: now,
+    };
+    db()
+      .prepare(
+        `INSERT INTO app_connections (id, business_id, toolkit, connected_account_id, status, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(row.id, row.businessId, row.toolkit, row.connectedAccountId, row.status, row.createdAt, row.updatedAt);
+    return row;
+  }
+  const id = String(existing.id);
+  db()
+    .prepare("UPDATE app_connections SET status = ?, connected_account_id = ?, updated_at = ? WHERE id = ?")
+    .run(input.status, input.connectedAccountId ?? existing.connected_account_id ?? null, now, id);
+  return {
+    id,
+    businessId: input.businessId,
+    toolkit: input.toolkit,
+    connectedAccountId: input.connectedAccountId ?? (existing.connected_account_id == null ? null : String(existing.connected_account_id)),
+    status: input.status,
+    createdAt: Number(existing.created_at),
+    updatedAt: now,
+  };
+}
+
+export function listConnections(businessId: string): AppConnection[] {
+  return db()
+    .prepare("SELECT * FROM app_connections WHERE business_id = ? ORDER BY toolkit ASC")
+    .all(businessId)
+    .map((row) => {
+      const record = asRecord(row)!;
+      return {
+        id: String(record.id),
+        businessId: String(record.business_id),
+        toolkit: String(record.toolkit),
+        connectedAccountId: record.connected_account_id == null ? null : String(record.connected_account_id),
+        status: String(record.status) as AppConnection["status"],
+        createdAt: Number(record.created_at),
+        updatedAt: Number(record.updated_at),
+      };
+    });
+}
+
 export function deleteDesk(userId: string) {
   const business = getBusinessForUser(userId);
   if (!business) {
@@ -500,6 +721,9 @@ export function deleteDesk(userId: string) {
     db().prepare("DELETE FROM computers WHERE agent_id = ?").run(agent.id);
   }
   db().prepare("DELETE FROM leads WHERE business_id = ?").run(business.id);
+  db().prepare("DELETE FROM tasks WHERE business_id = ?").run(business.id);
+  db().prepare("DELETE FROM audit_events WHERE business_id = ?").run(business.id);
+  db().prepare("DELETE FROM app_connections WHERE business_id = ?").run(business.id);
   db().prepare("DELETE FROM agents WHERE business_id = ?").run(business.id);
   db().prepare("DELETE FROM businesses WHERE id = ?").run(business.id);
   db().prepare("DELETE FROM profiles WHERE user_id = ?").run(userId);

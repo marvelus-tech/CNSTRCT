@@ -31,8 +31,8 @@ The MIT notice and the list of changes are in `THIRD_PARTY_NOTICES.md`.
 
 1. A user message or a routine is stored.
 2. The model returns text and zero or more tool calls. With no `XAI_API_KEY` or `OPENAI_API_KEY`, `mockModel` follows the home-services script. With a key, the server calls that vendor's chat completions API and falls back to the script if the call fails.
-3. Computer tools (`shell`, `write_file`, `read_file`, `list_files`, `screenshot`) run immediately, same as grokbot's own computer.
-4. `send_outreach`, `send_match`, and `spend` call `policyFor`. The default is ask. The loop writes an approval card and stores the batch in `pending_turns`.
+3. Computer tools (`shell`, `write_file`, `read_file`, `list_files`, `screenshot`) call `policyFor` and wait. Composio's write approval does not cover a shell.
+4. `send_outreach`, `send_match`, and `spend` also call `policyFor`. The default is ask. The loop writes an approval card and stores the batch in `pending_turns`. The owner can approve, reject, or approve an edited draft.
 5. Approve runs the tool. Reject writes a refusal into the transcript and tells the model not to retry. Always allow stores a policy so that tool stops asking.
 6. A newer user message expires an open card, matching grokbot, so only one batch is pending.
 
@@ -48,12 +48,7 @@ Orgo, when configured, uses the ported client for `bash`. If the call fails, the
 
 ## Routines
 
-Each agent is created with a routine:
-
-- Mara, tradie scout: "Weekday tradie sweep" (labeled weekdays at 8:00).
-- Jules, lead matcher: "New lead check" (labeled every morning).
-
-Opening the desk runs both immediately, so the dashboard already has approval cards. After that, `src/instrumentation.ts` starts a 30 second timer. A routine whose `next_run_at` has passed fires the same path. grokbot used croner. CNSTRCT stores an interval so the demo has no extra dependency. "Run now" uses that same function.
+Each blueprint role is created with a routine, including Quinn's morning brief. The label is a plan ("Weekdays at 8:00"). Opening the desk does not run them, and `startScheduler` does not start a timer. The owner presses Queue. That is the only fire path. grokbot used croner. CNSTRCT still stores an interval so a later signed cron can call the same queue function.
 
 ## Tenancy and auth
 
@@ -80,7 +75,7 @@ Sqlite lives in `data/cnstrct.db` (or `CNSTRCT_DATA_DIR`). There is no hosted da
 
 1. Add a template in `src/lib/templates.ts` with `live: false` until the prompts exist.
 2. Add card copy in the opportunities route. Personalize from the profile the way `liveCardCopy` does.
-3. When it is ready, teach `openDesk` to branch on `templateId`: site fields, agent instructions, routines, and which tools those routines call.
+3. When it is ready, add a `BusinessBlueprint` in `src/lib/agent/blueprint.ts`: one orchestrator, two specialists, tools, and routines. `openDesk` does not grow a new branch per template.
 4. Keep outbound tools on the approval policy. Do not add a path that sends or spends without a card.
 5. Flip `live` to true. The board already renders whatever the catalog marks live. Leave the other cards non-selectable.
 
@@ -101,7 +96,7 @@ Detailing and estate clearance are the two coming-soon cards. Tutoring is the th
 | Piece | No keys | With keys |
 | --- | --- | --- |
 | Triage, cards, site, leads | Live, stored in sqlite | Same |
-| Agent chat and routines | Scripted model, real tool loop | xAI if `XAI_API_KEY` is set, else OpenAI |
-| Computer | Local folder. Docker if the daemon answers | Orgo when both Orgo vars are set, else the fallback |
-| Email, match intro, spend | Approval card, then a local outbox file. No network | Same. Composio is not wired up |
+| Agent chat and routines | Owner chats with Quinn. Specialists take tasks. Routines stay planned | xAI if `XAI_API_KEY` is set, else OpenAI |
+| Computer | Status not configured. Local folder is labeled as a sandbox | Orgo Small, one computer per agent, only after create returns an id |
+| Email, match intro, shell | Approval card, then a local outbox or local command | Composio send only with a key and a stored connected account |
 | Auth | Demo session cookie | Supabase magic link when both public vars are set |

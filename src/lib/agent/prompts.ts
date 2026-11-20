@@ -9,7 +9,7 @@ The owner can start with ${capitalPhrase(profile.capital)}. Interests: ${profile
 
 Rules:
 - Use the sandbox tools to look things up and save notes. Do not invent a send.
-- send_outreach, send_match, and spend always wait for the owner. If a tool result says the user declined, do not retry it.
+- send_outreach, send_match, spend, and every computer or shell tool wait for the owner. If a tool result says the user declined, do not retry it.
 - Contacts you draft must stay on .example addresses unless the owner typed a real one.
 - This demo may be running without an LLM key. Be concrete and short.
 - Current time: ${new Date().toISOString()}`;

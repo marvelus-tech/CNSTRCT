@@ -14,7 +14,14 @@ function toolResult(input: ModelInput, tool: string) {
   return input.turnRows.filter((row) => row.kind === "tool-result" && row.body.tool === tool);
 }
 
+function stopped(input: ModelInput, tool: string) {
+  return toolResult(input, tool).at(-1)?.body.status === "denied";
+}
+
 function scoutPlan(input: ModelInput): ModelResult {
+  if (stopped(input, "shell") || stopped(input, "write_file") || stopped(input, "screenshot")) {
+    return { text: "I will not run that command.", calls: [], tokens: TOKENS_PER_MOCK_TURN };
+  }
   const city = input.business.city;
   const detailing = input.business.templateId === "mobile-detailing";
   const partners = partnersForTemplate(input.business.templateId);
@@ -100,6 +107,9 @@ function scoutPlan(input: ModelInput): ModelResult {
 }
 
 function matcherPlan(input: ModelInput): ModelResult {
+  if (stopped(input, "shell") || stopped(input, "write_file") || stopped(input, "screenshot")) {
+    return { text: "I will not run that command.", calls: [], tokens: TOKENS_PER_MOCK_TURN };
+  }
   const listed = toolResult(input, "list_leads").find((row) => row.body.status === "done");
   const wrote = toolResult(input, "write_file").find((row) => row.body.status === "done");
   const looked = toolResult(input, "screenshot").find((row) => row.body.status === "done");
@@ -163,9 +173,48 @@ function matcherPlan(input: ModelInput): ModelResult {
   };
 }
 
+function orchestratorPlan(input: ModelInput): ModelResult {
+  const text =
+    input.trigger.type === "user"
+      ? input.trigger.text
+      : input.trigger.type === "routine"
+        ? input.trigger.prompt
+        : input.trigger.type === "task"
+          ? input.trigger.instruction
+          : "";
+  if (toolResult(input, "delegate").length) {
+    return {
+      text: "I handed that to the specialist. Their computer and any send stay on your approval card.",
+      calls: [],
+      tokens: TOKENS_PER_MOCK_TURN,
+    };
+  }
+  const leadWork = /lead|match|homeowner|booking|driveway/i.test(text) && !/tradie|detailer|outreach|partner/i.test(text);
+  if (leadWork) {
+    return {
+      text: "I will ask the matcher to draft the introduction. You approve the command and the send.",
+      calls: [{ name: "delegate", arguments: { role: "matcher", task: text || "Read the newest lead and draft an introduction. Do not send it." } }],
+      tokens: TOKENS_PER_MOCK_TURN,
+    };
+  }
+  if (/tradie|detailer|outreach|sweep|partner|find|brief/i.test(text) || input.trigger.type === "routine") {
+    return {
+      text: "I will ask the scout to draft the partnership note. You approve every command and the send.",
+      calls: [{ name: "delegate", arguments: { role: "scout", task: text || "Search local partners, save notes, and draft one partnership email. Do not send it." } }],
+      tokens: TOKENS_PER_MOCK_TURN,
+    };
+  }
+  return {
+    text: `I am ${input.agent.name}, chief of staff for ${input.business.name}. Ask me to find partners or check leads. I do not send mail or use a computer.`,
+    calls: [],
+    tokens: TOKENS_PER_MOCK_TURN,
+  };
+}
+
 export function mockModel(input: ModelInput): ModelResult {
-  const text = input.trigger.type === "user" ? input.trigger.text : "";
-  const routine = input.trigger.type === "routine" || input.trigger.type === "resume";
+  if (input.agent.role === "orchestrator") return orchestratorPlan(input);
+  const text = input.trigger.type === "user" ? input.trigger.text : input.trigger.type === "task" ? input.trigger.instruction : "";
+  const routine = input.trigger.type === "routine" || input.trigger.type === "resume" || input.trigger.type === "task";
   const detailing = input.business.templateId === "mobile-detailing";
   const wantsScout =
     input.agent.role === "scout" &&

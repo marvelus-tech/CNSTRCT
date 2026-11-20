@@ -1,7 +1,7 @@
 export type Space = "none" | "corner" | "spare-room" | "garage";
 export type Capital = "none" | "under-100" | "100-500" | "more";
 export type Trades = "yes" | "no" | "maybe";
-export type AgentRole = "scout" | "matcher";
+export type AgentRole = "orchestrator" | "scout" | "matcher";
 export type MessageKind = "message" | "tool-call" | "tool-result" | "card" | "event" | "notice";
 
 export interface User {
@@ -33,6 +33,7 @@ export interface Business {
   city: string;
   createdAt: number;
   profileJson?: string | null;
+  orgoWorkspaceId?: string | null;
 }
 
 export interface Agent {
@@ -42,8 +43,10 @@ export interface Agent {
   role: AgentRole;
   name: string;
   title: string;
+  specialty: string;
   instructions: string;
   status: "active" | "coming_soon";
+  orgoComputerId: string | null;
   tokensUsed: number;
   computerSeconds: number;
   createdAt: number;
@@ -96,7 +99,45 @@ export interface Approval {
 export type Trigger =
   | { type: "user"; text: string }
   | { type: "routine"; routineId: string; name: string; prompt: string }
+  | { type: "task"; taskId: string; instruction: string }
   | { type: "resume" };
+
+export type TaskStatus = "queued" | "running" | "waiting_approval" | "reported" | "failed";
+
+export interface WorkTask {
+  id: string;
+  businessId: string;
+  fromAgentId: string;
+  toAgentId: string;
+  instruction: string;
+  status: TaskStatus;
+  report: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface AuditEvent {
+  id: string;
+  businessId: string;
+  userId: string;
+  agentId: string | null;
+  actor: string;
+  kind: string;
+  tool: string | null;
+  decision: string | null;
+  summary: string;
+  createdAt: number;
+}
+
+export interface AppConnection {
+  id: string;
+  businessId: string;
+  toolkit: string;
+  connectedAccountId: string | null;
+  status: "not_configured" | "not_connected" | "connected" | "expired";
+  createdAt: number;
+  updatedAt: number;
+}
 
 export interface PendingState {
   calls: { callId: string; name: string; arguments: string; rowId: string }[];

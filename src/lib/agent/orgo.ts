@@ -36,13 +36,17 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
 }
 
 export const orgo = {
-  createComputer(name: string) {
+  createWorkspace(name: string) {
+    return call<{ id: string }>("POST", "/workspaces", { name });
+  },
+  createComputer(input: { workspaceId: string; name: string }) {
     return call<{ id: string; status: string }>("POST", "/computers", {
-      workspace_id: process.env.ORGO_WORKSPACE_ID,
-      name,
+      workspace_id: input.workspaceId,
+      name: input.name,
       os: "linux",
-      ram: Number(process.env.ORGO_RAM_GB || 4),
-      cpu: Number(process.env.ORGO_CPU || 2),
+      cpu: 0.5,
+      ram: 4,
+      disk_size_gb: 20,
     });
   },
   bash(id: string, command: string) {
