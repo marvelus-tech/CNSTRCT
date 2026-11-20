@@ -10,6 +10,8 @@ import {
   listAgents,
   recordAudit,
   setAgentOrgoComputer,
+  setAgentInstructions,
+  setAgentName,
   setAgentSpecialty,
   setAgentTools,
   setBusinessWorkspace,
@@ -139,7 +141,7 @@ export async function openDesk(
 }
 
 /**
- * Older desks have scout and matcher only. Add Quinn so the workspace still has one owner thread.
+ * Older desks have scout and matcher only. Add Bizzie so the workspace still has one owner thread.
  * A business with zero agents (the seeded public sample) is left alone.
  */
 export function ensureTeamShape(businessId: string): Agent[] {
@@ -157,7 +159,7 @@ export function ensureTeamShape(businessId: string): Agent[] {
         businessId: business.id,
         userId: business.userId,
         role: "orchestrator",
-        name: role?.name ?? "Quinn",
+        name: role?.name ?? "Bizzie",
         title: role?.title ?? "Chief of staff",
         specialty: role?.specialty ?? "Routes the owner's requests to the specialists",
         instructions: role
@@ -193,10 +195,15 @@ export function ensureTeamShape(businessId: string): Agent[] {
     });
     agents = listAgents(businessId);
   }
+  const ctx: BlueprintContext = { city: business.city, businessName: business.name };
   if (blueprint) {
     for (const agent of agents) {
       const role = blueprint.roles.find((item) => item.role === agent.role);
       if (!role) continue;
+      if (agent.role === "orchestrator" && agent.name === "Quinn") {
+        setAgentName(agent.id, "Bizzie");
+        setAgentInstructions(agent.id, role.instructions(ctx));
+      }
       if (!agent.specialty) setAgentSpecialty(agent.id, role.specialty);
       if (!agent.tools.length) setAgentTools(agent.id, role.tools);
     }

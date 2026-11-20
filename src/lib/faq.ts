@@ -7,7 +7,7 @@ export const FAQS = [
   {
     question: "Is the questionnaire free?",
     answer:
-      "Yes. Triage and business path recommendations are free. Constructing a business with Quinn and specialists requires a paid Starter or Pro plan.",
+      "Yes. Triage and business path recommendations are free. Constructing a business with your founding bots requires a paid Starter or Pro plan.",
   },
   {
     question: "Do I need startup cash?",
@@ -22,6 +22,6 @@ export const FAQS = [
   {
     question: "Why agents instead of another chatbot?",
     answer:
-      "A chatbot answers one thread. BizOS gives you an orchestrator you talk to, specialists that do focused work behind it, and approval gates before anything sensitive is marked sent. You can connect more apps over time; in this MVP, outbound actions still stop on your approval card.",
+      "A chatbot answers one thread. BizOS gives you a founding team of bots: one lead you talk to, specialists behind it, and approval gates before anything sensitive is marked sent. You can connect more apps over time; in this MVP, outbound actions still stop on your approval card.",
   },
 ];
