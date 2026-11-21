@@ -85,36 +85,23 @@ h4 {
     radial-gradient(circle at 80% 60%, rgba(232, 93, 4, 0.06), transparent 45%);
 }
 
-/* Hero artifact: a softened brandmark tile viewed from above as a shallow horizontal slab. */
-.hero-artifact-stage {
+/* Hero artifact: the reference brandmark footprint as one static black silhouette. */
+.hero-brandmark-stage {
   position: relative;
   display: grid;
   min-height: 15rem;
   width: 100%;
   place-items: center;
-  overflow: visible;
-  perspective: 55rem;
-  perspective-origin: 50% 36%;
 }
 
-.hero-artifact-stage::before {
-  position: absolute;
-  width: min(82%, 28rem);
-  height: 36%;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.48);
-  filter: blur(3.5rem);
-  content: "";
-}
-
-.hero-artifact {
-  position: relative;
-  isolation: isolate;
+.hero-brandmark {
+  display: block;
   width: min(58vw, 17.5rem);
   aspect-ratio: 1;
-  transform: rotateX(52deg);
-  transform-origin: center;
-  transform-style: preserve-3d;
+}
+
+.hero-brandmark__shape {
+  fill: #000;
 }
 
 .hero-artifact__face {
@@ -299,7 +286,7 @@ h4 {
 }
 
 @media (min-width: 768px) {
-  .hero-artifact-stage {
+  .hero-brandmark-stage {
     min-height: 20rem;
   }
 
@@ -309,10 +296,6 @@ h4 {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .hero-artifact {
-    animation: hero-artifact-breathe 17s ease-in-out infinite;
-  }
-
   .hero-artifact__top,
   .hero-artifact__side {
     animation: hero-artifact-depth-glow 18s ease-in-out infinite alternate;
@@ -332,16 +315,6 @@ h4 {
 
   .hero-artifact__refraction {
     animation: hero-artifact-refraction 16s ease-in-out infinite;
-  }
-}
-
-@keyframes hero-artifact-breathe {
-  0%,
-  100% {
-    transform: rotateX(52deg) scale(1);
-  }
-  48% {
-    transform: rotateX(52deg) scale(1.012, 0.995);
   }
 }
 
