@@ -85,7 +85,7 @@ h4 {
     radial-gradient(circle at 80% 60%, rgba(232, 93, 4, 0.06), transparent 45%);
 }
 
-/* Hero artifact: a regular point-up hexagon prism with equal edges and softly rounded vertices. */
+/* Hero artifact: a square-set, flat-top brandmark hexagon with deeply softened vertices. */
 .hero-artifact-stage {
   position: relative;
   display: grid;
@@ -109,8 +109,8 @@ h4 {
 .hero-artifact {
   position: relative;
   isolation: isolate;
-  width: min(56vw, 16.875rem);
-  aspect-ratio: 0.866 / 1;
+  width: min(58vw, 17.5rem);
+  aspect-ratio: 1;
   transform: rotateX(2deg) rotateY(-2deg) rotateZ(-0.65deg);
   transform-style: preserve-3d;
 }
@@ -131,8 +131,8 @@ h4 {
 .hero-artifact__top,
 .hero-artifact__side,
 .hero-artifact__core {
-  -webkit-clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  -webkit-clip-path: polygon(36% 2%, 64% 2%, 100% 50%, 64% 98%, 36% 98%, 0 50%);
+  clip-path: polygon(36% 2%, 64% 2%, 100% 50%, 64% 98%, 36% 98%, 0 50%);
   -webkit-clip-path: url("#hero-artifact-rounded-hex");
   clip-path: url("#hero-artifact-rounded-hex");
 }
