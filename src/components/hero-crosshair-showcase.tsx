@@ -50,6 +50,13 @@ export function HeroCrosshairShowcase() {
       role="region"
       aria-label="Custom-made business examples"
     >
+      <svg className="pointer-events-none absolute h-0 w-0" aria-hidden focusable="false">
+        <defs>
+          <clipPath id="hero-artifact-rounded-hex" clipPathUnits="objectBoundingBox">
+            <path d="M .17 0 L .83 0 Q .86 0 .87 .03 L .99 .43 Q 1 .46 1 .5 Q 1 .54 .99 .57 L .87 .97 Q .86 1 .83 1 L .17 1 Q .14 1 .13 .97 L .01 .57 Q 0 .54 0 .5 Q 0 .46 .01 .43 L .13 .03 Q .14 0 .17 0 Z" />
+          </clipPath>
+        </defs>
+      </svg>
       <div className="hero-artifact" data-reduced-motion={reducedMotion || undefined}>
         <span className="hero-artifact__shadow" aria-hidden />
         <span className="hero-artifact__aura" aria-hidden />
@@ -80,6 +87,18 @@ export function HeroCrosshairShowcase() {
           </div>
           <span className="hero-artifact__frost" aria-hidden />
           <span className="hero-artifact__refraction" aria-hidden />
+          <svg
+            className="hero-artifact__hex-edge"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden
+            focusable="false"
+          >
+            <path
+              d="M 17 0 L 83 0 Q 86 0 87 3 L 99 43 Q 100 46 100 50 Q 100 54 99 57 L 87 97 Q 86 100 83 100 L 17 100 Q 14 100 13 97 L 1 57 Q 0 54 0 50 Q 0 46 1 43 L 13 3 Q 14 0 17 0 Z"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
         </div>
       </div>
       <span className="sr-only">{slide.label}</span>

@@ -85,7 +85,7 @@ h4 {
     radial-gradient(circle at 80% 60%, rgba(232, 93, 4, 0.06), transparent 45%);
 }
 
-/* Hero artifact: a frosted rounded cuboid with optical depth and a tight, low-spread photo rim. */
+/* Hero artifact: a flat-top rounded hexagon prism with a tight, low-spread photo rim. */
 .hero-artifact-stage {
   position: relative;
   display: grid;
@@ -107,7 +107,6 @@ h4 {
 }
 
 .hero-artifact {
-  --artifact-radius: clamp(1.5rem, 5.8vw, 2.25rem);
   position: relative;
   isolation: isolate;
   width: min(72vw, 26rem);
@@ -121,61 +120,50 @@ h4 {
   z-index: 3;
   inset: 0;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.58);
-  border-radius: var(--artifact-radius);
   background: rgba(244, 248, 250, 0.38);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(87, 102, 117, 0.12),
     0 1.75rem 4rem -2.5rem rgba(48, 61, 78, 0.42),
     0 0 1rem rgba(66, 191, 232, 0.08);
   transform: translateZ(1.15rem);
 }
 
+.hero-artifact__face,
+.hero-artifact__top,
+.hero-artifact__side,
+.hero-artifact__core {
+  -webkit-clip-path: polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0 50%);
+  clip-path: polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0 50%);
+  -webkit-clip-path: url("#hero-artifact-rounded-hex");
+  clip-path: url("#hero-artifact-rounded-hex");
+}
+
 .hero-artifact__top,
 .hero-artifact__side {
   position: absolute;
+  inset: 0;
   pointer-events: none;
 }
 
 .hero-artifact__top {
   z-index: 2;
-  top: -8.5%;
-  right: 1.5%;
-  left: 4.5%;
-  height: 19%;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: calc(var(--artifact-radius) * 0.82) calc(var(--artifact-radius) * 0.95) 0.75rem 0.9rem;
   background:
-    radial-gradient(circle at 20% 48%, rgba(87, 219, 239, 0.4), transparent 40%),
-    radial-gradient(circle at 79% 30%, rgba(126, 136, 244, 0.34), transparent 42%),
-    linear-gradient(100deg, rgba(237, 254, 255, 0.34), rgba(176, 221, 248, 0.16) 48%, rgba(219, 236, 132, 0.28));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 -0.45rem 1.5rem rgba(90, 196, 231, 0.08);
-  filter: blur(3px) saturate(1.05);
-  transform: skewX(-12deg) translateZ(0.25rem);
-  transform-origin: bottom;
+    radial-gradient(circle at 24% 20%, rgba(87, 219, 239, 0.38), transparent 38%),
+    radial-gradient(circle at 76% 18%, rgba(126, 136, 244, 0.32), transparent 40%),
+    linear-gradient(100deg, rgba(237, 254, 255, 0.3), rgba(176, 221, 248, 0.13) 48%, rgba(219, 236, 132, 0.24));
+  filter: blur(2.5px) saturate(1.03);
+  opacity: 0.62;
+  transform: translate3d(-2.4%, -4%, 0.25rem) scale(0.985);
 }
 
 .hero-artifact__side {
   z-index: 1;
-  top: 5%;
-  right: -5%;
-  bottom: 6%;
-  width: 11%;
-  border: 1px solid rgba(206, 244, 249, 0.16);
-  border-radius: 0 var(--artifact-radius) var(--artifact-radius) 0.65rem;
   background:
-    radial-gradient(circle at 32% 20%, rgba(100, 184, 246, 0.35), transparent 40%),
-    radial-gradient(circle at 54% 80%, rgba(213, 225, 72, 0.32), transparent 46%),
-    linear-gradient(165deg, rgba(191, 227, 247, 0.24), rgba(110, 129, 208, 0.12) 52%, rgba(225, 205, 92, 0.2));
-  box-shadow:
-    inset -1px 0 rgba(255, 255, 255, 0.2),
-    0.45rem 0 1.5rem rgba(89, 121, 164, 0.08);
-  filter: blur(3.5px) saturate(1.02);
-  transform: skewY(-10deg) translateZ(0.1rem);
-  transform-origin: left;
+    radial-gradient(circle at 76% 24%, rgba(100, 184, 246, 0.3), transparent 39%),
+    radial-gradient(circle at 72% 80%, rgba(213, 225, 72, 0.3), transparent 44%),
+    linear-gradient(165deg, rgba(191, 227, 247, 0.2), rgba(110, 129, 208, 0.1) 52%, rgba(225, 205, 92, 0.18));
+  filter: blur(3px) saturate(1.01);
+  opacity: 0.56;
+  transform: translate3d(3.5%, 2.5%, 0.1rem) scale(0.99);
 }
 
 .hero-artifact__shadow {
@@ -236,8 +224,6 @@ h4 {
   z-index: 1;
   inset: 9% 7%;
   overflow: hidden;
-  border: 1px solid rgba(221, 249, 252, 0.14);
-  border-radius: calc(var(--artifact-radius) - 0.75rem);
   background: rgba(21, 31, 40, 0.18);
   box-shadow:
     inset 0 0 2.4rem 0.2rem rgba(5, 12, 19, 0.2),
@@ -278,7 +264,6 @@ h4 {
   position: absolute;
   z-index: 2;
   inset: 0;
-  border-radius: inherit;
   background:
     radial-gradient(ellipse at 27% 9%, rgba(255, 255, 255, 0.28), transparent 31%),
     radial-gradient(ellipse at 82% 91%, rgba(219, 249, 255, 0.11), transparent 34%),
@@ -288,15 +273,27 @@ h4 {
 .hero-artifact__refraction {
   position: absolute;
   z-index: 3;
-  inset: 2px;
-  border-radius: calc(var(--artifact-radius) - 2px);
-  border-top: 1px solid rgba(255, 255, 255, 0.82);
-  border-right: 1px solid rgba(214, 251, 250, 0.28);
-  border-bottom: 1px solid rgba(121, 149, 166, 0.14);
-  background: linear-gradient(166deg, rgba(255, 255, 255, 0.14) 0 7%, transparent 23% 73%, rgba(255, 255, 255, 0.09) 92%);
-  box-shadow:
-    inset 0.65rem 0 1.25rem -1.25rem rgba(255, 255, 255, 0.9),
-    inset -0.75rem 0 1.5rem -1.3rem rgba(188, 246, 255, 0.65);
+  inset: 0;
+  background:
+    linear-gradient(166deg, rgba(255, 255, 255, 0.17) 0 7%, transparent 22% 74%, rgba(255, 255, 255, 0.08) 92%),
+    radial-gradient(circle at 8% 50%, rgba(188, 246, 255, 0.15), transparent 15%),
+    radial-gradient(circle at 92% 50%, rgba(218, 225, 92, 0.12), transparent 15%);
+}
+
+.hero-artifact__hex-edge {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hero-artifact__hex-edge path {
+  fill: none;
+  stroke: rgba(240, 253, 255, 0.66);
+  stroke-width: 1.1;
 }
 
 @media (min-width: 768px) {
