@@ -49,14 +49,3 @@ export const HERO_BUSINESS_SLIDES: HeroBusinessSlide[] = [
     alt: "Curated products on a small outdoor pop-up retail table",
   },
 ];
-
-/** Percent positions for crosshair anchor — stays inset from panel edges. */
-export const HERO_CROSSHAIR_COORDS = [
-  { x: 50, y: 50 },
-  { x: 28, y: 32 },
-  { x: 72, y: 38 },
-  { x: 35, y: 68 },
-  { x: 68, y: 62 },
-  { x: 22, y: 52 },
-  { x: 78, y: 55 },
-] as const;
