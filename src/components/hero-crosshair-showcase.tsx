@@ -53,7 +53,7 @@ export function HeroCrosshairShowcase() {
       <svg className="pointer-events-none absolute h-0 w-0" aria-hidden focusable="false">
         <defs>
           <clipPath id="hero-artifact-rounded-hex" clipPathUnits="objectBoundingBox">
-            <path d="M .36 .02 C .3 .02 .27 .05 .23 .11 L .03 .42 C .01 .45 0 .48 0 .5 C 0 .53 .01 .56 .03 .59 L .23 .9 C .27 .96 .3 .98 .36 .98 H .64 C .7 .98 .73 .95 .77 .89 L .97 .58 C .99 .55 1 .52 1 .5 C 1 .47 .99 .44 .97 .41 L .77 .1 C .73 .04 .7 .02 .64 .02 Z" />
+            <path d="M .38 .03 C .3 .03 .25 .07 .2 .15 L .05 .38 C .02 .43 0 .47 0 .5 C 0 .53 .02 .57 .05 .62 L .2 .85 C .25 .93 .3 .97 .38 .97 H .62 C .7 .97 .75 .93 .8 .85 L .95 .62 C .98 .57 1 .53 1 .5 C 1 .47 .98 .43 .95 .38 L .8 .15 C .75 .07 .7 .03 .62 .03 Z" />
           </clipPath>
         </defs>
       </svg>
@@ -95,7 +95,7 @@ export function HeroCrosshairShowcase() {
             focusable="false"
           >
             <path
-              d="M 36 2 C 30 2 27 5 23 11 L 3 42 C 1 45 0 48 0 50 C 0 53 1 56 3 59 L 23 90 C 27 96 30 98 36 98 H 64 C 70 98 73 95 77 89 L 97 58 C 99 55 100 52 100 50 C 100 47 99 44 97 41 L 77 10 C 73 4 70 2 64 2 Z"
+              d="M 38 3 C 30 3 25 7 20 15 L 5 38 C 2 43 0 47 0 50 C 0 53 2 57 5 62 L 20 85 C 25 93 30 97 38 97 H 62 C 70 97 75 93 80 85 L 95 62 C 98 57 100 53 100 50 C 100 47 98 43 95 38 L 80 15 C 75 7 70 3 62 3 Z"
               vectorEffect="non-scaling-stroke"
             />
           </svg>

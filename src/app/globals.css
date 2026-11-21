@@ -85,15 +85,16 @@ h4 {
     radial-gradient(circle at 80% 60%, rgba(232, 93, 4, 0.06), transparent 45%);
 }
 
-/* Hero artifact: a square-set, flat-top brandmark hexagon with deeply softened vertices. */
+/* Hero artifact: a softened brandmark tile viewed from above as a shallow horizontal slab. */
 .hero-artifact-stage {
   position: relative;
   display: grid;
-  min-height: 18rem;
+  min-height: 15rem;
   width: 100%;
   place-items: center;
   overflow: visible;
-  perspective: 70rem;
+  perspective: 55rem;
+  perspective-origin: 50% 36%;
 }
 
 .hero-artifact-stage::before {
@@ -111,7 +112,8 @@ h4 {
   isolation: isolate;
   width: min(58vw, 17.5rem);
   aspect-ratio: 1;
-  transform: rotateX(2deg) rotateY(-2deg) rotateZ(-0.65deg);
+  transform: rotateX(52deg);
+  transform-origin: center;
   transform-style: preserve-3d;
 }
 
@@ -124,15 +126,15 @@ h4 {
   box-shadow:
     0 1.75rem 4rem -2.5rem rgba(48, 61, 78, 0.42),
     0 0 1rem rgba(66, 191, 232, 0.08);
-  transform: translateZ(1.15rem);
+  transform: translateZ(0.85rem);
 }
 
 .hero-artifact__face,
 .hero-artifact__top,
 .hero-artifact__side,
 .hero-artifact__core {
-  -webkit-clip-path: polygon(36% 2%, 64% 2%, 100% 50%, 64% 98%, 36% 98%, 0 50%);
-  clip-path: polygon(36% 2%, 64% 2%, 100% 50%, 64% 98%, 36% 98%, 0 50%);
+  -webkit-clip-path: polygon(38% 3%, 62% 3%, 100% 50%, 62% 97%, 38% 97%, 0 50%);
+  clip-path: polygon(38% 3%, 62% 3%, 100% 50%, 62% 97%, 38% 97%, 0 50%);
   -webkit-clip-path: url("#hero-artifact-rounded-hex");
   clip-path: url("#hero-artifact-rounded-hex");
 }
@@ -152,7 +154,7 @@ h4 {
     linear-gradient(100deg, rgba(237, 254, 255, 0.3), rgba(176, 221, 248, 0.13) 48%, rgba(219, 236, 132, 0.24));
   filter: blur(2.5px) saturate(1.03);
   opacity: 0.62;
-  transform: translate3d(-2.5%, -2.5%, 0.25rem) scale(0.985);
+  transform: translateZ(0.42rem) scale(0.995);
 }
 
 .hero-artifact__side {
@@ -163,20 +165,20 @@ h4 {
     linear-gradient(165deg, rgba(191, 227, 247, 0.2), rgba(110, 129, 208, 0.1) 52%, rgba(225, 205, 92, 0.18));
   filter: blur(3px) saturate(1.01);
   opacity: 0.56;
-  transform: translate3d(2.75%, 2.5%, 0.1rem) scale(0.99);
+  transform: translateZ(0) scale(0.998);
 }
 
 .hero-artifact__shadow {
   position: absolute;
   z-index: 0;
-  right: -3%;
-  bottom: -12%;
-  left: 4%;
-  height: 28%;
+  right: 2%;
+  bottom: -10%;
+  left: 2%;
+  height: 22%;
   border-radius: 50%;
   background: rgba(40, 57, 75, 0.2);
   filter: blur(1.35rem);
-  transform: translateZ(-1rem) rotate(-1deg);
+  transform: translateZ(-1rem);
 }
 
 .hero-artifact__aura {
@@ -190,7 +192,7 @@ h4 {
     radial-gradient(circle at 78% 82%, rgba(194, 217, 73, 0.3), transparent 35%);
   filter: blur(1.6rem) saturate(0.85);
   opacity: 0.48;
-  transform: translate3d(0, 0.5%, -1.4rem) scale(1.005);
+  transform: translate3d(0, 0.5%, -0.6rem) scale(1.005);
 }
 
 .hero-artifact__color-field {
@@ -298,7 +300,7 @@ h4 {
 
 @media (min-width: 768px) {
   .hero-artifact-stage {
-    min-height: 27rem;
+    min-height: 20rem;
   }
 
   .hero-artifact__aura {
@@ -336,10 +338,10 @@ h4 {
 @keyframes hero-artifact-breathe {
   0%,
   100% {
-    transform: rotateX(2deg) rotateY(-2deg) rotateZ(-0.65deg) scale(1);
+    transform: rotateX(52deg) scale(1);
   }
   48% {
-    transform: rotateX(2.8deg) rotateY(-1.1deg) rotateZ(-0.15deg) scale(1.012, 0.995);
+    transform: rotateX(52deg) scale(1.012, 0.995);
   }
 }
 
@@ -357,11 +359,11 @@ h4 {
 @keyframes hero-artifact-aura-drift {
   from {
     opacity: 0.42;
-    transform: translate3d(-0.35%, 0.75%, -1.4rem) scale(0.998);
+    transform: translate3d(-0.35%, 0.75%, -0.6rem) scale(0.998);
   }
   to {
     opacity: 0.54;
-    transform: translate3d(0.5%, -0.25%, -1.4rem) scale(1.012);
+    transform: translate3d(0.5%, -0.25%, -0.6rem) scale(1.012);
   }
 }
 
