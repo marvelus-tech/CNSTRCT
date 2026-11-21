@@ -52,6 +52,7 @@ export function HeroCrosshairShowcase() {
     >
       <div className="hero-artifact" data-reduced-motion={reducedMotion || undefined}>
         <span className="hero-artifact__shadow" aria-hidden />
+        <span className="hero-artifact__aura" aria-hidden />
         <span className="hero-artifact__top" aria-hidden />
         <span className="hero-artifact__side" aria-hidden />
         <div className="hero-artifact__face">
@@ -61,10 +62,19 @@ export function HeroCrosshairShowcase() {
               src={slide.src}
               alt={slide.alt}
               fill
-              sizes="(max-width: 767px) 78vw, 460px"
-              className="hero-artifact__image"
+              sizes="(max-width: 767px) 64vw, 360px"
+              className="hero-artifact__image-sharp"
               preload={slideIndex === 0}
               style={{ opacity: imageVisible ? 1 : 0 }}
+            />
+            <Image
+              src={slide.src}
+              alt=""
+              fill
+              sizes="(max-width: 767px) 64vw, 360px"
+              className="hero-artifact__image-edge"
+              aria-hidden
+              style={{ opacity: imageVisible ? 0.48 : 0 }}
             />
             <span className="hero-artifact__image-tint" aria-hidden />
           </div>
