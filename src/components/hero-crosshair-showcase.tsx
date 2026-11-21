@@ -53,7 +53,7 @@ export function HeroCrosshairShowcase() {
       <svg className="pointer-events-none absolute h-0 w-0" aria-hidden focusable="false">
         <defs>
           <clipPath id="hero-artifact-rounded-hex" clipPathUnits="objectBoundingBox">
-            <path d="M .17 0 L .83 0 Q .86 0 .87 .03 L .99 .43 Q 1 .46 1 .5 Q 1 .54 .99 .57 L .87 .97 Q .86 1 .83 1 L .17 1 Q .14 1 .13 .97 L .01 .57 Q 0 .54 0 .5 Q 0 .46 .01 .43 L .13 .03 Q .14 0 .17 0 Z" />
+            <path d="M .29 0 L .71 0 Q .75 0 .77 .04 L .98 .46 Q 1 .5 .98 .54 L .77 .96 Q .75 1 .71 1 L .29 1 Q .25 1 .23 .96 L .02 .54 Q 0 .5 .02 .46 L .23 .04 Q .25 0 .29 0 Z" />
           </clipPath>
         </defs>
       </svg>
@@ -69,7 +69,7 @@ export function HeroCrosshairShowcase() {
               src={slide.src}
               alt={slide.alt}
               fill
-              sizes="(max-width: 767px) 64vw, 360px"
+              sizes="(max-width: 767px) 54vw, 270px"
               className="hero-artifact__image-sharp"
               preload={slideIndex === 0}
               style={{ opacity: imageVisible ? 1 : 0 }}
@@ -78,7 +78,7 @@ export function HeroCrosshairShowcase() {
               src={slide.src}
               alt=""
               fill
-              sizes="(max-width: 767px) 64vw, 360px"
+              sizes="(max-width: 767px) 54vw, 270px"
               className="hero-artifact__image-edge"
               aria-hidden
               style={{ opacity: imageVisible ? 0.48 : 0 }}
@@ -95,7 +95,7 @@ export function HeroCrosshairShowcase() {
             focusable="false"
           >
             <path
-              d="M 17 0 L 83 0 Q 86 0 87 3 L 99 43 Q 100 46 100 50 Q 100 54 99 57 L 87 97 Q 86 100 83 100 L 17 100 Q 14 100 13 97 L 1 57 Q 0 54 0 50 Q 0 46 1 43 L 13 3 Q 14 0 17 0 Z"
+              d="M 29 0 L 71 0 Q 75 0 77 4 L 98 46 Q 100 50 98 54 L 77 96 Q 75 100 71 100 L 29 100 Q 25 100 23 96 L 2 54 Q 0 50 2 46 L 23 4 Q 25 0 29 0 Z"
               vectorEffect="non-scaling-stroke"
             />
           </svg>
