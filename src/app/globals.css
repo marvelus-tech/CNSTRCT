@@ -653,10 +653,11 @@ h4 {
   min-height: 22rem;
   width: 100%;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 0.25rem;
   border: 1px solid var(--border);
   background: var(--card);
+  padding-inline: 0.25rem;
 }
 
 @media (min-width: 768px) {
@@ -667,16 +668,21 @@ h4 {
 
 .connectors-orbit-arena {
   position: relative;
-  width: min(100%, 25rem);
-  height: 12.5rem;
+  width: 100%;
+  max-width: 25rem;
   margin-inline: auto;
+  aspect-ratio: 400 / 220;
 }
 
-@media (min-width: 768px) {
-  .connectors-orbit-arena {
-    width: 25rem;
-    height: 13.75rem;
-  }
+.connectors-orbit-scale-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 400px;
+  height: 220px;
+  translate: -50% -50%;
+  transform: scale(var(--orbit-scale, 1));
+  transform-origin: center center;
 }
 
 .connectors-orbit-guides-layer {
@@ -705,11 +711,7 @@ h4 {
 
 .connectors-orbit-screen-layer {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 400px;
-  height: 220px;
-  translate: -50% -50%;
+  inset: 0;
   z-index: 1;
 }
 

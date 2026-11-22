@@ -33,6 +33,7 @@ function motionAtTheta(theta: number, rx: number, ry: number): NodeMotion {
 
 export function LandingConnectorsOrbit() {
   const stageRef = useRef<HTMLDivElement>(null);
+  const arenaRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number>(0);
   const inViewRef = useRef(true);
@@ -51,6 +52,22 @@ export function LandingConnectorsOrbit() {
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    const arena = arenaRef.current;
+    if (!arena) return;
+
+    const syncScale = () => {
+      const width = arena.clientWidth;
+      const scale = width > 0 ? Math.min(1, width / 400) : 1;
+      arena.style.setProperty("--orbit-scale", scale.toFixed(4));
+    };
+
+    syncScale();
+    const ro = new ResizeObserver(syncScale);
+    ro.observe(arena);
+    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
@@ -100,29 +117,30 @@ export function LandingConnectorsOrbit() {
       className="connectors-orbit-stage hero-grain"
       aria-label={buildAriaLabel()}
     >
-      <div className="connectors-orbit-arena">
-        <div className="connectors-orbit-guides-layer" aria-hidden="true">
-          <div className="connectors-orbit-guides-tilt">
-            <svg
-              className="connectors-orbit-guides"
-              viewBox="-200 -110 400 220"
-              focusable="false"
-            >
-              {ORBIT_RING_CONFIG.map((ring, index) => (
-                <ellipse
-                  key={index}
-                  cx={0}
-                  cy={0}
-                  rx={ring.rx}
-                  ry={ring.ry}
-                  className="connectors-orbit-guide"
-                />
-              ))}
-            </svg>
+      <div ref={arenaRef} className="connectors-orbit-arena">
+        <div className="connectors-orbit-scale-wrap">
+          <div className="connectors-orbit-guides-layer" aria-hidden="true">
+            <div className="connectors-orbit-guides-tilt">
+              <svg
+                className="connectors-orbit-guides"
+                viewBox="-200 -110 400 220"
+                focusable="false"
+              >
+                {ORBIT_RING_CONFIG.map((ring, index) => (
+                  <ellipse
+                    key={index}
+                    cx={0}
+                    cy={0}
+                    rx={ring.rx}
+                    ry={ring.ry}
+                    className="connectors-orbit-guide"
+                  />
+                ))}
+              </svg>
+            </div>
           </div>
-        </div>
 
-        <div className="connectors-orbit-screen-layer">
+          <div className="connectors-orbit-screen-layer">
           <div className="connectors-orbit-hub-halo" aria-hidden="true" />
 
           {LANDING_CONNECTORS.map((connector, index) => {
@@ -161,6 +179,7 @@ export function LandingConnectorsOrbit() {
                 aria-hidden
               />
             </div>
+          </div>
           </div>
         </div>
       </div>
