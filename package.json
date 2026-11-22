@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "NODE_ENV=test tsx --test src/lib/seo.test.ts src/lib/landing-stats.test.ts src/lib/opportunities-preview.test.ts src/lib/billing/billing-policy.test.ts src/lib/billing/billing-construction.test.ts src/lib/agent/flow.test.ts src/lib/agent/business-api.test.ts src/lib/agent/team.test.ts src/lib/agent/review.test.ts"
+    "test": "NODE_ENV=test tsx --test src/lib/seo.test.ts src/lib/landing-stats.test.ts src/lib/opportunities-preview.test.ts src/lib/billing/billing-policy.test.ts src/lib/billing/billing-construction.test.ts src/lib/agent/flow.test.ts src/lib/agent/business-api.test.ts src/lib/agent/team.test.ts src/lib/agent/review.test.ts src/lib/connectors-orbit-math.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",
