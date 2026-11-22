@@ -1,7 +1,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { dataDir } from "../db";
+import { sandboxBaseDir } from "../db/paths";
 import { searchDetailers, searchTradies } from "./directory";
 import { orgo } from "./orgo";
 import { getAgent, getComputer, upsertComputer } from "../store";
@@ -38,7 +38,7 @@ let dockerCache: boolean | null = null;
 export type SandboxProvider = "orgo" | "docker" | "local";
 
 export function sandboxRoot(agentId: string) {
-  return path.join(dataDir(), "sandboxes", agentId);
+  return path.join(sandboxBaseDir(), agentId);
 }
 
 export function ensureWorkspace(agentId: string) {

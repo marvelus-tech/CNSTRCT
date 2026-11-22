@@ -54,9 +54,9 @@ Each blueprint role is created with a routine, including Quinn's morning brief. 
 
 A user owns a profile, one business, that business's public site at `/b/[slug]`, and that business's agents. The sample desk `harbor-tradie-desk` belongs to `user_sample` and is not the signed-in demo user.
 
-With no Supabase keys, `POST /api/session` sets an httpOnly `cnstrct_sid` cookie and a row in sqlite. With `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `POST /api/auth/magic` asks Supabase to email a link, and `POST /api/auth/verify` accepts `token_hash` from `/auth/callback`. The email template has to land on that page with `token_hash` and `type`. The demo cookie still works when those keys are absent.
+With no Supabase keys, `POST /api/session` sets an httpOnly `cnstrct_sid` cookie and a user row. With `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `POST /api/auth/magic` asks Supabase to email a link, and `POST /api/auth/verify` accepts `token_hash` from `/auth/callback`. The email template has to land on that page with `token_hash` and `type`. The demo cookie still works when those keys are absent.
 
-Sqlite lives in `data/cnstrct.db` (or `CNSTRCT_DATA_DIR`). There is no hosted database in the default demo.
+Local and test state is SQLite in `data/cnstrct.db` (or `CNSTRCT_DATA_DIR`). Production state is Neon when `DATABASE_URL` or `POSTGRES_URL` is set. Vercel refuses SQLite. See [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Product flow
 
@@ -95,7 +95,7 @@ Detailing and estate clearance are the two coming-soon cards. Tutoring is the th
 
 | Piece | No keys | With keys |
 | --- | --- | --- |
-| Triage, cards, site, leads | Live, stored in sqlite | Same |
+| Triage, cards, site, leads | Live, stored in the database | Same |
 | Agent chat and routines | Owner chats with Quinn. Specialists take tasks. Routines stay planned | xAI if `XAI_API_KEY` is set, else OpenAI |
 | Computer | Status not configured. Local folder is labeled as a sandbox | Orgo Small for each specialist, only after create returns an id. Quinn has none |
 | Email, match intro, shell | Approval card, then a local outbox or local command | Gmail send is not available. The outbox stays local and is not marked sent |

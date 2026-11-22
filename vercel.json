@@ -1,8 +1,5 @@
 {
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "env": {
-    "CNSTRCT_DATA_DIR": "/tmp/cnstrct-data"
-  }
+  "framework": "nextjs"
 }

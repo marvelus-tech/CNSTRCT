@@ -6,7 +6,7 @@ Run this after a production deploy (or against local `pnpm start` with productio
 
 ## Banners
 
-- **Hosted demo:** When `NEXT_PUBLIC_SITE_URL` is not localhost and `CNSTRCT_DATA_DIR` is under `/tmp`, the top banner should mention ephemeral storage and link to the seeded desk.
+- **Hosted demo:** With `DATABASE_URL` or `POSTGRES_URL` set, the amber ephemeral-storage banner should be **absent**. It still shows if production has no database URL, or if a non-local site is running SQLite under `/tmp`.
 - **Billing:** Without Stripe keys, expect **Billing activates soon.** Construction should still complete.
 
 ## Flow
@@ -20,13 +20,13 @@ Run this after a production deploy (or against local `pnpm start` with productio
 7. **`/command-center`** Lists your businesses with team names, Gmail and Orgo status, workspace and public site links. Below `lg` (1024px), use the bottom tab bar (Businesses, Profile, Settings); from `lg` up, the 240px left rail returns.
 8. **`/workspace/[businessId]`** Chat is Quinn only. Team, connections, and computers show real statuses (`not configured` with no keys). Routines say planned. Message Quinn, then approve or reject the specialist card. No timer fires a routine.
 9. **`/b/[slug]`** Public site and lead form for your business slug.
-10. **`/b/harbor-tradie-desk`** Seeded sample desk always available (no prior session). Lead form saves to sqlite.
+10. **`/b/harbor-tradie-desk`** Seeded sample desk always available (no prior session). Lead form saves to the database.
 
 ## API session check
 
 - `GET /api/session` returns JSON for the signed-in demo user when the `cnstrct_sid` cookie is present.
 
-After persistence work, expect session data to **survive warm requests** on the same serverless instance but **not** across cold starts or deploys when sqlite lives under `/tmp`. If sqlite resets, call `POST /api/auth/demo` or **Start** again to refresh the session cookie, then re-run triage if the profile row is gone.
+With Neon configured, session and business rows should **survive a cold start and a redeploy**. Sandbox files under `/tmp` still do not. If production was rolled back to SQLite on `/tmp`, call `POST /api/auth/demo` or **Start** again after a reset, then re-run triage if the profile row is gone.
 
 ## Build parity
 

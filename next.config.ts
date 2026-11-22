@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Desks are read from sqlite on each request. Cache Components would
+  // Desks are read from the database on each request. Cache Components would
   // freeze a business page at build time, so this app stays dynamic.
   cacheComponents: false,
+  // The Neon driver is loaded with require() from a worker thread. Bundling it
+  // would hide that file from the worker.
+  serverExternalPackages: ["@neondatabase/serverless"],
   poweredByHeader: false,
   turbopack: {
     rules: {
