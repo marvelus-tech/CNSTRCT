@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { BusinessHexMark } from "@/components/business-hex-mark";
 import {
   depthFromTheta,
+  ORBIT_OUTER_DIAMETER,
   ORBIT_RING_CONFIG,
   positionOnProjectedEllipse,
   thetaAtTime,
@@ -60,9 +61,12 @@ export function LandingConnectorsOrbit() {
 
     const syncScale = () => {
       const width = arena.clientWidth;
-      const designWidth = 400;
-      const maxScale = 1.42;
-      const scale = width > 0 ? Math.min(maxScale, width / designWidth) : 1;
+      const targetFill = 0.87;
+      const maxScale = 2.65;
+      const minScale = 0.55;
+      let scale =
+        width > 0 ? (width * targetFill) / ORBIT_OUTER_DIAMETER : 1;
+      scale = Math.min(maxScale, Math.max(minScale, scale));
       arena.style.setProperty("--orbit-scale", scale.toFixed(4));
     };
 

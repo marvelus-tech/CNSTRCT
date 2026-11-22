@@ -653,21 +653,18 @@ h4 {
 
 .connectors-orbit-stage {
   position: relative;
-  display: grid;
-  min-height: 20rem;
+  display: block;
   width: 100%;
-  place-items: center;
   overflow: visible;
   border-radius: 0.25rem;
   border: 1px solid var(--border);
   background: var(--card);
-  padding: 1rem 0.35rem;
+  padding: 0.5rem 0.125rem 0.625rem;
 }
 
 @media (min-width: 768px) {
   .connectors-orbit-stage {
-    min-height: 26rem;
-    padding: 1.5rem 0.75rem;
+    padding: 0.75rem 0.125rem 1rem;
   }
 }
 

@@ -14,7 +14,7 @@ export function LandingConnectors() {
         <h2 className="max-w-3xl text-center text-xl font-semibold leading-snug tracking-tight text-foreground md:text-2xl">
           {CONNECTORS_HEADLINE}
         </h2>
-        <div className="connectors-orbit-layout w-full max-w-5xl">
+        <div className="connectors-orbit-layout w-full">
           <LandingConnectorsOrbit />
         </div>
       </div>

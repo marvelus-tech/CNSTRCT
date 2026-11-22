@@ -10,10 +10,13 @@ export type OrbitDepth = {
 };
 
 export const ORBIT_RING_CONFIG = [
-  { rx: 88, ry: 36, durationMs: 48_000 },
-  { rx: 128, ry: 52, durationMs: 62_000 },
-  { rx: 168, ry: 68, durationMs: 76_000 },
+  { rx: 96, ry: 40, durationMs: 48_000 },
+  { rx: 140, ry: 56, durationMs: 62_000 },
+  { rx: 184, ry: 76, durationMs: 76_000 },
 ] as const;
+
+/** Horizontal span of the outer ring in design units (scale-wrap is 400×220). */
+export const ORBIT_OUTER_DIAMETER = ORBIT_RING_CONFIG[2].rx * 2;
 
 /** Matches tilted ring foreshortening (~rotateX(58deg)). */
 export const ORBIT_Y_COMPRESS = Math.cos((58 * Math.PI) / 180);
