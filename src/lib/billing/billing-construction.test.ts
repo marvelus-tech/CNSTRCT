@@ -11,6 +11,7 @@ delete process.env.BILLING_MODE;
 delete process.env.STRIPE_SECRET_KEY;
 delete process.env.STRIPE_PRICE_STARTER;
 delete process.env.STRIPE_PRICE_PRO;
+delete process.env.STRIPE_PRICE_SCALE;
 
 const profileBody = {
   interests: "woodworking",
@@ -65,6 +66,7 @@ test("production enforces payment when Stripe is configured", async () => {
   process.env.STRIPE_SECRET_KEY = "sk_test_x";
   process.env.STRIPE_PRICE_STARTER = "price_starter";
   process.env.STRIPE_PRICE_PRO = "price_pro";
+  process.env.STRIPE_PRICE_SCALE = "price_scale";
   const { createUser, saveProfile } = await import("../store");
   const { constructionAccess } = await import("./access");
   const user = createUser({ email: "prod@bizos.local", name: "Prod" });
@@ -80,6 +82,24 @@ test("production enforces payment when Stripe is configured", async () => {
   delete process.env.STRIPE_SECRET_KEY;
   delete process.env.STRIPE_PRICE_STARTER;
   delete process.env.STRIPE_PRICE_PRO;
+  delete process.env.STRIPE_PRICE_SCALE;
+});
+
+test("scale entitlement allows a fourth business", async () => {
+  const { createUser, saveProfile } = await import("../store");
+  const { constructionAccess } = await import("./access");
+  const { grantTestEntitlement } = await import("./entitlements");
+  const { openDesk } = await import("../agent/provision");
+
+  const user = createUser({ email: "scale@bizos.local", name: "Scale" });
+  saveProfile({ userId: user.id, ...profileBody });
+  grantTestEntitlement(user.id, "scale");
+
+  for (let i = 0; i < 4; i++) {
+    assert.equal(constructionAccess(user.id).ok, true);
+    await openDesk(user.id, { userId: user.id, ...profileBody }, "home-services");
+  }
+  assert.equal(constructionAccess(user.id).ok, true);
 });
 
 test("opportunity recommendations stay available without billing", async () => {

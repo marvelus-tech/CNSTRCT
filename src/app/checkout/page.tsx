@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
-import { PLANS, planFromId, type PlanId } from "@/lib/billing/plans";
+import { LANDING_PLAN_ORDER, PLANS, planFromId, type PlanId } from "@/lib/billing/plans";
 
 type BillingStatus = {
   configured: boolean;
@@ -81,15 +81,17 @@ function CheckoutInner() {
             <li>{(plan.tokenCredits / 1000).toLocaleString()}k included credits / month</li>
             <li>{plan.computerHours} computer hours / month</li>
           </ul>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button disabled={loading || !status?.configured} onClick={() => void startCheckout()} className="flex-1">
+          <div className="mt-6 flex flex-col gap-3">
+            <Button disabled={loading || !status?.configured} onClick={() => void startCheckout()} className="w-full">
               {loading ? "Opening Stripe…" : "Pay with Stripe"}
             </Button>
-            <Button variant="outline" asChild className="flex-1">
-              <Link href={`/checkout?plan=${planId === "starter" ? "pro" : "starter"}&next=${encodeURIComponent(next)}`}>
-                View {planId === "starter" ? "Pro" : "Starter"}
-              </Link>
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap" role="group" aria-label="Other plans">
+              {LANDING_PLAN_ORDER.filter((id) => id !== planId).map((id) => (
+                <Button key={id} variant="outline" asChild className="flex-1 min-w-[7rem]">
+                  <Link href={`/checkout?plan=${id}&next=${encodeURIComponent(next)}`}>View {PLANS[id].label}</Link>
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
         {!status?.configured ? (

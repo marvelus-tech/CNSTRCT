@@ -22,12 +22,14 @@ function resetStripe() {
   delete process.env.STRIPE_SECRET_KEY;
   delete process.env.STRIPE_PRICE_STARTER;
   delete process.env.STRIPE_PRICE_PRO;
+  delete process.env.STRIPE_PRICE_SCALE;
 }
 
 function setStripeConfigured() {
   process.env.STRIPE_SECRET_KEY = "sk_test_x";
   process.env.STRIPE_PRICE_STARTER = "price_starter";
   process.env.STRIPE_PRICE_PRO = "price_pro";
+  process.env.STRIPE_PRICE_SCALE = "price_scale";
 }
 
 test("local development allows construction when Stripe is unset", async () => {

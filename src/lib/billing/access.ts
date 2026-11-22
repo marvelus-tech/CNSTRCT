@@ -51,8 +51,10 @@ export function constructionAccess(userId: string): ConstructionAccess {
       code: "plan_limit",
       error:
         limit.plan === "starter"
-          ? "Starter includes one business. Upgrade to Pro for up to three."
-          : "You reached the business limit on your plan.",
+          ? "Starter includes one business. Upgrade to Pro or Scale for more."
+          : limit.plan === "pro"
+            ? "Pro includes up to three businesses. Upgrade to Scale for up to ten."
+            : "You reached the business limit on your Scale plan (ten businesses).",
     };
   }
 
