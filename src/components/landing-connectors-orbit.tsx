@@ -60,7 +60,9 @@ export function LandingConnectorsOrbit() {
 
     const syncScale = () => {
       const width = arena.clientWidth;
-      const scale = width > 0 ? Math.min(1, width / 400) : 1;
+      const designWidth = 400;
+      const maxScale = 1.42;
+      const scale = width > 0 ? Math.min(maxScale, width / designWidth) : 1;
       arena.style.setProperty("--orbit-scale", scale.toFixed(4));
     };
 

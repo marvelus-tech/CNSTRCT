@@ -647,29 +647,33 @@ h4 {
 }
 
 /* Connectors orbit section */
+.connectors-orbit-layout {
+  width: 100%;
+}
+
 .connectors-orbit-stage {
   position: relative;
   display: grid;
-  min-height: 22rem;
+  min-height: 20rem;
   width: 100%;
   place-items: center;
   overflow: visible;
   border-radius: 0.25rem;
   border: 1px solid var(--border);
   background: var(--card);
-  padding-inline: 0.25rem;
+  padding: 1rem 0.35rem;
 }
 
 @media (min-width: 768px) {
   .connectors-orbit-stage {
-    min-height: 28rem;
+    min-height: 26rem;
+    padding: 1.5rem 0.75rem;
   }
 }
 
 .connectors-orbit-arena {
   position: relative;
   width: 100%;
-  max-width: 25rem;
   margin-inline: auto;
   aspect-ratio: 400 / 220;
 }
