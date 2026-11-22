@@ -11,8 +11,8 @@ export type OrbitDepth = {
 
 export const ORBIT_HUB_Z_INDEX = 10;
 
-export const ORBIT_RX = 168;
-export const ORBIT_RY = 68;
+export const ORBIT_RX = 176;
+export const ORBIT_RY = 72;
 export const ORBIT_PERIOD_MS = 72_000;
 export const ORBIT_PHASE_OFFSET = -Math.PI / 2;
 
