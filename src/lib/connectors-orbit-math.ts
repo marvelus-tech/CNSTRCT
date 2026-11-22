@@ -15,10 +15,26 @@ export const ORBIT_RING_CONFIG = [
   { rx: 168, ry: 68, durationMs: 76_000 },
 ] as const;
 
+/** Matches tilted ring foreshortening (~rotateX(58deg)). */
+export const ORBIT_Y_COMPRESS = Math.cos((58 * Math.PI) / 180);
+
 export function positionOnEllipse(theta: number, rx: number, ry: number): EllipsePosition {
   return {
     x: rx * Math.cos(theta),
     y: ry * Math.sin(theta),
+  };
+}
+
+/** Screen-space ellipse: nodes stay circular billboards over projected paths. */
+export function positionOnProjectedEllipse(
+  theta: number,
+  rx: number,
+  ry: number,
+  yCompress = ORBIT_Y_COMPRESS,
+): EllipsePosition {
+  return {
+    x: rx * Math.cos(theta),
+    y: ry * Math.sin(theta) * yCompress,
   };
 }
 

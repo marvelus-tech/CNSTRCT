@@ -6,7 +6,7 @@ import { BusinessHexMark } from "@/components/business-hex-mark";
 import {
   depthFromTheta,
   ORBIT_RING_CONFIG,
-  positionOnEllipse,
+  positionOnProjectedEllipse,
   thetaAtTime,
 } from "@/lib/connectors-orbit-math";
 import { LANDING_CONNECTORS, LANDING_CONNECTOR_TOOL_NAMES } from "@/lib/landing-connectors";
@@ -21,6 +21,16 @@ function buildAriaLabel(): string {
   return `Connected tools orbiting the BizOS hub: ${LANDING_CONNECTOR_TOOL_NAMES.join(", ")}`;
 }
 
+function motionAtTheta(theta: number, rx: number, ry: number): NodeMotion {
+  const { x, y } = positionOnProjectedEllipse(theta, rx, ry);
+  const depth = depthFromTheta(theta);
+  return {
+    transform: `translate3d(${x}px, ${y}px, 0) scale(${depth.scale})`,
+    zIndex: depth.zIndex,
+    opacity: depth.opacity,
+  };
+}
+
 export function LandingConnectorsOrbit() {
   const stageRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -31,13 +41,7 @@ export function LandingConnectorsOrbit() {
     LANDING_CONNECTORS.map((c) => {
       const ring = ORBIT_RING_CONFIG[c.orbitIndex];
       const theta = (c.angleDeg * Math.PI) / 180;
-      const { x, y } = positionOnEllipse(theta, ring.rx, ring.ry);
-      const depth = depthFromTheta(theta);
-      return {
-        transform: `translate3d(${x}px, ${y}px, 0) scale(${depth.scale})`,
-        zIndex: depth.zIndex,
-        opacity: depth.opacity,
-      };
+      return motionAtTheta(theta, ring.rx, ring.ry);
     }),
   );
 
@@ -78,13 +82,7 @@ export function LandingConnectorsOrbit() {
         const ring = ORBIT_RING_CONFIG[connector.orbitIndex];
         const startAngle = (connector.angleDeg * Math.PI) / 180;
         const theta = thetaAtTime(startAngle, ring.durationMs, now, startRef.current);
-        const { x, y } = positionOnEllipse(theta, ring.rx, ring.ry);
-        const depth = depthFromTheta(theta);
-        return {
-          transform: `translate3d(${x}px, ${y}px, 0) scale(${depth.scale})`,
-          zIndex: depth.zIndex,
-          opacity: depth.opacity,
-        };
+        return motionAtTheta(theta, ring.rx, ring.ry);
       });
       setNodes(next);
       rafRef.current = requestAnimationFrame(tick);
@@ -102,26 +100,29 @@ export function LandingConnectorsOrbit() {
       className="connectors-orbit-stage hero-grain"
       aria-label={buildAriaLabel()}
     >
-      <div className="connectors-orbit-perspective">
-        <div className="connectors-orbit-plane">
-          <svg
-            className="connectors-orbit-guides"
-            viewBox="-200 -110 400 220"
-            aria-hidden="true"
-            focusable="false"
-          >
-            {ORBIT_RING_CONFIG.map((ring, index) => (
-              <ellipse
-                key={index}
-                cx={0}
-                cy={0}
-                rx={ring.rx}
-                ry={ring.ry}
-                className="connectors-orbit-guide"
-              />
-            ))}
-          </svg>
+      <div className="connectors-orbit-arena">
+        <div className="connectors-orbit-guides-layer" aria-hidden="true">
+          <div className="connectors-orbit-guides-tilt">
+            <svg
+              className="connectors-orbit-guides"
+              viewBox="-200 -110 400 220"
+              focusable="false"
+            >
+              {ORBIT_RING_CONFIG.map((ring, index) => (
+                <ellipse
+                  key={index}
+                  cx={0}
+                  cy={0}
+                  rx={ring.rx}
+                  ry={ring.ry}
+                  className="connectors-orbit-guide"
+                />
+              ))}
+            </svg>
+          </div>
+        </div>
 
+        <div className="connectors-orbit-screen-layer">
           <div className="connectors-orbit-hub-halo" aria-hidden="true" />
 
           {LANDING_CONNECTORS.map((connector, index) => {

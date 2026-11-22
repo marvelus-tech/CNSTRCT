@@ -665,36 +665,52 @@ h4 {
   }
 }
 
-.connectors-orbit-perspective {
-  perspective: 900px;
-  width: 100%;
-  max-width: 26rem;
-  height: 18rem;
-  display: grid;
-  place-items: center;
+.connectors-orbit-arena {
+  position: relative;
+  width: min(100%, 25rem);
+  height: 12.5rem;
+  margin-inline: auto;
 }
 
 @media (min-width: 768px) {
-  .connectors-orbit-perspective {
-    max-width: 30rem;
-    height: 22rem;
+  .connectors-orbit-arena {
+    width: 25rem;
+    height: 13.75rem;
   }
 }
 
-.connectors-orbit-plane {
-  position: relative;
+.connectors-orbit-guides-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 900px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.connectors-orbit-guides-tilt {
   width: 400px;
   height: 220px;
   transform: rotateX(58deg);
-  transform-style: preserve-3d;
+  transform-origin: center center;
 }
 
 .connectors-orbit-guides {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  display: block;
+  width: 400px;
+  height: 220px;
   pointer-events: none;
+}
+
+.connectors-orbit-screen-layer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 400px;
+  height: 220px;
+  translate: -50% -50%;
+  z-index: 1;
 }
 
 .connectors-orbit-guide {
@@ -731,12 +747,12 @@ h4 {
   place-items: center;
   width: 4.75rem;
   height: 4.75rem;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: var(--background);
   box-shadow:
     0 0.75rem 1.75rem -1rem rgba(48, 61, 78, 0.35),
     0 0 0 1px color-mix(in oklab, var(--border) 70%, transparent);
-  transform: rotateX(-58deg);
 }
 
 .connectors-orbit-hub-hex {
@@ -758,18 +774,20 @@ h4 {
   width: 2.75rem;
   height: 2.75rem;
   will-change: transform;
+  transform-origin: center center;
 }
 
 .connectors-orbit-disc {
   display: grid;
-  width: 100%;
-  height: 100%;
+  box-sizing: border-box;
+  width: 2.75rem;
+  height: 2.75rem;
+  aspect-ratio: 1 / 1;
   place-items: center;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--card);
   box-shadow: 0 0.25rem 0.75rem -0.35rem rgba(40, 57, 75, 0.25);
-  transform: rotateX(-58deg);
 }
 
 .connectors-orbit-logo {

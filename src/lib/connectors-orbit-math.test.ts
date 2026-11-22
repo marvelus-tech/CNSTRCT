@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { depthFromTheta, positionOnEllipse, thetaAtTime } from "./connectors-orbit-math";
+import {
+  depthFromTheta,
+  ORBIT_Y_COMPRESS,
+  positionOnEllipse,
+  positionOnProjectedEllipse,
+  thetaAtTime,
+} from "./connectors-orbit-math";
 
 describe("connectors-orbit-math", () => {
   it("positionOnEllipse places θ=0 on +x", () => {
@@ -16,6 +22,14 @@ describe("connectors-orbit-math", () => {
     const near = depthFromTheta(Math.PI / 2);
     assert.equal(near.zIndex, 20);
     assert.equal(near.scale, 1);
+  });
+
+  it("positionOnProjectedEllipse compresses y", () => {
+    const flat = positionOnEllipse(Math.PI / 2, 100, 50);
+    const projected = positionOnProjectedEllipse(Math.PI / 2, 100, 50);
+    assert.equal(projected.x, flat.x);
+    assert.ok(projected.y < flat.y);
+    assert.ok(Math.abs(projected.y / flat.y - ORBIT_Y_COMPRESS) < 1e-6);
   });
 
   it("thetaAtTime wraps by duration", () => {
