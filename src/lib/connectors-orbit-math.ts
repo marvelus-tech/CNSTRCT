@@ -10,16 +10,14 @@ export type OrbitDepth = {
 };
 
 export const ORBIT_HUB_Z_INDEX = 10;
-export const ORBIT_HUB_HALO_Z_INDEX = 9;
 
-export const ORBIT_RING_CONFIG = [
-  { rx: 96, ry: 40, durationMs: 48_000 },
-  { rx: 140, ry: 56, durationMs: 62_000 },
-  { rx: 184, ry: 76, durationMs: 76_000 },
-] as const;
+export const ORBIT_RX = 168;
+export const ORBIT_RY = 68;
+export const ORBIT_PERIOD_MS = 72_000;
+export const ORBIT_PHASE_OFFSET = -Math.PI / 2;
 
-/** Horizontal span of the outer ring in design units (scale-wrap is 400×220). */
-export const ORBIT_OUTER_DIAMETER = ORBIT_RING_CONFIG[2].rx * 2;
+/** Horizontal span of the train path in design units (scale-wrap is 400×220). */
+export const ORBIT_OUTER_DIAMETER = ORBIT_RX * 2;
 
 /** Matches tilted ring foreshortening (~rotateX(58deg)). */
 export const ORBIT_Y_COMPRESS = Math.cos((58 * Math.PI) / 180);
@@ -39,6 +37,11 @@ export function lerp(a: number, b: number, t: number): number {
 export function smoothstep(t: number): number {
   const x = Math.min(1, Math.max(0, t));
   return x * x * (3 - 2 * x);
+}
+
+export function orbitThetaForIndex(leadTheta: number, index: number, count: number): number {
+  const step = (Math.PI * 2) / count;
+  return leadTheta + step * index;
 }
 
 export function positionOnEllipse(theta: number, rx: number, ry: number): EllipsePosition {
@@ -61,9 +64,23 @@ export function positionOnProjectedEllipse(
   };
 }
 
+/** True when (x,y) lies on the projected ellipse within tolerance. */
+export function isOnProjectedEllipse(
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+  yCompress = ORBIT_Y_COMPRESS,
+  epsilon = 0.02,
+): boolean {
+  const normalized =
+    (x / rx) ** 2 + (y / (ry * yCompress)) ** 2;
+  return Math.abs(normalized - 1) <= epsilon;
+}
+
 /**
  * Continuous depth along the orbit: sin(theta) maps back arc (behind hub) to front arc
- * (overlapping hub rim). Hub stays at z-index 10; halo at 9.
+ * (overlapping the hex planet at z-index 10).
  */
 export function depthFromTheta(theta: number, projectedY?: number, orbitRy?: number): OrbitDepth {
   const sin = Math.sin(theta);

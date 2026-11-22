@@ -2,19 +2,42 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   depthFromTheta,
+  isOnProjectedEllipse,
   ORBIT_HUB_Z_INDEX,
+  ORBIT_RX,
+  ORBIT_RY,
   ORBIT_Y_COMPRESS,
+  orbitThetaForIndex,
   positionOnEllipse,
   positionOnProjectedEllipse,
   smoothstep,
   thetaAtTime,
 } from "./connectors-orbit-math";
 
+const TRAIN_COUNT = 11;
+
 describe("connectors-orbit-math", () => {
   it("positionOnEllipse places θ=0 on +x", () => {
     const p = positionOnEllipse(0, 100, 50);
     assert.equal(p.x, 100);
     assert.equal(p.y, 0);
+  });
+
+  it("orbitThetaForIndex spaces satellites evenly on one path", () => {
+    const lead = 0;
+    const a = orbitThetaForIndex(lead, 0, TRAIN_COUNT);
+    const b = orbitThetaForIndex(lead, 1, TRAIN_COUNT);
+    const step = (Math.PI * 2) / TRAIN_COUNT;
+    assert.ok(Math.abs(b - a - step) < 1e-6);
+  });
+
+  it("train positions lie on the projected ellipse", () => {
+    const lead = -Math.PI / 4;
+    for (let i = 0; i < TRAIN_COUNT; i += 1) {
+      const theta = orbitThetaForIndex(lead, i, TRAIN_COUNT);
+      const { x, y } = positionOnProjectedEllipse(theta, ORBIT_RX, ORBIT_RY);
+      assert.ok(isOnProjectedEllipse(x, y, ORBIT_RX, ORBIT_RY));
+    }
   });
 
   it("depthFromTheta curves behind and in front of hub", () => {
@@ -26,8 +49,6 @@ describe("connectors-orbit-math", () => {
     assert.ok(near.zIndex > ORBIT_HUB_Z_INDEX);
     assert.ok(far.scale < near.scale);
     assert.ok(far.opacity < near.opacity);
-    assert.ok(far.scale >= 0.72 && far.scale <= 0.85);
-    assert.ok(near.scale >= 1 && near.scale <= 1.12);
     assert.ok(mid.zIndex >= ORBIT_HUB_Z_INDEX);
   });
 

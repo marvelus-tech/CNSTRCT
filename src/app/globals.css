@@ -723,48 +723,23 @@ h4 {
   opacity: 0.32;
 }
 
-.connectors-orbit-hub,
-.connectors-orbit-hub-halo {
+.connectors-orbit-planet {
   position: absolute;
   left: 50%;
   top: 50%;
+  z-index: 10;
   translate: -50% -50%;
   pointer-events: none;
+  filter: drop-shadow(0 0.65rem 1.1rem rgba(48, 61, 78, 0.22));
 }
 
-.connectors-orbit-hub-halo {
-  z-index: 9;
-  width: 5.5rem;
-  height: 5.5rem;
-  border-radius: 50%;
-  background: var(--background);
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--border) 80%, transparent);
-}
-
-.connectors-orbit-hub {
-  z-index: 10;
-}
-
-.connectors-orbit-hub-disc {
-  display: grid;
-  place-items: center;
-  width: 4.75rem;
-  height: 4.75rem;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  background: var(--background);
-  box-shadow:
-    0 0.75rem 1.75rem -1rem rgba(48, 61, 78, 0.35),
-    0 0 0 1px color-mix(in oklab, var(--border) 70%, transparent);
-}
-
-.connectors-orbit-hub-hex {
-  width: 2.35rem;
-  height: auto;
+.connectors-orbit-planet-hex {
   display: block;
+  width: clamp(4.25rem, 14vw, 6.5rem);
+  height: auto;
 }
 
-.connectors-orbit-hub-hex__shape {
+.connectors-orbit-planet-hex__shape {
   fill: #000;
 }
 

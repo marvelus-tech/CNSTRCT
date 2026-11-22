@@ -6,11 +6,19 @@ import { BusinessHexMark } from "@/components/business-hex-mark";
 import {
   depthFromTheta,
   ORBIT_OUTER_DIAMETER,
-  ORBIT_RING_CONFIG,
+  ORBIT_PERIOD_MS,
+  ORBIT_PHASE_OFFSET,
+  ORBIT_RX,
+  ORBIT_RY,
+  orbitThetaForIndex,
   positionOnProjectedEllipse,
   thetaAtTime,
 } from "@/lib/connectors-orbit-math";
-import { LANDING_CONNECTORS, LANDING_CONNECTOR_TOOL_NAMES } from "@/lib/landing-connectors";
+import {
+  LANDING_CONNECTORS,
+  LANDING_CONNECTOR_COUNT,
+  LANDING_CONNECTOR_TOOL_NAMES,
+} from "@/lib/landing-connectors";
 
 type NodeMotion = {
   transform: string;
@@ -22,14 +30,20 @@ function buildAriaLabel(): string {
   return `Connected tools orbiting the BizOS hub: ${LANDING_CONNECTOR_TOOL_NAMES.join(", ")}`;
 }
 
-function motionAtTheta(theta: number, rx: number, ry: number): NodeMotion {
-  const { x, y } = positionOnProjectedEllipse(theta, rx, ry);
-  const depth = depthFromTheta(theta, y, ry);
+function motionAtTheta(theta: number): NodeMotion {
+  const { x, y } = positionOnProjectedEllipse(theta, ORBIT_RX, ORBIT_RY);
+  const depth = depthFromTheta(theta, y, ORBIT_RY);
   return {
     transform: `translate3d(${x}px, ${y}px, 0) scale(${depth.scale})`,
     zIndex: depth.zIndex,
     opacity: depth.opacity,
   };
+}
+
+function trainMotionsAtLead(leadTheta: number): NodeMotion[] {
+  return LANDING_CONNECTORS.map((_, index) =>
+    motionAtTheta(orbitThetaForIndex(leadTheta, index, LANDING_CONNECTOR_COUNT)),
+  );
 }
 
 export function LandingConnectorsOrbit() {
@@ -40,11 +54,7 @@ export function LandingConnectorsOrbit() {
   const inViewRef = useRef(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [nodes, setNodes] = useState<NodeMotion[]>(() =>
-    LANDING_CONNECTORS.map((c) => {
-      const ring = ORBIT_RING_CONFIG[c.orbitIndex];
-      const theta = (c.angleDeg * Math.PI) / 180;
-      return motionAtTheta(theta, ring.rx, ring.ry);
-    }),
+    trainMotionsAtLead(ORBIT_PHASE_OFFSET),
   );
 
   useEffect(() => {
@@ -64,8 +74,7 @@ export function LandingConnectorsOrbit() {
       const targetFill = 0.87;
       const maxScale = 2.65;
       const minScale = 0.55;
-      let scale =
-        width > 0 ? (width * targetFill) / ORBIT_OUTER_DIAMETER : 1;
+      let scale = width > 0 ? (width * targetFill) / ORBIT_OUTER_DIAMETER : 1;
       scale = Math.min(maxScale, Math.max(minScale, scale));
       arena.style.setProperty("--orbit-scale", scale.toFixed(4));
     };
@@ -91,7 +100,10 @@ export function LandingConnectorsOrbit() {
   }, []);
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion) {
+      setNodes(trainMotionsAtLead(ORBIT_PHASE_OFFSET));
+      return;
+    }
 
     startRef.current = performance.now();
 
@@ -101,13 +113,13 @@ export function LandingConnectorsOrbit() {
         return;
       }
 
-      const next = LANDING_CONNECTORS.map((connector) => {
-        const ring = ORBIT_RING_CONFIG[connector.orbitIndex];
-        const startAngle = (connector.angleDeg * Math.PI) / 180;
-        const theta = thetaAtTime(startAngle, ring.durationMs, now, startRef.current);
-        return motionAtTheta(theta, ring.rx, ring.ry);
-      });
-      setNodes(next);
+      const leadTheta = thetaAtTime(
+        ORBIT_PHASE_OFFSET,
+        ORBIT_PERIOD_MS,
+        now,
+        startRef.current,
+      );
+      setNodes(trainMotionsAtLead(leadTheta));
       rafRef.current = requestAnimationFrame(tick);
     };
 
@@ -132,60 +144,53 @@ export function LandingConnectorsOrbit() {
                 viewBox="-200 -110 400 220"
                 focusable="false"
               >
-                {ORBIT_RING_CONFIG.map((ring, index) => (
-                  <ellipse
-                    key={index}
-                    cx={0}
-                    cy={0}
-                    rx={ring.rx}
-                    ry={ring.ry}
-                    className="connectors-orbit-guide"
-                  />
-                ))}
+                <ellipse
+                  cx={0}
+                  cy={0}
+                  rx={ORBIT_RX}
+                  ry={ORBIT_RY}
+                  className="connectors-orbit-guide"
+                />
               </svg>
             </div>
           </div>
 
           <div className="connectors-orbit-screen-layer">
-          <div className="connectors-orbit-hub-halo" aria-hidden="true" />
-
-          {LANDING_CONNECTORS.map((connector, index) => {
-            const motion = nodes[index];
-            return (
-              <div
-                key={connector.id}
-                className="connectors-orbit-node"
-                style={{
-                  transform: motion.transform,
-                  zIndex: motion.zIndex,
-                  opacity: motion.opacity,
-                }}
-                aria-hidden="true"
-                title={connector.name}
-              >
-                <div className="connectors-orbit-disc">
-                  <Image
-                    src={`/integrations/${connector.id}.svg`}
-                    alt=""
-                    width={22}
-                    height={22}
-                    className="connectors-orbit-logo"
-                    unoptimized
-                  />
+            {LANDING_CONNECTORS.map((connector, index) => {
+              const motion = nodes[index];
+              return (
+                <div
+                  key={connector.id}
+                  className="connectors-orbit-node"
+                  style={{
+                    transform: motion.transform,
+                    zIndex: motion.zIndex,
+                    opacity: motion.opacity,
+                  }}
+                  aria-hidden="true"
+                  title={connector.name}
+                >
+                  <div className="connectors-orbit-disc">
+                    <Image
+                      src={`/integrations/${connector.id}.svg`}
+                      alt=""
+                      width={22}
+                      height={22}
+                      className="connectors-orbit-logo"
+                      unoptimized
+                    />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          <div className="connectors-orbit-hub">
-            <div className="connectors-orbit-hub-disc">
+            <div className="connectors-orbit-planet" aria-hidden="true">
               <BusinessHexMark
-                className="connectors-orbit-hub-hex"
-                shapeClassName="connectors-orbit-hub-hex__shape"
+                className="connectors-orbit-planet-hex"
+                shapeClassName="connectors-orbit-planet-hex__shape"
                 aria-hidden
               />
             </div>
-          </div>
           </div>
         </div>
       </div>
