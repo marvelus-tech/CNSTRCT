@@ -97,7 +97,7 @@ h4 {
 .hero-brandmark {
   display: block;
   width: min(58vw, 17.5rem);
-  aspect-ratio: 1;
+  aspect-ratio: 1.0836 / 1;
 }
 
 .hero-brandmark__shape {
