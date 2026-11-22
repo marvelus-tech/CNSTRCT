@@ -1,4 +1,4 @@
-export type PlanId = "starter" | "pro";
+export type PlanId = "starter" | "pro" | "scale";
 
 export type PlanDefinition = {
   id: PlanId;
@@ -9,6 +9,8 @@ export type PlanDefinition = {
   computerHours: number;
   agentCount: number;
 };
+
+export const LANDING_PLAN_ORDER: PlanId[] = ["starter", "pro", "scale"];
 
 export const PLANS: Record<PlanId, PlanDefinition> = {
   starter: {
@@ -29,10 +31,19 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     computerHours: 12,
     agentCount: 3,
   },
+  scale: {
+    id: "scale",
+    label: "Scale",
+    priceUsd: 200,
+    maxBusinesses: 10,
+    tokenCredits: 4_000_000,
+    computerHours: 40,
+    agentCount: 3,
+  },
 };
 
 export function planFromId(id: string | null | undefined): PlanDefinition | null {
-  if (id === "starter" || id === "pro") return PLANS[id];
+  if (id === "starter" || id === "pro" || id === "scale") return PLANS[id];
   return null;
 }
 

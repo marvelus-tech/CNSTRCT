@@ -29,6 +29,7 @@ export default function HomePage() {
         offers: [
           { "@type": "Offer", name: "Starter", price: "39", priceCurrency: "USD" },
           { "@type": "Offer", name: "Pro", price: "79", priceCurrency: "USD" },
+          { "@type": "Offer", name: "Scale", price: "200", priceCurrency: "USD" },
         ],
       },
       {

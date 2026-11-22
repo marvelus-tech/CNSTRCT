@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   const body = (await request.json()) as { planId?: string; returnPath?: string };
   const plan = planFromId(body.planId);
-  if (!plan) return NextResponse.json({ error: "Pick Starter or Pro." }, { status: 400 });
+  if (!plan) return NextResponse.json({ error: "Pick a plan." }, { status: 400 });
   const returnPath = body.returnPath?.startsWith("/") ? body.returnPath : "/opportunities";
   const session = await createCheckoutSession({
     userId: user.id,
