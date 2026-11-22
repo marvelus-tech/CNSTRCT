@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   depthFromTheta,
+  ORBIT_HUB_Z_INDEX,
   ORBIT_Y_COMPRESS,
   positionOnEllipse,
   positionOnProjectedEllipse,
+  smoothstep,
   thetaAtTime,
 } from "./connectors-orbit-math";
 
@@ -15,13 +17,32 @@ describe("connectors-orbit-math", () => {
     assert.equal(p.y, 0);
   });
 
-  it("depthFromTheta marks top half as far", () => {
+  it("depthFromTheta curves behind and in front of hub", () => {
     const far = depthFromTheta(-Math.PI / 2);
-    assert.equal(far.zIndex, 1);
-    assert.ok(far.scale < 1);
     const near = depthFromTheta(Math.PI / 2);
-    assert.equal(near.zIndex, 20);
-    assert.equal(near.scale, 1);
+    const mid = depthFromTheta(0);
+
+    assert.ok(far.zIndex < ORBIT_HUB_Z_INDEX);
+    assert.ok(near.zIndex > ORBIT_HUB_Z_INDEX);
+    assert.ok(far.scale < near.scale);
+    assert.ok(far.opacity < near.opacity);
+    assert.ok(far.scale >= 0.72 && far.scale <= 0.85);
+    assert.ok(near.scale >= 1 && near.scale <= 1.12);
+    assert.ok(mid.zIndex >= ORBIT_HUB_Z_INDEX);
+  });
+
+  it("depthFromTheta changes smoothly around the ellipse", () => {
+    const a = depthFromTheta(-Math.PI / 2 + 0.05);
+    const b = depthFromTheta(-Math.PI / 2 + 0.1);
+    assert.ok(Math.abs(a.scale - b.scale) < 0.08);
+    assert.ok(Math.abs(a.opacity - b.opacity) < 0.12);
+    assert.ok(Math.abs(a.zIndex - b.zIndex) <= 2);
+  });
+
+  it("smoothstep is 0 at 0 and 1 at 1", () => {
+    assert.equal(smoothstep(0), 0);
+    assert.equal(smoothstep(1), 1);
+    assert.ok(smoothstep(0.5) > 0.4 && smoothstep(0.5) < 0.6);
   });
 
   it("positionOnProjectedEllipse compresses y", () => {

@@ -24,7 +24,7 @@ function buildAriaLabel(): string {
 
 function motionAtTheta(theta: number, rx: number, ry: number): NodeMotion {
   const { x, y } = positionOnProjectedEllipse(theta, rx, ry);
-  const depth = depthFromTheta(theta);
+  const depth = depthFromTheta(theta, y, ry);
   return {
     transform: `translate3d(${x}px, ${y}px, 0) scale(${depth.scale})`,
     zIndex: depth.zIndex,
