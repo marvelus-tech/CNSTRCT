@@ -656,9 +656,7 @@ h4 {
   display: block;
   width: 100%;
   overflow: visible;
-  border-radius: 0.25rem;
-  border: 1px solid var(--border);
-  background: var(--card);
+  background: transparent;
   padding: 0.5rem 0.125rem 0.625rem;
 }
 
@@ -736,7 +734,7 @@ h4 {
 
 .connectors-orbit-planet-hex {
   display: block;
-  width: 54px;
+  width: 70px;
   height: auto;
 }
 
