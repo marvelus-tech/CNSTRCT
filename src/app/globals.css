@@ -116,9 +116,6 @@ h4 {
   max-width: 15rem;
   margin-inline: auto;
   place-items: center;
-  padding: 2rem;
-  border: 1px solid var(--border);
-  background: var(--card);
 }
 
 .founding-team-hex-stage__mark {
