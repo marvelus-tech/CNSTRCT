@@ -264,13 +264,13 @@ h4 {
 }
 
 .founding-team-cluster__bot--left {
-  left: -2%;
+  left: 7%;
   top: 54%;
   animation: founding-team-bot-drift-left 6.4s ease-in-out infinite;
 }
 
 .founding-team-cluster__bot--right {
-  right: -2%;
+  right: 7%;
   top: 54%;
   animation: founding-team-bot-drift-right 7.9s ease-in-out infinite;
   animation-delay: -2.8s;
@@ -278,7 +278,7 @@ h4 {
 
 .founding-team-cluster__bot--bottom {
   left: 50%;
-  bottom: 0%;
+  bottom: 11%;
   animation: founding-team-bot-drift-bottom 5.7s ease-in-out infinite;
   animation-delay: -4.1s;
 }
