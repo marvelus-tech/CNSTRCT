@@ -13,40 +13,40 @@ export function LandingProofStrip() {
     <LandingSection
       variant="plain"
       aria-label="Enterprise AI adoption and business formation trends"
-      className="[&>div]:max-w-3xl"
+      className="[&>div]:max-w-3xl md:[&>div]:py-4"
     >
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="landing-section-title text-pretty">{LANDING_PROOF_HEADLINE}</h2>
-        <p className="landing-section-lead mx-auto mt-4 max-w-2xl text-pretty">
+        <p className="landing-section-lead mx-auto mt-6 max-w-xl text-pretty">
           {LANDING_PROOF_SUBHEAD}
         </p>
 
-        <div className="mt-10 w-full text-left">
+        <div className="mt-14 w-full text-left">
           <LandingProofTrendChart />
         </div>
 
-        <ul className="mt-10 grid grid-cols-1 gap-6 text-left md:grid-cols-3 md:gap-8">
+        <ul className="mt-14 grid grid-cols-1 gap-10 text-left md:grid-cols-3 md:gap-12">
           {LANDING_PROOF_STATS.map((stat) => (
             <li
               key={stat.value + stat.label.slice(0, 24)}
-              className="flex flex-col gap-2 py-4 md:py-6"
+              className="flex flex-col gap-3 py-2 md:py-4"
             >
               <p className="text-3xl font-semibold tabular-nums tracking-tight text-foreground md:text-4xl">
                 {stat.value}
               </p>
               <span className="h-px w-8 bg-accent/40" aria-hidden />
-              <p className="landing-section-lead text-sm leading-relaxed">{stat.label}</p>
+              <p className="landing-section-lead text-sm leading-snug">{stat.label}</p>
             </li>
           ))}
         </ul>
 
-        <p className="landing-section-lead mx-auto mt-8 max-w-2xl text-pretty">{LANDING_PROOF_KICKER}</p>
-        <p className="landing-fine-print mt-4 text-xs sm:text-[0.6875rem]">
-          Figures from{" "}
+        <p className="landing-section-lead mx-auto mt-14 max-w-xl text-pretty">{LANDING_PROOF_KICKER}</p>
+        <p className="landing-fine-print mt-6 text-xs sm:text-[0.6875rem]">
+          Sources:{" "}
           {LANDING_PROOF_SOURCES.map((source, index) => (
             <span key={source.name}>
               {index > 0 && index < LANDING_PROOF_SOURCES.length - 1 ? ", " : null}
-              {index === LANDING_PROOF_SOURCES.length - 1 && index > 0 ? ", and " : null}
+              {index === LANDING_PROOF_SOURCES.length - 1 && index > 0 ? ", " : null}
               <a
                 href={source.url}
                 target="_blank"
@@ -57,7 +57,7 @@ export function LandingProofStrip() {
               </a>
             </span>
           ))}
-          . Results vary by industry and execution.
+          .
         </p>
       </div>
     </LandingSection>
