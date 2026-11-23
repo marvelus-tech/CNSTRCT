@@ -17,7 +17,7 @@
 | `.how-step-title` | How-it-works step titles (`h3`) |
 | `.landing-section-lead` | Supporting copy, FAQ answers, proof kicker, pricing intro |
 | `.how-step-lead` | How-it-works step body copy |
-| `.hero-gradient-brand` | Decorative gradient “BizOS” behind hex (`aria-hidden`) |
+| `.hero-gradient-brand` | Gradient hero `h1` (“BizOS”) behind hex |
 | `.hero-overlap-stage` | Centered hero stage container |
 | `.hero-overlap-brand` | Gradient word layer (`z-index: 0`) |
 | `.hero-overlap-hex` | Black hex overlap layer (`z-index: 10`) |
@@ -26,7 +26,7 @@
 
 ## Hero (`LandingHero`)
 
-Single centered column (`max-w-3xl`): overlap stage (gradient “BizOS” + black hex via `.hero-overlap-*`), then H1, lead, and **Start a BIZ** only. No hero eyebrow.
+Single centered column (`max-w-3xl`): overlap stage (gradient `h1` “BizOS” + black hex via `.hero-overlap-*`), then lead and **Start a BIZ** only. No hero eyebrow.
 
 ## Layout wrapper
 
@@ -37,9 +37,8 @@ Single centered column (`max-w-3xl`): overlap stage (gradient “BizOS” + blac
 | Surface | String |
 |---------|--------|
 | Nav CTA | Start a BIZ → `/triage` |
-| Hero display (decorative) | Gradient **BizOS** behind hex (`LandingHero`, not in heading tree) |
-| Hero H1 | Your founding team ships on day one. |
-| Hero sub | BizOS finds a business that fits you, then starts your bots. They do the work. You approve it. |
+| Hero H1 | Gradient **BizOS** in overlap stage (single `h1`, hex on top) |
+| Hero lead | BizOS matches a business that fits you, gives you a founding team, so you can start being productive on day one. |
 | Hero CTA | Start a BIZ |
 | Proof H2 | Most people are still guessing. You do not have to. |
 | Proof card 4 label | Bots on your desk. They work. You approve. |
