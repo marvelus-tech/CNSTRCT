@@ -1,31 +1,54 @@
 # BizOS landing typographic hierarchy (implementation)
 
+## Type system
+
+- **Font:** Inter Tight (`next/font/google`), CSS variable `--font-inter-tight`, wired as `--font-sans` in `@theme`.
+- **Weights:** body `400` (`--type-body-weight`), display headlines `500` (`--type-display-weight`). Stat/price numerals may use `font-semibold` locally.
+- **Muted copy:** `--type-muted` (`#6f7177`), aligned with theme `--muted`.
+- **Headlines:** `letter-spacing: -0.02em`, display line-height ~`1.15`; leads `1.55`–`1.6`.
+- **HUD / triage:** `.hud-readout` and `Button` HUD frames keep uppercase + wide tracking; app surfaces inherit body weight only.
+
 ## CSS utilities (`src/app/globals.css`)
 
 | Class | Use |
 |-------|-----|
-| `.landing-eyebrow` | Section kickers, plan labels, FAQ eyebrow |
-| `.landing-section-title` | Section `h2`, proof H2, pricing title, step titles as `h3` |
-| `.landing-section-lead` | Supporting copy, FAQ answers, proof kicker, pricing intro |
+| `.landing-eyebrow` | Section kickers, plan labels, FAQ eyebrow (sentence case, weight 500) |
+| `.landing-section-title` | Section `h2`, proof H2, pricing title, connectors headline |
+| `.how-step-title` | How-it-works step titles (`h3`) |
+| `.landing-section-lead` | Supporting copy, FAQ answers, pricing intro |
+| `.how-step-lead` | How-it-works step body copy |
+| `.hero-gradient-brand` | Gradient hero `h1` (“BizOS”) behind hex |
+| `.hero-overlap-stage` | Centered hero stage container |
+| `.hero-overlap-brand-core` | H1 + hex overlap context (`top: %` = cap height only) |
+| `.hero-overlap-hex-spacer` | In-flow reserve for hex silhouette below wordmark |
+| `.hero-overlap-brand` | Gradient word layer (`z-index: 0`, full **BizOS** under hex) |
+| `.hero-overlap-hex` | Black hex overlap layer (`z-index: 10`) |
+| `.hero-overlap-copy-stack` | Lead + CTA below the hex footprint (separate layer from brand stack) |
 | `.landing-caption` | Hero crosshair slide labels |
 | `.landing-fine-print` | Survey source lines, pricing overage note |
 
+## Hero (`LandingHero`)
+
+Single centered column (`max-w-3xl`): brand stack (single `h1` **BizOS** at `z-index: 0`; hex at `z-index: 10`; `overflow: visible` on stack/stage/core + end padding on stack/`h1` so **S** curve is not flattened; hex spacer reserves descent), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). E2E: `pnpm test:hero-e2e` asserts copy gap, hex in front on overlap, and **S** not clipped. No hero eyebrow.
+
 ## Layout wrapper
 
-`LandingSection` (`src/components/landing-section.tsx`): `px-4 sm:px-5 md:px-10`, `py-14 md:py-16`, variants `default` | `card` | `plain`, inner `max-w-6xl`.
+`LandingSection` (`src/components/landing-section.tsx`): `px-4 sm:px-5 md:px-10`, `py-14 md:py-16`, unified `bg-card` (same as hero / `--card` `#f5f5f7`, lightest grey — not `--background` `#e8e9ec`); no section `border-y` dividers. Variants `default` | `card` | `plain` remain for API compat and resolve to the same surface. Inner `max-w-6xl`. Plan cards and controls keep their own borders; FAQ uses spacing only (no `divide-y`). Landing footer: `SiteFooter` with `border-t-0 bg-card`.
 
 ## Copy strings (landing `/`)
 
 | Surface | String |
 |---------|--------|
-| Hero eyebrow | **Business** operating system (accent on "Business") |
-| Nav CTA | Find my business → `/triage` |
-| Hero H1 | Your founding team ships on day one. |
-| Hero sub | BizOS finds a business that fits you, then starts your bots. They do the work. You approve it. |
-| Hero CTA | Find my business |
-| Proof H2 | Most people are still guessing. You do not have to. |
-| Proof card 4 label | Bots on your desk. They work. You approve. |
-| Proof kicker | Bot-led businesses are pulling ahead. BizOS gives you the same shape: work gets done, nothing sensitive ships without your yes. |
+| Nav CTA | Start a BIZ → `/triage` |
+| Hero H1 | Gradient **BizOS** in overlap stage (single `h1`, hex on top) |
+| Hero lead | Start a custom biz with AI working on your behalf from day one. |
+| Hero CTA | Start a BIZ |
+| Proof H2 | AI is default. New businesses are forming faster than ever. |
+| Proof chart | `LandingProofTrendChart`: dual-axis SVG (McKinsey AI % + Census BFS), x ticks 2017/2020/2023/2026 only, Y ticks 0/50/100% and 0/3/6M, compact legend (“AI adoption”, “New business applications”) with sr-only detail, AI stroke gradient ends green (`#16a34a`), 89% + 5.7M in a row below plot (no overlap), doubled stroke widths (AI 4.7px, BFS 4.5px), `prefers-reduced-motion` respected |
+| Proof stat 1 | **89%** — Orgs using AI in at least one function |
+| Proof stat 2 | **28%** — Reporting AI revenue gains |
+| Proof stat 3 | **2.4×** — AI leaders' revenue growth vs. laggards |
+| Proof sources | McKinsey State of AI (2026), Deloitte State of AI in the Enterprise (2026), BCG Applied AI Index (2026), US Census Bureau Business Formation Statistics |
 | Steps section | **How it works** (`h2`); 01 Tell us who you are / 02 Get a business that fits / 03 Turn the key |
 | FAQ eyebrow | FAQ |
 | FAQ title | Questions people ask first |

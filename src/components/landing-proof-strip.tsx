@@ -1,54 +1,59 @@
+import { LandingProofTrendChart } from "@/components/landing-proof-trend-chart";
 import { LandingSection } from "@/components/landing-section";
 import {
-  LANDING_PROOF_KICKER,
   LANDING_PROOF_SOURCES,
   LANDING_PROOF_STATS,
+  LANDING_PROOF_TITLE,
 } from "@/lib/landing-stats";
 
 export function LandingProofStrip() {
   return (
     <LandingSection
-      variant="card"
-      aria-label="Enterprise AI adoption and BizOS digital workers"
-      className="[&>div]:max-w-6xl"
+      variant="plain"
+      aria-label="Enterprise AI adoption and business formation trends"
+      className="[&>div]:max-w-3xl md:[&>div]:py-4"
     >
-      <h2 className="landing-section-title max-w-3xl text-pretty">
-        Most people are still guessing. You do not have to.
-      </h2>
-      <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
-        {LANDING_PROOF_STATS.map((stat) => (
-          <li
-            key={stat.value + stat.label.slice(0, 24)}
-            className="flex flex-col rounded-none border border-border bg-card p-4 sm:min-h-[7.5rem] md:p-5"
-          >
-            <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl md:text-4xl">
-              {stat.value}
-            </p>
-            <p className="landing-section-lead mt-2 text-sm leading-relaxed sm:text-sm">
-              {stat.label}
-            </p>
-          </li>
-        ))}
-      </ul>
-      <p className="landing-section-lead mt-6 max-w-3xl sm:mt-8">{LANDING_PROOF_KICKER}</p>
-      <p className="landing-fine-print mt-4 max-w-3xl text-xs sm:text-[0.6875rem]">
-        Figures from{" "}
-        {LANDING_PROOF_SOURCES.map((source, index) => (
-          <span key={source.name}>
-            {index > 0 && index < LANDING_PROOF_SOURCES.length - 1 ? ", " : null}
-            {index === LANDING_PROOF_SOURCES.length - 1 && index > 0 ? ", and " : null}
-            <a
-              href={source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline decoration-border underline-offset-2 hover:text-foreground"
+      <div className="mx-auto max-w-3xl text-center">
+        <h2 className="landing-section-title text-pretty">{LANDING_PROOF_TITLE}</h2>
+
+        <div className="mt-14 w-full text-left">
+          <LandingProofTrendChart />
+        </div>
+
+        <ul className="mt-14 grid grid-cols-1 gap-10 text-left md:grid-cols-3 md:gap-12">
+          {LANDING_PROOF_STATS.map((stat) => (
+            <li
+              key={stat.value + stat.label.slice(0, 24)}
+              className="flex flex-col gap-3 py-2 md:py-4"
             >
-              {source.name}
-            </a>
-          </span>
-        ))}{" "}
-        enterprise surveys, 2026. Results vary by industry and execution.
-      </p>
+              <p className="text-3xl font-semibold tabular-nums tracking-tight text-foreground md:text-4xl">
+                {stat.value}
+              </p>
+              <span className="h-px w-8 bg-accent/40" aria-hidden />
+              <p className="landing-section-lead text-sm leading-snug">{stat.label}</p>
+            </li>
+          ))}
+        </ul>
+
+        <p className="landing-fine-print mt-10 text-xs sm:text-[0.6875rem]">
+          Sources:{" "}
+          {LANDING_PROOF_SOURCES.map((source, index) => (
+            <span key={source.name}>
+              {index > 0 && index < LANDING_PROOF_SOURCES.length - 1 ? ", " : null}
+              {index === LANDING_PROOF_SOURCES.length - 1 && index > 0 ? ", " : null}
+              <a
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-border underline-offset-2 hover:text-foreground"
+              >
+                {source.name}
+              </a>
+            </span>
+          ))}
+          .
+        </p>
+      </div>
     </LandingSection>
   );
 }

@@ -6,58 +6,51 @@ export type SurveyLandingStat = {
   sourceUrl: string;
 };
 
-export type ProductLandingStat = {
-  kind: "product";
-  value: string;
-  label: string;
-};
+export type LandingStat = SurveyLandingStat;
 
-export type LandingStat = SurveyLandingStat | ProductLandingStat;
+export const LANDING_PROOF_TITLE =
+  "AI is default. New businesses are forming faster than ever.";
 
 export const LANDING_PROOF_STATS: readonly LandingStat[] = [
   {
     kind: "survey",
     value: "89%",
-    label: "AI is already in use somewhere in the business",
-    sourceName: "McKinsey",
+    label: "Orgs using AI in at least one function",
+    sourceName: "McKinsey State of AI 2026",
     sourceUrl: "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
   },
   {
     kind: "survey",
     value: "28%",
-    label: "Report revenue gains, and rising fast",
-    sourceName: "Deloitte",
+    label: "Reporting AI revenue gains",
+    sourceName: "Deloitte State of AI in the Enterprise 2026",
     sourceUrl:
       "https://www.deloitte.com/us/en/about/press-room/enterprise-ai-enters-an-roi-reckoning.html",
   },
   {
     kind: "survey",
     value: "2.4×",
-    label: "Revenue growth for AI leaders vs laggards",
-    sourceName: "BCG",
+    label: "AI leaders' revenue growth vs. laggards",
+    sourceName: "BCG Applied AI Index 2026",
     sourceUrl: "https://www.bcg.com/publications/2026/the-formula-for-agentic-ai-value",
-  },
-  {
-    kind: "product",
-    value: "3",
-    label: "Bots on your desk. They work. You approve.",
   },
 ] as const;
 
-export const LANDING_PROOF_KICKER =
-  "Bot-led businesses are pulling ahead. BizOS gives you the same shape: work gets done, nothing sensitive ships without your yes.";
-
 export const LANDING_PROOF_SOURCES: readonly { name: string; url: string }[] = [
   {
-    name: "McKinsey",
+    name: "McKinsey State of AI (2026)",
     url: "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
   },
   {
-    name: "Deloitte",
+    name: "Deloitte State of AI in the Enterprise (2026)",
     url: "https://www.deloitte.com/us/en/about/press-room/enterprise-ai-enters-an-roi-reckoning.html",
   },
   {
-    name: "BCG",
+    name: "BCG Applied AI Index (2026)",
     url: "https://www.bcg.com/publications/2026/the-formula-for-agentic-ai-value",
+  },
+  {
+    name: "US Census Bureau Business Formation Statistics",
+    url: "https://www.census.gov/econ/bfs/",
   },
 ];

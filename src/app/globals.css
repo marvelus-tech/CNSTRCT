@@ -1,16 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  --background: #e8e9ec;
   --foreground: #222326;
   --card: #f5f5f7;
-  --muted: #6b6e74;
+  /* Site canvas matches hero (`bg-card` / lightest grey). */
+  --background: var(--card);
+  --muted: #6f7177;
+  --type-display-weight: 500;
+  --type-body-weight: 400;
+  --type-muted: #6f7177;
   --accent: #e85d04;
   --accent-hot: #fff4e8;
   --accent-glow: #f97316;
   --accent-soft: #fde8d6;
   --border: #d2d3d8;
   --danger: #9f1239;
+  --proof-chart-bfs-stroke: hsl(226 58% 48%);
+  --proof-chart-ai-swatch: linear-gradient(
+    98deg,
+    #b45309 0%,
+    #e85d04 22%,
+    #f9738a 48%,
+    #4ade80 74%,
+    #16a34a 100%
+  );
+  --proof-chart-stroke-ai: 5.5;
+  --proof-chart-stroke-bfs: 5.5;
+  /* Landing chrome: header row (py-4 + text-sm line) — used for hero first-screen height. */
+  --landing-site-header-height: calc(2rem + 1.25rem + env(safe-area-inset-top, 0px));
+  --landing-hero-min-height: calc(100svh - var(--landing-site-header-height));
+  /* Rendered hub hex; matches connectors orbit planet (84px × --orbit-scale). ~74px @390px. */
+  --landing-hub-hex-size: clamp(4.125rem, 19vw, 5.875rem);
+}
+
+.proof-chart-stroke-ai {
+  stroke-width: var(--proof-chart-stroke-ai);
+}
+
+.proof-chart-stroke-bfs {
+  stroke-width: var(--proof-chart-stroke-bfs);
+}
+
+.proof-chart-legend-swatch {
+  height: calc(var(--proof-chart-stroke-ai) * 1px);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --proof-chart-stroke-ai: 6;
+    --proof-chart-stroke-bfs: 6;
+  }
 }
 
 @theme inline {
@@ -22,13 +61,14 @@
   --color-accent-soft: var(--accent-soft);
   --color-border: var(--border);
   --color-danger: var(--danger);
-  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-weight: var(--type-body-weight);
 }
 
 /* Tabular HUD readout — triage step counter (“3 of 7”) and back control */
@@ -59,8 +99,9 @@ h2,
 h3,
 h4 {
   font-family: var(--font-sans);
-  font-weight: 600;
+  font-weight: var(--type-display-weight);
   letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -104,6 +145,389 @@ h4 {
 
 .hero-brandmark__shape {
   fill: #000;
+}
+
+/* Centered hero: gradient wordmark with black hex overlapping only the lower third (depth). */
+.hero-gradient-brand {
+  font-size: var(--hero-font-size, clamp(3.75rem, 15.5vw, 8.75rem));
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  background-image: linear-gradient(
+    98deg,
+    #b45309 0%,
+    #e85d04 22%,
+    #f9738a 48%,
+    #93a4f8 74%,
+    #5b67d6 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* First screen: flex shell fills small viewport; hero grows to header’s remainder on mobile. */
+.landing-first-screen {
+  box-sizing: border-box;
+}
+
+.landing-hero-viewport {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+@media (min-width: 768px) {
+  .landing-hero-viewport {
+    flex: none;
+    min-height: min(var(--landing-hero-min-height), 42rem);
+  }
+}
+
+.hero-overlap-stage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  overflow: visible;
+  padding-top: 0.25rem;
+}
+
+.hero-overlap-copy-stack {
+  /* Outside brand stack; never stacks with hex (no z-index). */
+  position: relative;
+  margin-top: max(0.5rem, clamp(0.75rem, 2.5vw, 1.25rem));
+}
+
+.hero-overlap-brand-stack {
+  --hero-font-size: clamp(3.75rem, 15.5vw, 8.75rem);
+  --hero-cap-height: calc(var(--hero-font-size) * 0.92);
+  --hero-hex-width: min(42vw, 10.25rem);
+  --hero-hex-height: calc(var(--hero-hex-width) / 0.92285);
+  /* descent = hex below h1 box when hex top is 70% of cap. */
+  --hero-hex-descent: calc(var(--hero-hex-height) - 0.3 * var(--hero-cap-height) + 0.5rem);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding-inline-end: clamp(0.375rem, 1.75vw, 0.85rem);
+  overflow: visible;
+  contain: layout;
+  isolation: isolate;
+}
+
+/* top: % on the hex anchors to cap height here only (not spacer). */
+.hero-overlap-brand-core {
+  position: relative;
+  display: inline-block;
+  max-width: none;
+  overflow: visible;
+}
+
+.hero-overlap-hex-spacer {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 0.5rem;
+  height: max(clamp(6.5rem, 42vw, 11rem), var(--hero-hex-descent));
+  pointer-events: none;
+}
+
+.hero-overlap-brand {
+  position: relative;
+  z-index: 0;
+  display: inline-block;
+  margin: 0;
+  box-sizing: border-box;
+  /* background-clip:text anti-alias extends past the glyph advance; reserve end room. */
+  padding-inline-end: 0.5em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-overlap-hex {
+  position: absolute;
+  left: 50%;
+  /* Hex top sits on lower ~28% of cap height (parent height = h1 only). */
+  top: 70%;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  isolation: isolate;
+}
+
+.hero-overlap-hex__mark {
+  display: block;
+  width: var(--hero-hex-width, min(42vw, 10.25rem));
+  aspect-ratio: 0.92285 / 1;
+  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+}
+
+@media (min-width: 640px) {
+  .hero-overlap-brand-stack {
+    --hero-font-size: clamp(3.75rem, 15.5vw, 8.75rem);
+    --hero-hex-width: min(38vw, 12.5rem);
+    --hero-hex-descent: calc(var(--hero-hex-height) - 0.31 * var(--hero-cap-height) + 0.5rem);
+  }
+
+  .hero-overlap-hex-spacer {
+    height: max(clamp(7rem, 36vw, 12.5rem), var(--hero-hex-descent));
+  }
+
+  .hero-overlap-hex {
+    top: 69%;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-overlap-brand-stack {
+    --hero-font-size: clamp(3.75rem, 15.5vw, 8.75rem);
+    --hero-hex-width: min(34vw, 15.5rem);
+    --hero-hex-descent: calc(var(--hero-hex-height) - 0.33 * var(--hero-cap-height) + 0.5rem);
+  }
+
+  .hero-overlap-hex-spacer {
+    height: max(clamp(7.5rem, 32vw, 14.5rem), var(--hero-hex-descent));
+  }
+
+  .hero-overlap-hex {
+    top: 67%;
+  }
+}
+
+.bizos-hex-shape--black {
+  fill: #000;
+}
+
+.how-step-index {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.how-step-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+@media (min-width: 768px) {
+  .how-step-title {
+    font-size: 1.6875rem;
+  }
+}
+
+.how-step-lead {
+  font-size: 0.96875rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .how-step-lead {
+    font-size: 1.11rem;
+  }
+}
+
+.how-step-hex-solo {
+  display: flex;
+  justify-content: center;
+  width: min(100%, var(--landing-hub-hex-size));
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .how-step-hex-solo {
+    margin-inline: 0;
+    justify-content: flex-end;
+  }
+}
+
+@keyframes how-step-hex-solo-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  35% {
+    transform: translate(5px, -4px) rotate(0.5deg);
+  }
+  70% {
+    transform: translate(-4px, 5px) rotate(-0.4deg);
+  }
+}
+
+.how-step-hex-solo__mark {
+  display: block;
+  width: 100%;
+  max-width: var(--landing-hub-hex-size);
+  aspect-ratio: 0.92285 / 1;
+  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  animation: how-step-hex-solo-drift 9.5s ease-in-out infinite;
+  animation-delay: -2.2s;
+}
+
+.how-step-cluster-stage {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .how-step-cluster-stage {
+    justify-self: start;
+  }
+}
+
+@keyframes founding-team-bot-drift-left {
+  0%,
+  100% {
+    transform: translateY(-35%) translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-35%) translate(6px, -5px) rotate(0.7deg);
+  }
+  66% {
+    transform: translateY(-35%) translate(-5px, 6px) rotate(-0.6deg);
+  }
+}
+
+@keyframes founding-team-bot-drift-right {
+  0%,
+  100% {
+    transform: translateY(-35%) translate(0, 0) rotate(0deg);
+  }
+  40% {
+    transform: translateY(-35%) translate(-7px, 4px) rotate(-0.8deg);
+  }
+  75% {
+    transform: translateY(-35%) translate(5px, -6px) rotate(0.5deg);
+  }
+}
+
+@keyframes founding-team-bot-drift-bottom {
+  0%,
+  100% {
+    transform: translateX(-50%) translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translateX(-50%) translate(4px, -7px) rotate(0.6deg);
+  }
+  25% {
+    transform: translateX(-50%) translate(-6px, 5px) rotate(-0.5deg);
+  }
+}
+
+.founding-team-cluster {
+  position: relative;
+  width: min(100%, clamp(9.5rem, 48vw, 12rem));
+  aspect-ratio: 1.22 / 1;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .founding-team-cluster {
+    width: min(100%, 14.5rem);
+  }
+}
+
+.founding-team-cluster__hex-wrap {
+  position: absolute;
+  inset: 8% 20% 16%;
+  display: grid;
+  place-items: center;
+}
+
+.founding-team-cluster__hex {
+  display: block;
+  width: 100%;
+  max-width: var(--landing-hub-hex-size);
+  aspect-ratio: 0.92285 / 1;
+  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+}
+
+.founding-team-cluster__bot {
+  position: absolute;
+  z-index: 1;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
+}
+
+.founding-team-cluster__bot--left {
+  left: 7%;
+  top: 54%;
+  animation: founding-team-bot-drift-left 6.4s ease-in-out infinite;
+}
+
+.founding-team-cluster__bot--right {
+  right: 7%;
+  top: 54%;
+  animation: founding-team-bot-drift-right 7.9s ease-in-out infinite;
+  animation-delay: -2.8s;
+}
+
+.founding-team-cluster__bot--bottom {
+  left: 50%;
+  bottom: 11%;
+  animation: founding-team-bot-drift-bottom 5.7s ease-in-out infinite;
+  animation-delay: -4.1s;
+}
+
+.grok-bot-face {
+  display: block;
+  flex-shrink: 0;
+  transition: transform 180ms ease;
+}
+
+.grok-bot-face__disc {
+  fill: #000;
+}
+
+.grok-bot-face__disc--orange {
+  fill: var(--accent);
+}
+
+.grok-bot-face__disc--blue {
+  fill: #2563eb;
+}
+
+.grok-bot-face__disc--green {
+  fill: #16a34a;
+}
+
+.grok-bot-face__eye {
+  fill: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grok-bot-face {
+    transition: none;
+  }
+
+  .how-step-hex-solo__mark,
+  .founding-team-cluster__bot--left,
+  .founding-team-cluster__bot--right,
+  .founding-team-cluster__bot--bottom {
+    animation: none;
+  }
+
+  .founding-team-cluster__bot--left,
+  .founding-team-cluster__bot--right {
+    transform: translateY(-35%);
+  }
+
+  .founding-team-cluster__bot--bottom {
+    transform: translateX(-50%);
+  }
 }
 
 .hero-artifact__face {
@@ -587,10 +1011,10 @@ h4 {
 /* Landing marketing typography */
 .landing-eyebrow {
   font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--type-muted);
 }
 
 @media (min-width: 640px) {
@@ -601,10 +1025,24 @@ h4 {
 
 .landing-section-title {
   font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.2;
+  font-weight: 500;
+  line-height: 1.15;
   letter-spacing: -0.02em;
   color: var(--foreground);
+}
+
+.how-step-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+@media (min-width: 768px) {
+  .how-step-title {
+    font-size: 1.5rem;
+  }
 }
 
 @media (min-width: 768px) {
@@ -613,10 +1051,12 @@ h4 {
   }
 }
 
-.landing-section-lead {
+.landing-section-lead,
+.how-step-lead {
   font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--muted);
+  font-weight: var(--type-body-weight);
+  line-height: 1.55;
+  color: var(--type-muted);
 }
 
 @media (min-width: 640px) {
@@ -671,6 +1111,13 @@ h4 {
   width: 100%;
   margin-inline: auto;
   aspect-ratio: 400 / 220;
+}
+
+@media (min-width: 768px) {
+  /* Cap layout width so the orbit cluster stays centered with horizontal margin. */
+  .connectors-orbit-arena {
+    max-width: 36rem;
+  }
 }
 
 .connectors-orbit-scale-wrap {
@@ -734,7 +1181,7 @@ h4 {
 
 .connectors-orbit-planet-hex {
   display: block;
-  width: 84px;
+  width: calc(var(--landing-hub-hex-size) / var(--orbit-scale, 1));
   height: auto;
 }
 
@@ -763,7 +1210,7 @@ h4 {
   place-items: center;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--card);
+  background: var(--background);
   box-shadow: 0 2px 8px -2px rgba(40, 57, 75, 0.28);
 }
 
