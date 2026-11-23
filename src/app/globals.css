@@ -111,6 +111,85 @@ h4 {
   fill: #000;
 }
 
+/* Centered hero: gradient display word tucked behind the black hex (light bg). */
+.hero-gradient-brand {
+  font-size: clamp(3.25rem, 13.5vw, 7.25rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  background-image: linear-gradient(
+    98deg,
+    #b45309 0%,
+    #e85d04 22%,
+    #f9738a 48%,
+    #93a4f8 74%,
+    #5b67d6 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.hero-overlap-stage {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 13.5rem;
+  place-items: center;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  overflow: visible;
+}
+
+.hero-overlap-brand {
+  grid-area: 1 / 1;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-overlap-hex {
+  grid-area: 1 / 1;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  /* Pull hex down so ~35% of the gradient word sits behind the hex top. */
+  margin-top: 2.625rem;
+}
+
+.hero-overlap-hex__mark {
+  display: block;
+  width: min(50vw, 11.25rem);
+  aspect-ratio: 0.92285 / 1;
+  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+}
+
+@media (min-width: 640px) {
+  .hero-overlap-hex {
+    margin-top: 3rem;
+  }
+
+  .hero-overlap-hex__mark {
+    width: min(44vw, 15.5rem);
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-overlap-stage {
+    min-height: 17.5rem;
+  }
+
+  .hero-overlap-hex {
+    margin-top: 3.75rem;
+  }
+
+  .hero-overlap-hex__mark {
+    width: min(38vw, 19.25rem);
+  }
+}
+
 .bizos-hex-shape--black {
   fill: #000;
 }

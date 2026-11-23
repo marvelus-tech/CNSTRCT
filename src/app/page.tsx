@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HeroCrosshairShowcase } from "@/components/hero-crosshair-showcase";
+import { LandingHero } from "@/components/landing-hero";
 import { LandingFoundingTeam } from "@/components/landing-founding-team";
 import { LandingConnectors } from "@/components/landing-connectors";
 import { LandingPricing } from "@/components/landing-pricing";
 import { LandingProofStrip } from "@/components/landing-proof-strip";
 import { LandingSection } from "@/components/landing-section";
-import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { Wordmark } from "@/components/wordmark";
 import { FAQS } from "@/lib/faq";
@@ -60,29 +59,7 @@ export default function HomePage() {
         </nav>
       </header>
       <main>
-        <section className="px-4 pb-12 pt-6 sm:px-5 sm:pb-16 sm:pt-8 md:px-10 md:pt-16">
-          <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-12">
-            <div className="rise">
-              <p className="landing-eyebrow">
-                <span className="text-accent">Business</span> operating system
-              </p>
-              <h1 className="mt-3 max-w-xl text-[1.75rem] leading-[1.15] tracking-tight text-foreground sm:text-4xl sm:leading-[1.12] md:text-5xl md:leading-[1.1]">
-                Your founding team ships on day one.
-              </h1>
-              <p className="mt-4 max-w-lg text-base font-normal leading-[1.55] text-muted sm:text-lg sm:leading-[1.6]">
-                BizOS finds a business that fits you, then starts your bots. They do the work. You approve it.
-              </p>
-              <div className="mt-8">
-                <Button size="lg" asChild>
-                  <Link href="/triage">Start a BIZ</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="rise w-full md:justify-self-end">
-              <HeroCrosshairShowcase />
-            </div>
-          </div>
-        </section>
+        <LandingHero />
         <LandingFoundingTeam />
         <LandingProofStrip />
         <LandingConnectors />
