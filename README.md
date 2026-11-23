@@ -8,6 +8,8 @@ This app adapts the agent loop from [grokbot-clone](https://github.com/nickvasil
 
 **Production:** [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app)
 
+**Investor deck:** [https://marvelus-tech.github.io/decks/cnstrct-investor/](https://marvelus-tech.github.io/decks/cnstrct-investor/)
+
 Step-by-step import and env vars: [docs/DEPLOY.md](docs/DEPLOY.md). Billing setup: [docs/BILLING.md](docs/BILLING.md).
 
 ## Run
