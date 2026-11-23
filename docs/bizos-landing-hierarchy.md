@@ -29,7 +29,7 @@
 
 ## Hero (`LandingHero`)
 
-Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: gradient `h1` + partial hex; `.hero-overlap-hex-spacer` = computed descent; `overflow-x: visible` + `contain: layout` + `h1` end padding so **S** curve is not flattened), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). E2E: `pnpm test:hero-e2e` asserts copy gap, full wordmark under hex, and **S** not clipped. No hero eyebrow.
+Single centered column (`max-w-3xl`): brand stack (single `h1` **BizOS** at `z-index: 0`; hex at `z-index: 10`; `overflow: visible` on stack/stage/core + end padding on stack/`h1` so **S** curve is not flattened; hex spacer reserves descent), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). E2E: `pnpm test:hero-e2e` asserts copy gap, hex in front on overlap, and **S** not clipped. No hero eyebrow.
 
 ## Layout wrapper
 

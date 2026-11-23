@@ -189,8 +189,7 @@ h4 {
   display: flex;
   justify-content: center;
   width: 100%;
-  max-width: 100%;
-  overflow-x: visible;
+  overflow: visible;
   padding-top: 0.25rem;
 }
 
@@ -210,11 +209,10 @@ h4 {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  width: max-content;
-  max-width: min(100%, max-content);
-  /* Clip vertically so the hex silhouette cannot paint on copy; keep X open so S ink is not cropped. */
-  overflow-x: visible;
-  overflow-y: clip;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding-inline-end: clamp(0.375rem, 1.75vw, 0.85rem);
+  overflow: visible;
   contain: layout;
   isolation: isolate;
 }
@@ -224,7 +222,7 @@ h4 {
   position: relative;
   display: inline-block;
   max-width: none;
-  width: max-content;
+  overflow: visible;
 }
 
 .hero-overlap-hex-spacer {
@@ -240,8 +238,11 @@ h4 {
   z-index: 0;
   display: inline-block;
   margin: 0;
-  /* Reserve space past the S advance width so background-clip text anti-alias isn't cropped. */
-  padding-inline-end: 0.35em;
+  box-sizing: border-box;
+  /* background-clip:text anti-alias extends past the glyph advance; reserve end room. */
+  padding-inline-end: 0.5em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   pointer-events: none;
   user-select: none;
 }
@@ -257,6 +258,7 @@ h4 {
   margin: 0;
   pointer-events: none;
   transform: translateX(-50%);
+  isolation: isolate;
 }
 
 .hero-overlap-hex__mark {
