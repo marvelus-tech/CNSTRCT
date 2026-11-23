@@ -14,7 +14,7 @@ export function LandingPricing() {
         {LANDING_PLAN_ORDER.map((id) => {
           const plan = PLANS[id];
           return (
-            <li key={plan.id} className="flex flex-col border border-border bg-card p-6">
+            <li key={plan.id} className="flex flex-col border border-border bg-background p-6">
               <p className="landing-eyebrow text-accent">{plan.label}</p>
               <p className="mt-2 text-4xl font-semibold tabular-nums tracking-tight">
                 ${plan.priceUsd}
