@@ -30,7 +30,10 @@ You only need to do this once per Vercel team. After that, every push to `main` 
    | Name | Value |
    | --- | --- |
    | `DATABASE_URL` or `POSTGRES_URL` | Neon connection string from the Vercel Postgres / Neon integration. Required. Do not commit it. |
+   | `CRON_SECRET` | Random string. Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` to `/api/cron/provisioning`. |
    | `NEXT_PUBLIC_SITE_URL` | `https://cnstrct-mu.vercel.app` (no trailing slash) |
+
+   Optional server-only names (empty in demo mode): `ORGO_API_KEY`, `TREG_TOKEN`, `TREG_ORG_ID`, `COMPOSIO_API_KEY`, `COMPOSIO_WEBHOOK_SECRET`. No `NEXT_PUBLIC_` copies.
 
    Do **not** set `CNSTRCT_DATA_DIR=/tmp/cnstrct-data`. `vercel.json` no longer does. On Vercel the app refuses to boot SQLite. If that variable is still in the project dashboard from an older deploy, delete it. Sandbox scratch files use `/tmp/cnstrct-sandboxes` and are not application state.
 
@@ -57,7 +60,9 @@ pnpm start
 
 ## Durable database
 
-Production state (users, sessions, profiles, businesses, agents, routines, messages, approvals, policies, leads, tasks, audit, connections, billing) is Neon. The store awaits the Neon HTTP driver. Production does not open a worker thread and does not open SQLite. The first request applies `001_baseline` inside one transaction and records it in `schema_migrations`. A failed boot does not record the version, so the next boot retries. `CREATE TABLE IF NOT EXISTS` makes that retry safe.
+Production state (users, sessions, profiles, businesses, agents, routines, messages, approvals, policies, leads, tasks, audit, connections, billing, provisioning jobs) is Neon. Production does not open SQLite. The first request applies pending versions in `schema_migrations` (`001_baseline`, then `002_provisioning` for the async provider outbox). A failed boot does not record the version, so the next boot retries. `CREATE TABLE IF NOT EXISTS` and one-time `ALTER TABLE` steps make that retry safe.
+
+Business creation enqueues Orgo, Treg, and Composio jobs in the same transaction as the business row. External calls run from `/api/cron/provisioning` (schedule in `vercel.json`), not from `POST /api/business`.
 
 Epoch columns are `BIGINT`. Postgres `INTEGER` is 32-bit and cannot store `Date.now()`.
 

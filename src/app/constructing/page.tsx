@@ -22,6 +22,14 @@ const STEPS_BY_TEMPLATE: Record<string, readonly string[]> = {
 };
 
 const MIN_MS = 5000;
+const IDEMPOTENCY_STORAGE = "cnstrct.construct.idempotency.v1";
+
+function constructIdempotencyKey(template: string) {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `construct:${template}:${crypto.randomUUID()}`;
+  }
+  return `construct:${template}:${Date.now()}`;
+}
 
 function ConstructingInner() {
   const router = useRouter();
@@ -48,9 +56,23 @@ function ConstructingInner() {
         return;
       }
 
+      let idempotencyKey = "";
+      try {
+        idempotencyKey = sessionStorage.getItem(IDEMPOTENCY_STORAGE) ?? "";
+        if (!idempotencyKey) {
+          idempotencyKey = constructIdempotencyKey(template);
+          sessionStorage.setItem(IDEMPOTENCY_STORAGE, idempotencyKey);
+        }
+      } catch {
+        idempotencyKey = constructIdempotencyKey(template);
+      }
+
       const response = await fetch("/api/business", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
         body: JSON.stringify({ templateId: template }),
       });
       const json = (await response.json()) as { businessId?: string; error?: string; code?: string };
@@ -65,6 +87,11 @@ function ConstructingInner() {
         return;
       }
       setStep(steps.length - 1);
+      try {
+        sessionStorage.removeItem(IDEMPOTENCY_STORAGE);
+      } catch {
+        // ignore
+      }
       router.replace(`/command-center?new=${json.businessId}`);
     }
 

@@ -24,6 +24,12 @@ export interface Profile {
   constraints: string;
 }
 
+export type ProvisionStatus = "pending" | "provisioning" | "ready" | "partial" | "failed";
+
+export type ProvisioningProvider = "orgo" | "treg" | "composio";
+
+export type ProvisioningJobStatus = "pending" | "running" | "succeeded" | "failed" | "skipped";
+
 export interface Business {
   id: string;
   userId: string;
@@ -34,6 +40,25 @@ export interface Business {
   createdAt: number;
   profileJson?: string | null;
   orgoWorkspaceId?: string | null;
+  orgoComputerId?: string | null;
+  composioUserId?: string | null;
+  tregCustomerTag?: string | null;
+  provisionStatus: ProvisionStatus;
+  provisionError?: string | null;
+  createIdempotencyKey?: string | null;
+}
+
+export interface ProvisioningJob {
+  id: string;
+  businessId: string;
+  provider: ProvisioningProvider;
+  status: ProvisioningJobStatus;
+  attempts: number;
+  nextAttemptAt: number;
+  leasedUntil: number | null;
+  lastError: string | null;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface Agent {
