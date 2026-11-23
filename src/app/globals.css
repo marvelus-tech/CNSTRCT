@@ -23,8 +23,8 @@
     #4ade80 74%,
     #16a34a 100%
   );
-  --proof-chart-stroke-ai: 2.25;
-  --proof-chart-stroke-bfs: 2;
+  --proof-chart-stroke-ai: 5.5;
+  --proof-chart-stroke-bfs: 5.5;
 }
 
 .proof-chart-stroke-ai {
@@ -35,10 +35,14 @@
   stroke-width: var(--proof-chart-stroke-bfs);
 }
 
+.proof-chart-legend-swatch {
+  height: calc(var(--proof-chart-stroke-ai) * 1px);
+}
+
 @media (min-width: 640px) {
   :root {
-    --proof-chart-stroke-ai: 2.75;
-    --proof-chart-stroke-bfs: 2.5;
+    --proof-chart-stroke-ai: 6;
+    --proof-chart-stroke-bfs: 6;
   }
 }
 
