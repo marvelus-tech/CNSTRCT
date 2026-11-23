@@ -7,6 +7,9 @@ import type {
   AuditEvent,
   Business,
   Capital,
+  ComposioConnectionAttempt,
+  ComposioConnectionAttemptStatus,
+  ComposioSessionRow,
   Lead,
   PendingState,
   Profile,
@@ -354,6 +357,10 @@ export async function setBusinessWorkspace(id: string, workspaceId: string) {
 
 export async function setBusinessTregBudgetStatus(id: string, status: import("./types").TregBudgetStatus) {
   await (await db()).prepare("UPDATE businesses SET treg_budget_status = ? WHERE id = ?").run(status, id);
+}
+
+export async function setBusinessComposioUserId(id: string, composioUserId: string) {
+  await (await db()).prepare("UPDATE businesses SET composio_user_id = ? WHERE id = ?").run(composioUserId, id);
 }
 
 export async function setBusinessOrgoIds(
@@ -978,6 +985,93 @@ export async function upsertConnection(input: {
   };
 }
 
+function mapComposioConnectionAttempt(row: Record<string, unknown>): ComposioConnectionAttempt {
+  return {
+    id: String(row.id),
+    businessId: String(row.business_id),
+    toolkit: String(row.toolkit),
+    composioUserId: String(row.composio_user_id),
+    nonce: String(row.nonce),
+    sessionId: row.session_id == null ? null : String(row.session_id),
+    status: String(row.status) as ComposioConnectionAttempt["status"],
+    createdAt: Number(row.created_at),
+    expiresAt: Number(row.expires_at),
+  };
+}
+
+export async function insertComposioConnectionAttempt(input: Omit<ComposioConnectionAttempt, "sessionId"> & { sessionId?: string | null }) {
+  await (await db())
+    .prepare(
+      `INSERT INTO composio_connection_attempts (
+        id, business_id, toolkit, composio_user_id, nonce, session_id, status, created_at, expires_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      input.id,
+      input.businessId,
+      input.toolkit,
+      input.composioUserId,
+      input.nonce,
+      input.sessionId ?? null,
+      input.status,
+      input.createdAt,
+      input.expiresAt,
+    );
+}
+
+export async function getComposioConnectionAttemptByNonce(businessId: string, nonce: string) {
+  const row = asRecord(
+    await (await db())
+      .prepare(
+        `SELECT * FROM composio_connection_attempts
+         WHERE business_id = ? AND nonce = ? AND status = 'pending'
+         ORDER BY created_at DESC LIMIT 1`,
+      )
+      .get(businessId, nonce),
+  );
+  return row ? mapComposioConnectionAttempt(row) : null;
+}
+
+export async function completeComposioConnectionAttempt(id: string, status: ComposioConnectionAttemptStatus) {
+  await (await db()).prepare("UPDATE composio_connection_attempts SET status = ? WHERE id = ?").run(status, id);
+}
+
+export async function expireComposioConnectionAttempts(businessId: string, now: number) {
+  await (await db())
+    .prepare(
+      `UPDATE composio_connection_attempts
+       SET status = 'failed'
+       WHERE business_id = ? AND status = 'pending' AND expires_at < ?`,
+    )
+    .run(businessId, now);
+}
+
+export async function recordComposioSession(businessId: string, sessionId: string) {
+  const now = Date.now();
+  await (await db())
+    .prepare(
+      `INSERT INTO composio_sessions (id, business_id, session_id, created_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT (business_id, session_id) DO NOTHING`,
+    )
+    .run(newId("csess"), businessId, sessionId, now);
+}
+
+export async function listComposioSessions(businessId: string): Promise<ComposioSessionRow[]> {
+  return await (await (await db())
+    .prepare("SELECT * FROM composio_sessions WHERE business_id = ? ORDER BY created_at ASC")
+    .all(businessId))
+    .map((row) => {
+      const record = asRecord(row)!;
+      return {
+        id: String(record.id),
+        businessId: String(record.business_id),
+        sessionId: String(record.session_id),
+        createdAt: Number(record.created_at),
+      };
+    });
+}
+
 export async function listConnections(businessId: string): Promise<AppConnection[]> {
   return await (await (await db())
     .prepare("SELECT * FROM app_connections WHERE business_id = ? ORDER BY toolkit ASC")
@@ -1019,6 +1113,8 @@ export async function deleteBusinessForUser(userId: string, businessId: string) 
     "DELETE FROM tasks WHERE business_id = ?",
     "DELETE FROM audit_events WHERE business_id = ?",
     "DELETE FROM app_connections WHERE business_id = ?",
+    "DELETE FROM composio_connection_attempts WHERE business_id = ?",
+    "DELETE FROM composio_sessions WHERE business_id = ?",
     "DELETE FROM agents WHERE business_id = ?",
     "DELETE FROM businesses WHERE id = ?",
   ]) {

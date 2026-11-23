@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // freeze a business page at build time, so this app stays dynamic.
   cacheComponents: false,
   // Keep the Neon HTTP driver external so Node loads the published package.
-  serverExternalPackages: ["@neondatabase/serverless"],
+  serverExternalPackages: ["@neondatabase/serverless", "@composio/core"],
   poweredByHeader: false,
   turbopack: {
     rules: {

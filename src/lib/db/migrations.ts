@@ -229,6 +229,33 @@ CREATE INDEX IF NOT EXISTS provisioning_jobs_due ON provisioning_jobs (status, n
 ALTER TABLE businesses ADD COLUMN treg_budget_status TEXT NOT NULL DEFAULT 'unset';
 `,
   },
+  {
+    version: "004_composio_lifecycle",
+    sql: `
+CREATE TABLE IF NOT EXISTS composio_connection_attempts (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  toolkit TEXT NOT NULL,
+  composio_user_id TEXT NOT NULL,
+  nonce TEXT NOT NULL,
+  session_id TEXT,
+  status TEXT NOT NULL,
+  created_at BIGINT NOT NULL,
+  expires_at BIGINT NOT NULL,
+  UNIQUE (business_id, nonce)
+);
+
+CREATE INDEX IF NOT EXISTS composio_connection_attempts_business ON composio_connection_attempts (business_id, status);
+
+CREATE TABLE IF NOT EXISTS composio_sessions (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  created_at BIGINT NOT NULL,
+  UNIQUE (business_id, session_id)
+);
+`,
+  },
 ] as const;
 
 export const SCHEMA_MIGRATIONS_SQL = `
