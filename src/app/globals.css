@@ -4,7 +4,10 @@
   --background: #e8e9ec;
   --foreground: #222326;
   --card: #f5f5f7;
-  --muted: #6b6e74;
+  --muted: #6f7177;
+  --type-display-weight: 500;
+  --type-body-weight: 400;
+  --type-muted: #6f7177;
   --accent: #e85d04;
   --accent-hot: #fff4e8;
   --accent-glow: #f97316;
@@ -22,13 +25,14 @@
   --color-accent-soft: var(--accent-soft);
   --color-border: var(--border);
   --color-danger: var(--danger);
-  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-weight: var(--type-body-weight);
 }
 
 /* Tabular HUD readout — triage step counter (“3 of 7”) and back control */
@@ -59,8 +63,9 @@ h2,
 h3,
 h4 {
   font-family: var(--font-sans);
-  font-weight: 600;
+  font-weight: var(--type-display-weight);
   letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -807,10 +812,10 @@ h4 {
 /* Landing marketing typography */
 .landing-eyebrow {
   font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--type-muted);
 }
 
 @media (min-width: 640px) {
@@ -821,10 +826,24 @@ h4 {
 
 .landing-section-title {
   font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.2;
+  font-weight: 500;
+  line-height: 1.15;
   letter-spacing: -0.02em;
   color: var(--foreground);
+}
+
+.how-step-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+@media (min-width: 768px) {
+  .how-step-title {
+    font-size: 1.5rem;
+  }
 }
 
 @media (min-width: 768px) {
@@ -833,10 +852,12 @@ h4 {
   }
 }
 
-.landing-section-lead {
+.landing-section-lead,
+.how-step-lead {
   font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--muted);
+  font-weight: var(--type-body-weight);
+  line-height: 1.55;
+  color: var(--type-muted);
 }
 
 @media (min-width: 640px) {

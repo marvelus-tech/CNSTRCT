@@ -66,10 +66,10 @@ export default function HomePage() {
               <p className="landing-eyebrow">
                 <span className="text-accent">Business</span> operating system
               </p>
-              <h1 className="mt-3 max-w-xl text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-foreground sm:text-4xl sm:leading-[1.08] md:text-6xl md:leading-[1.05]">
+              <h1 className="mt-3 max-w-xl text-[1.75rem] leading-[1.15] tracking-tight text-foreground sm:text-4xl sm:leading-[1.12] md:text-5xl md:leading-[1.1]">
                 Your founding team ships on day one.
               </h1>
-              <p className="mt-4 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
+              <p className="mt-4 max-w-lg text-base font-normal leading-[1.55] text-muted sm:text-lg sm:leading-[1.6]">
                 BizOS finds a business that fits you, then starts your bots. They do the work. You approve it.
               </p>
               <div className="mt-8">

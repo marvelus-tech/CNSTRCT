@@ -1,12 +1,22 @@
 # BizOS landing typographic hierarchy (implementation)
 
+## Type system
+
+- **Font:** Inter Tight (`next/font/google`), CSS variable `--font-inter-tight`, wired as `--font-sans` in `@theme`.
+- **Weights:** body `400` (`--type-body-weight`), display headlines `500` (`--type-display-weight`). Stat/price numerals may use `font-semibold` locally.
+- **Muted copy:** `--type-muted` (`#6f7177`), aligned with theme `--muted`.
+- **Headlines:** `letter-spacing: -0.02em`, display line-height ~`1.15`; leads `1.55`–`1.6`.
+- **HUD / triage:** `.hud-readout` and `Button` HUD frames keep uppercase + wide tracking; app surfaces inherit body weight only.
+
 ## CSS utilities (`src/app/globals.css`)
 
 | Class | Use |
 |-------|-----|
-| `.landing-eyebrow` | Section kickers, plan labels, FAQ eyebrow |
-| `.landing-section-title` | Section `h2`, proof H2, pricing title, step titles as `h3` |
+| `.landing-eyebrow` | Section kickers, plan labels, FAQ eyebrow (sentence case, weight 500) |
+| `.landing-section-title` | Section `h2`, proof H2, pricing title, connectors headline |
+| `.how-step-title` | How-it-works step titles (`h3`) |
 | `.landing-section-lead` | Supporting copy, FAQ answers, proof kicker, pricing intro |
+| `.how-step-lead` | How-it-works step body copy |
 | `.landing-caption` | Hero crosshair slide labels |
 | `.landing-fine-print` | Survey source lines, pricing overage note |
 
