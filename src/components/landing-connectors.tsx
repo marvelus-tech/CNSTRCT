@@ -1,7 +1,7 @@
 import { LandingConnectorsOrbit } from "@/components/landing-connectors-orbit";
 import { LandingSection } from "@/components/landing-section";
 
-const CONNECTORS_HEADLINE = "All your favorite tools, accessible to your new business.";
+const CONNECTORS_HEADLINE = "All your favorite tools, accessible to your biz";
 
 export function LandingConnectors() {
   return (

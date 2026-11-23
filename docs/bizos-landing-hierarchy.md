@@ -55,6 +55,7 @@ Single centered column (`max-w-3xl`): brand stack (single `h1` **BizOS** at `z-i
 | Proof stat 2 | **28%** — Reporting AI revenue gains |
 | Proof stat 3 | **2.4×** — AI leaders' revenue growth vs. laggards |
 | Proof sources | McKinsey State of AI (2026), Deloitte State of AI in the Enterprise (2026), BCG Applied AI Index (2026), US Census Bureau Business Formation Statistics |
+| Connectors H2 | All your favorite tools, accessible to your biz |
 | Steps section | **How it works** (`h2` Match, then start.); 01 Custom Business / 02 Start your business |
 | FAQ eyebrow | FAQ |
 | FAQ title | Questions people ask first |
