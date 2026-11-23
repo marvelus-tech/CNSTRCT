@@ -26,8 +26,7 @@ export function LandingHero() {
         </div>
         <div className="hero-overlap-copy-stack w-full max-w-lg shrink-0">
           <p className="text-base font-normal leading-[1.55] text-muted sm:text-lg sm:leading-[1.6]">
-            BizOS matches a business that fits you, gives you a founding team, so you can start being
-            productive on day one.
+            Start a custom biz with AI working on your behalf from day one.
           </p>
           <div className="mt-8 flex justify-center">
             <Button size="lg" asChild>

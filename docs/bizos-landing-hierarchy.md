@@ -41,7 +41,7 @@ Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: g
 |---------|--------|
 | Nav CTA | Start a BIZ → `/triage` |
 | Hero H1 | Gradient **BizOS** in overlap stage (single `h1`, hex on top) |
-| Hero lead | BizOS matches a business that fits you, gives you a founding team, so you can start being productive on day one. |
+| Hero lead | Start a custom biz with AI working on your behalf from day one. |
 | Hero CTA | Start a BIZ |
 | Proof H2 | AI is default. New businesses are forming faster than ever. |
 | Proof chart | `LandingProofTrendChart`: dual-axis SVG (McKinsey AI % + Census BFS), x ticks 2017/2020/2023/2026 only, Y ticks 0/50/100% and 0/3/6M, compact legend (“AI adoption”, “New business applications”) with sr-only detail, AI stroke gradient ends green (`#16a34a`), 89% + 5.7M in a row below plot (no overlap), doubled stroke widths (AI 4.7px, BFS 4.5px), `prefers-reduced-motion` respected |
