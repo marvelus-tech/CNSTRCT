@@ -110,6 +110,39 @@ h4 {
   fill: #000;
 }
 
+.how-step-hex-solo {
+  display: flex;
+  justify-content: center;
+  width: min(100%, 12rem);
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .how-step-hex-solo {
+    margin-inline: 0;
+    justify-content: flex-start;
+  }
+}
+
+.how-step-hex-solo__mark {
+  display: block;
+  width: 100%;
+  max-width: 12rem;
+  aspect-ratio: 0.92285 / 1;
+  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+}
+
+.how-step-cluster-stage {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .how-step-cluster-stage {
+    justify-self: end;
+  }
+}
+
 .founding-team-cluster {
   position: relative;
   width: min(100%, 19rem);
