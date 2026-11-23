@@ -50,7 +50,7 @@ Single centered column (`max-w-3xl`): brand stack (single `h1` **BizOS** at `z-i
 | Hero lead | Start a custom biz with AI working on your behalf from day one. |
 | Hero CTA | Start a BIZ |
 | Proof H2 | AI is default. New businesses are forming faster than ever. |
-| Proof chart | `LandingProofTrendChart`: dual-axis SVG (McKinsey AI % + Census BFS), x ticks 2017/2020/2023/2026 only, Y ticks 0/50/100% and 0/3/6M, compact legend (“AI adoption”, “New business applications”) with sr-only detail, AI stroke gradient ends green (`#16a34a`), 89% + 5.7M in a row below plot (no overlap), doubled stroke widths (AI 4.7px, BFS 4.5px), `prefers-reduced-motion` respected |
+| Proof chart | `LandingProofTrendChart`: narrow centered figure (`max-w-md` / `max-w-lg`), dual-line SVG (McKinsey AI % + Census BFS), sparse x ticks 2017/2020/2023/2026, faint 0 baseline only (no Y tick labels), sr-only legend + data table, endpoint labels at 2026 line ends (`89%` / `AI adoption (2026)` above AI dot; `5.7M` / `New applications, US (2026)` below BFS dot), AI stroke gradient ends green (`#16a34a`), `prefers-reduced-motion` respected |
 | Proof stat 1 | **89%** — Orgs using AI in at least one function |
 | Proof stat 2 | **28%** — Reporting AI revenue gains |
 | Proof stat 3 | **2.4×** — AI leaders' revenue growth vs. laggards |

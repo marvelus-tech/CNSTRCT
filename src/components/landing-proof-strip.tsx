@@ -16,7 +16,7 @@ export function LandingProofStrip() {
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="landing-section-title text-pretty">{LANDING_PROOF_TITLE}</h2>
 
-        <div className="mt-14 w-full text-left">
+        <div className="mt-10 w-full text-left sm:mt-12">
           <LandingProofTrendChart />
         </div>
 
