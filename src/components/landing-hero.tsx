@@ -8,7 +8,7 @@ export function LandingHero() {
       className="overflow-x-hidden px-4 pb-12 pt-6 sm:px-5 sm:pb-16 sm:pt-8 md:px-10 md:pt-16"
       aria-label="BizOS introduction"
     >
-      <div className="rise mx-auto flex max-w-3xl flex-col items-center text-center">
+      <div className="rise mx-auto flex w-full max-w-3xl flex-col items-center text-center">
         <div className="hero-overlap-stage">
           <div className="hero-overlap-brand-stack">
             <div className="hero-overlap-brand-core">
@@ -24,7 +24,7 @@ export function LandingHero() {
             <div className="hero-overlap-hex-spacer" aria-hidden="true" />
           </div>
         </div>
-        <div className="hero-overlap-copy-stack w-full max-w-lg">
+        <div className="hero-overlap-copy-stack w-full max-w-lg shrink-0">
           <p className="text-base font-normal leading-[1.55] text-muted sm:text-lg sm:leading-[1.6]">
             BizOS matches a business that fits you, gives you a founding team, so you can start being
             productive on day one.
