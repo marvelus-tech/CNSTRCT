@@ -188,7 +188,7 @@ export function LandingConnectorsOrbit() {
 
             <div className="connectors-orbit-planet" aria-hidden="true">
               <BusinessHexMark
-                className="connectors-orbit-planet-hex"
+                className="landing-hub-hex-mark connectors-orbit-planet-hex"
                 shapeClassName="connectors-orbit-planet-hex__shape"
                 aria-hidden
               />
