@@ -45,11 +45,7 @@ export async function GET() {
       connectedAccountId: gmail?.connectedAccountId ?? null,
       storedStatus: gmail?.status,
     });
-    const specialists = team.filter((agent) => agent.role !== "orchestrator");
-    const orgoLabel = orgoDeskLabel(
-      specialists.map((agent) => agent.orgoComputerId),
-      orgoConfigured(),
-    );
+    const orgoLabel = orgoDeskLabel(business.orgoComputerId, orgoConfigured());
     return {
       id: business.id,
       name: business.name,

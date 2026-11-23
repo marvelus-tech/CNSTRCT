@@ -29,7 +29,7 @@ import { ensureWorkspace } from "./sandbox";
 export const LOCAL_COMPUTER_NOTE =
   "Orgo is not connected. This folder is a local sandbox, not an Orgo computer.";
 export const ORGO_COMPUTER_NOTE =
-  "Orgo Small computer (0.5 vCPU, 4 GB RAM, 20 GB disk). App secrets are not on this VM.";
+  "Orgo desk computer (2 vCPU, 8 GB RAM, 40 GB disk). One Linux VM per business. App secrets are not on this VM.";
 
 function slugify(input: string) {
   const base = input

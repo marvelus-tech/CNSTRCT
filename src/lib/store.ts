@@ -348,6 +348,18 @@ export async function setBusinessWorkspace(id: string, workspaceId: string) {
   await (await db()).prepare("UPDATE businesses SET orgo_workspace_id = ? WHERE id = ?").run(workspaceId, id);
 }
 
+export async function setBusinessOrgoIds(
+  id: string,
+  patch: { orgoWorkspaceId?: string | null; orgoComputerId?: string | null },
+) {
+  if (patch.orgoWorkspaceId !== undefined) {
+    await (await db()).prepare("UPDATE businesses SET orgo_workspace_id = ? WHERE id = ?").run(patch.orgoWorkspaceId, id);
+  }
+  if (patch.orgoComputerId !== undefined) {
+    await (await db()).prepare("UPDATE businesses SET orgo_computer_id = ? WHERE id = ?").run(patch.orgoComputerId, id);
+  }
+}
+
 export async function getBusinessBySlug(slug: string): Promise<Business | null> {
   const row = asRecord(await (await db()).prepare("SELECT * FROM businesses WHERE slug = ?").get(slug));
   return row ? mapBusiness(row) : null;
