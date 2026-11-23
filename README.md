@@ -6,7 +6,7 @@ This app adapts the agent loop from [grokbot-clone](https://github.com/nickvasil
 
 ## Deploy (Vercel)
 
-**Production:** [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app)
+**Production:** [https://bizos-mu.vercel.app](https://bizos-mu.vercel.app)
 
 Step-by-step import and env vars: [docs/DEPLOY.md](docs/DEPLOY.md). Billing setup: [docs/BILLING.md](docs/BILLING.md).
 
@@ -64,7 +64,7 @@ Copy `.env.example` to `.env.local` only when you want a live provider. Every va
 | Docker | Used only when the daemon answers `docker version`, Orgo is unset, and the owner already approved the command. The container is `alpine` with `--network none`. |
 | `COMPOSIO_API_KEY` | Reserved. This MVP does not send Gmail. A set key is still not a sent message. Approved drafts stay in the local outbox with `network: false`. |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Email magic link. The template should land on `/auth/callback` with `token_hash` and `type`. Without the keys, the demo session is the path that always works. |
-| `NEXT_PUBLIC_SITE_URL` | Canonical origin. Production: `https://cnstrct-mu.vercel.app`. Local default `http://localhost:3000`. |
+| `NEXT_PUBLIC_SITE_URL` | Canonical origin. Production: `https://bizos-mu.vercel.app`. Local default `http://localhost:3000`. |
 | `DATABASE_URL` or `POSTGRES_URL` | Neon (Vercel Postgres) connection string. Required on Vercel. Empty locally, which keeps SQLite in `./data`. | 
 | `CNSTRCT_DATA_DIR` | Local SQLite directory. Defaults to `./data`. Not used for production state. |
 | Stripe / `BILLING_MODE` | See [docs/BILLING.md](docs/BILLING.md). |
@@ -73,14 +73,14 @@ Token and computer-hour meters are a hardcoded demo cap: 50,000 tokens and 2 hou
 
 ## Hosted demo: what persists
 
-**Canonical production URL:** [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app)
+**Canonical production URL:** [https://bizos-mu.vercel.app](https://bizos-mu.vercel.app)
 
 Production requires `DATABASE_URL` or `POSTGRES_URL` (Neon via the Vercel Postgres integration). The app refuses to open SQLite on Vercel, including a data directory under `/tmp`. Sessions, triage profiles, businesses, and agent rows survive cold starts and deploys.
 
 What **does** persist without signing in:
 
 - The app code and UI on each deploy.
-- A **seeded sample desk** at [`/b/harbor-tradie-desk`](https://cnstrct-mu.vercel.app/b/harbor-tradie-desk). The first request on an empty database inserts `user_sample` and that business.
+- A **seeded sample desk** at [`/b/harbor-tradie-desk`](https://bizos-mu.vercel.app/b/harbor-tradie-desk). The first request on an empty database inserts `user_sample` and that business.
 
 What **does not** persist on Vercel:
 

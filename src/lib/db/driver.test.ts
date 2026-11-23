@@ -3,7 +3,7 @@ import test from "node:test";
 import { EphemeralDatabaseError, resolveDatabaseDriver, scrubDatabaseError } from "./driver";
 import { ephemeralHostedDemo } from "../hosted-demo";
 
-const publicSite = { NEXT_PUBLIC_SITE_URL: "https://cnstrct-mu.vercel.app" };
+const publicSite = { NEXT_PUBLIC_SITE_URL: "https://bizos-mu.vercel.app" };
 
 test("tests stay on sqlite even when a database URL is present", () => {
   const choice = resolveDatabaseDriver(
