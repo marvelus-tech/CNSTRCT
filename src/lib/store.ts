@@ -17,6 +17,10 @@ import type {
   Trades,
   User,
   WorkTask,
+  ProvisioningJob,
+  ProvisioningJobStatus,
+  ProvisioningProvider,
+  ProvisionStatus,
 } from "./types";
 
 async function db() {
@@ -117,11 +121,64 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   };
 }
 
-export async function insertBusiness(input: Omit<Business, "id" | "createdAt">): Promise<Business> {
-  const business: Business = { ...input, id: newId("biz"), createdAt: Date.now() };
+export async function insertBusinessWithProvisioningJobs(
+  input: Omit<Business, "createdAt" | "provisionStatus"> & { provisionStatus?: ProvisionStatus },
+  providers: ProvisioningProvider[],
+): Promise<Business> {
+  const business: Business = {
+    ...input,
+    id: input.id ?? newId("biz"),
+    createdAt: Date.now(),
+    provisionStatus: input.provisionStatus ?? "pending",
+    orgoComputerId: input.orgoComputerId ?? null,
+    provisionError: input.provisionError ?? null,
+  };
+  const now = business.createdAt;
+  const statements = [
+    {
+      sql: `INSERT INTO businesses (
+        id, user_id, template_id, name, slug, city, created_at, profile_json,
+        orgo_workspace_id, orgo_computer_id, composio_user_id, treg_customer_tag,
+        provision_status, provision_error, create_idempotency_key
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      params: [
+        business.id,
+        business.userId,
+        business.templateId,
+        business.name,
+        business.slug,
+        business.city,
+        business.createdAt,
+        business.profileJson ?? null,
+        business.orgoWorkspaceId ?? null,
+        business.orgoComputerId ?? null,
+        business.composioUserId ?? null,
+        business.tregCustomerTag ?? null,
+        business.provisionStatus,
+        business.provisionError ?? null,
+        business.createIdempotencyKey ?? null,
+      ],
+    },
+    ...providers.map((provider) => ({
+      sql: `INSERT INTO provisioning_jobs (
+        id, business_id, provider, status, attempts, next_attempt_at, leased_until, last_error, created_at, updated_at
+      ) VALUES (?, ?, ?, 'pending', 0, ?, NULL, NULL, ?, ?)`,
+      params: [newId("pjob"), business.id, provider, now, now, now],
+    })),
+  ];
+  await (await db()).transaction(statements);
+  return business;
+}
+
+export async function insertBusiness(input: Omit<Business, "id" | "createdAt" | "provisionStatus"> & { provisionStatus?: ProvisionStatus }): Promise<Business> {
+  const business: Business = { provisionStatus: "pending", ...input, id: newId("biz"), createdAt: Date.now() };
   await (await db())
     .prepare(
-      "INSERT INTO businesses (id, user_id, template_id, name, slug, city, created_at, profile_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      `INSERT INTO businesses (
+        id, user_id, template_id, name, slug, city, created_at, profile_json,
+        orgo_workspace_id, orgo_computer_id, composio_user_id, treg_customer_tag,
+        provision_status, provision_error, create_idempotency_key
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       business.id,
@@ -132,6 +189,13 @@ export async function insertBusiness(input: Omit<Business, "id" | "createdAt">):
       business.city,
       business.createdAt,
       business.profileJson ?? null,
+      business.orgoWorkspaceId ?? null,
+      business.orgoComputerId ?? null,
+      business.composioUserId ?? null,
+      business.tregCustomerTag ?? null,
+      business.provisionStatus ?? "pending",
+      business.provisionError ?? null,
+      business.createIdempotencyKey ?? null,
     );
   return business;
 }
@@ -147,8 +211,138 @@ function mapBusiness(row: Record<string, unknown>): Business {
     createdAt: Number(row.created_at),
     profileJson: row.profile_json == null ? null : String(row.profile_json),
     orgoWorkspaceId: row.orgo_workspace_id == null ? null : String(row.orgo_workspace_id),
+    orgoComputerId: row.orgo_computer_id == null ? null : String(row.orgo_computer_id),
+    composioUserId: row.composio_user_id == null ? null : String(row.composio_user_id),
+    tregCustomerTag: row.treg_customer_tag == null ? null : String(row.treg_customer_tag),
+    provisionStatus: (row.provision_status == null ? "pending" : String(row.provision_status)) as ProvisionStatus,
+    provisionError: row.provision_error == null ? null : String(row.provision_error),
+    createIdempotencyKey: row.create_idempotency_key == null ? null : String(row.create_idempotency_key),
   };
 }
+
+function mapProvisioningJob(row: Record<string, unknown>): ProvisioningJob {
+  return {
+    id: String(row.id),
+    businessId: String(row.business_id),
+    provider: String(row.provider) as ProvisioningProvider,
+    status: String(row.status) as ProvisioningJobStatus,
+    attempts: Number(row.attempts),
+    nextAttemptAt: Number(row.next_attempt_at),
+    leasedUntil: row.leased_until == null ? null : Number(row.leased_until),
+    lastError: row.last_error == null ? null : String(row.last_error),
+    createdAt: Number(row.created_at),
+    updatedAt: Number(row.updated_at),
+  };
+}
+
+export async function getBusinessByCreateIdempotencyKey(userId: string, key: string): Promise<Business | null> {
+  const row = asRecord(
+    await (await db())
+      .prepare("SELECT * FROM businesses WHERE user_id = ? AND create_idempotency_key = ? LIMIT 1")
+      .get(userId, key),
+  );
+  return row ? mapBusiness(row) : null;
+}
+
+export async function setBusinessProvisionFields(
+  businessId: string,
+  patch: { provisionStatus?: ProvisionStatus; provisionError?: string | null },
+) {
+  if (patch.provisionStatus != null) {
+    await (await db())
+      .prepare("UPDATE businesses SET provision_status = ? WHERE id = ?")
+      .run(patch.provisionStatus, businessId);
+  }
+  if (patch.provisionError !== undefined) {
+    await (await db())
+      .prepare("UPDATE businesses SET provision_error = ? WHERE id = ?")
+      .run(patch.provisionError, businessId);
+  }
+}
+
+export async function enqueueProvisioningJobs(
+  businessId: string,
+  items: Array<{ provider: ProvisioningProvider; nextAttemptAt: number }>,
+) {
+  const now = Date.now();
+  const statements = items.map((item) => ({
+    sql: `INSERT INTO provisioning_jobs (
+      id, business_id, provider, status, attempts, next_attempt_at, leased_until, last_error, created_at, updated_at
+    ) VALUES (?, ?, ?, 'pending', 0, ?, NULL, NULL, ?, ?)
+    ON CONFLICT (business_id, provider) DO NOTHING`,
+    params: [newId("pjob"), businessId, item.provider, item.nextAttemptAt, now, now],
+  }));
+  await (await db()).transaction(statements);
+}
+
+export async function getProvisioningJobsForBusiness(businessId: string): Promise<ProvisioningJob[]> {
+  return await (await (await db())
+    .prepare("SELECT * FROM provisioning_jobs WHERE business_id = ? ORDER BY provider")
+    .all(businessId))
+    .map((row) => mapProvisioningJob(asRecord(row)!));
+}
+
+export async function listDueProvisioningJobs(now: number, limit = 10): Promise<ProvisioningJob[]> {
+  return await (await (await db())
+    .prepare(
+      `SELECT * FROM provisioning_jobs
+       WHERE status IN ('pending', 'failed')
+         AND next_attempt_at <= ?
+         AND (leased_until IS NULL OR leased_until < ?)
+       ORDER BY next_attempt_at ASC
+       LIMIT ?`,
+    )
+    .all(now, now, limit))
+    .map((row) => mapProvisioningJob(asRecord(row)!));
+}
+
+export async function claimProvisioningJob(
+  jobId: string,
+  now: number,
+  leaseUntil: number,
+  fromStatuses: ProvisioningJobStatus[],
+): Promise<boolean> {
+  const placeholders = fromStatuses.map(() => "?").join(", ");
+  const result = await (await db())
+    .prepare(
+      `UPDATE provisioning_jobs
+       SET status = 'running', leased_until = ?, updated_at = ?
+       WHERE id = ?
+         AND status IN (${placeholders})
+         AND next_attempt_at <= ?
+         AND (leased_until IS NULL OR leased_until < ?)`,
+    )
+    .run(leaseUntil, now, jobId, ...fromStatuses, now, now);
+  return result.changes > 0;
+}
+
+export async function updateProvisioningJobResult(
+  jobId: string,
+  patch: {
+    status: ProvisioningJobStatus;
+    nextAttemptAt: number;
+    leasedUntil: number | null;
+    lastError: string | null;
+    attempts: number;
+  },
+) {
+  await (await db())
+    .prepare(
+      `UPDATE provisioning_jobs
+       SET status = ?, next_attempt_at = ?, leased_until = ?, last_error = ?, attempts = ?, updated_at = ?
+       WHERE id = ?`,
+    )
+    .run(
+      patch.status,
+      patch.nextAttemptAt,
+      patch.leasedUntil,
+      patch.lastError,
+      patch.attempts,
+      Date.now(),
+      jobId,
+    );
+}
+
 
 export async function setBusinessWorkspace(id: string, workspaceId: string) {
   await (await db()).prepare("UPDATE businesses SET orgo_workspace_id = ? WHERE id = ?").run(workspaceId, id);

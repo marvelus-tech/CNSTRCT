@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 
 import { constructionAccess } from "@/lib/billing/access";
 import { openDesk } from "@/lib/agent/provision";
+import { provisionSummary } from "@/lib/agent/provisioning";
 import { currentUser } from "@/lib/session";
-import { getProfile } from "@/lib/store";
+import { getBusinessByCreateIdempotencyKey, getProfile, listAgents } from "@/lib/store";
 import { TEMPLATES } from "@/lib/templates";
 
 export const runtime = "nodejs";
@@ -32,11 +33,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "That template is not live yet." }, { status: 400 });
   }
 
-  const desk = await openDesk(user.id, profile, templateId);
+  const idempotencyKey =
+    request.headers.get("Idempotency-Key")?.trim() ||
+    request.headers.get("x-idempotency-key")?.trim() ||
+    "";
+
+  if (idempotencyKey) {
+    const existing = await getBusinessByCreateIdempotencyKey(user.id, idempotencyKey);
+    if (existing) {
+      const agents = await listAgents(existing.id);
+      const provision = await provisionSummary(existing.id);
+      return NextResponse.json({
+        businessId: existing.id,
+        business: existing,
+        agents,
+        sitePath: `/b/${existing.slug}`,
+        provision,
+        idempotent: true,
+      });
+    }
+  }
+
+  const desk = await openDesk(user.id, profile, templateId, idempotencyKey || null);
+  const provision = await provisionSummary(desk.business.id);
   return NextResponse.json({
     businessId: desk.business.id,
     business: desk.business,
     agents: desk.agents,
     sitePath: `/b/${desk.business.slug}`,
+    provision,
   });
 }

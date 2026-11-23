@@ -1,29 +1,29 @@
 import { businessName, cityOf, type TemplateId } from "../copy";
 import { mapSeq } from "../seq";
 import { newId } from "../ids";
+import type { Business as BusinessRow } from "../types";
 import {
   getAgent,
   getBusiness,
+  getBusinessByCreateIdempotencyKey,
   insertAgent,
-  insertBusiness,
+  insertBusinessWithProvisioningJobs,
   insertLead,
   insertRoutine,
   listAgents,
   recordAudit,
-  setAgentOrgoComputer,
   setAgentInstructions,
   setAgentName,
   setAgentSpecialty,
   setAgentTools,
-  setBusinessWorkspace,
   slugTaken,
   upsertComputer,
   upsertConnection,
 } from "../store";
 import type { Agent, Business, Profile } from "../types";
-import { ORGO_SMALL, orgoConfigured } from "./adapters";
+import { composioUserId, tregCustomerTag } from "./adapters";
+import { PROVISIONING_PROVIDERS } from "./provisioning";
 import { blueprintFor, validateBlueprint, type BusinessBlueprint, type BlueprintContext } from "./blueprint";
-import { orgo } from "./orgo";
 import { ensureWorkspace } from "./sandbox";
 
 export const LOCAL_COMPUTER_NOTE =
@@ -56,21 +56,35 @@ export async function provisionBlueprint(
   profile: Profile,
   blueprint: BusinessBlueprint,
   name?: string,
+  createIdempotencyKey?: string | null,
 ): Promise<{ business: Business; agents: Agent[] }> {
   const check = validateBlueprint(blueprint);
   if (!check.ok) throw new Error(check.reason);
   const city = cityOf(profile.location);
   const businessNameText = name ?? `${city} Desk`;
   const ctx: BlueprintContext = { city, businessName: businessNameText };
-  const business = await insertBusiness({
-    userId,
-    templateId: blueprint.templateId,
-    name: businessNameText,
-    slug: await uniqueSlug(businessNameText),
-    city,
-    profileJson: JSON.stringify(profile),
-    orgoWorkspaceId: null,
-  });
+  const businessId = newId("biz");
+  const composioId = composioUserId(businessId);
+  const tregTag = tregCustomerTag(businessId);
+  const business = await insertBusinessWithProvisioningJobs(
+    {
+      id: businessId,
+      userId,
+      templateId: blueprint.templateId,
+      name: businessNameText,
+      slug: await uniqueSlug(businessNameText),
+      city,
+      profileJson: JSON.stringify(profile),
+      orgoWorkspaceId: null,
+      orgoComputerId: null,
+      composioUserId: composioId,
+      tregCustomerTag: tregTag,
+      provisionStatus: "pending",
+      provisionError: null,
+      createIdempotencyKey: createIdempotencyKey ?? null,
+    } satisfies Omit<BusinessRow, "createdAt">,
+    PROVISIONING_PROVIDERS,
+  );
 
   const agents: Agent[] = [];
   for (const role of blueprint.roles) {
@@ -123,9 +137,8 @@ export async function provisionBlueprint(
     kind: "team.provisioned",
     summary: `Provisioned ${agents.map((agent) => agent.name).join(", ")}. Routines are planned, not running.`,
   });
-  await provisionOrgo(business, agents);
   return {
-    business: { ...business, orgoWorkspaceId: business.orgoWorkspaceId ?? null },
+    business,
     agents: await mapSeq(agents, async (agent) => await getAgent(agent.id) ?? agent),
   };
 }
@@ -134,11 +147,18 @@ export async function openDesk(
   userId: string,
   profile: Profile,
   templateId: TemplateId | string = "home-services",
+  createIdempotencyKey?: string | null,
 ): Promise<{ business: Business; agents: Agent[] }> {
+  if (createIdempotencyKey) {
+    const existing = await getBusinessByCreateIdempotencyKey(userId, createIdempotencyKey);
+    if (existing) {
+      return { business: existing, agents: await listAgents(existing.id) };
+    }
+  }
   const blueprint = blueprintFor(templateId);
   if (!blueprint) throw new Error("No blueprint for that template.");
   const name = businessName(profile, templateId as TemplateId);
-  return await provisionBlueprint(userId, profile, blueprint, name);
+  return await provisionBlueprint(userId, profile, blueprint, name, createIdempotencyKey);
 }
 
 /**
@@ -213,39 +233,3 @@ export async function ensureTeamShape(businessId: string): Promise<Agent[]> {
   return await listAgents(businessId);
 }
 
-async function provisionOrgo(business: Business, agents: Agent[]) {
-  if (!orgoConfigured()) return;
-  const specialists = agents.filter((agent) => agent.role !== "orchestrator");
-  try {
-    let workspaceId = business.orgoWorkspaceId || "";
-    if (!workspaceId) {
-      const created = await orgo.createWorkspace(`cnstrct-${business.id}`);
-      workspaceId = created.id;
-      await setBusinessWorkspace(business.id, workspaceId);
-    }
-    for (const agent of specialists) {
-      const name = `${agent.role}-${agent.id.slice(-8)}`.slice(0, 80);
-      const computer = await orgo.createComputer({ workspaceId, name });
-      await setAgentOrgoComputer(agent.id, computer.id);
-      await upsertComputer(agent.id, "orgo", "connected", ORGO_COMPUTER_NOTE);
-      await recordAudit({
-        businessId: business.id,
-        userId: business.userId,
-        agentId: agent.id,
-        actor: agent.role,
-        kind: "computer.created",
-        summary: `${agent.name} has Orgo computer ${computer.id} (${ORGO_SMALL.label}). Secrets were not synced.`,
-        refId: computer.id,
-      });
-    }
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : "Orgo create failed";
-    await recordAudit({
-      businessId: business.id,
-      userId: business.userId,
-      actor: "owner",
-      kind: "computer.create_failed",
-      summary: `Orgo computer was not created. ${detail}`,
-    });
-  }
-}

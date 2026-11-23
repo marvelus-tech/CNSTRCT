@@ -29,6 +29,16 @@ export function composioTenantId(businessId: string) {
   return `biz_${businessId}`;
 }
 
+/** Composio `user_id` stored on the business row. No remote create call. */
+export function composioUserId(businessId: string) {
+  return `biz_${businessId}:integration`;
+}
+
+/** Treg budget dimension value for this business. */
+export function tregCustomerTag(businessId: string) {
+  return `biz_${businessId}`;
+}
+
 export function composioConfigured() {
   return Boolean(process.env.COMPOSIO_API_KEY);
 }

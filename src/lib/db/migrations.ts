@@ -194,6 +194,35 @@ CREATE TABLE IF NOT EXISTS billing_entitlements (
 CREATE UNIQUE INDEX IF NOT EXISTS agents_business_role ON agents (business_id, role);
 `,
   },
+  {
+    version: "002_provisioning",
+    sql: `
+ALTER TABLE businesses ADD COLUMN orgo_computer_id TEXT;
+ALTER TABLE businesses ADD COLUMN composio_user_id TEXT;
+ALTER TABLE businesses ADD COLUMN treg_customer_tag TEXT;
+ALTER TABLE businesses ADD COLUMN provision_status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE businesses ADD COLUMN provision_error TEXT;
+ALTER TABLE businesses ADD COLUMN create_idempotency_key TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS businesses_user_idempotency ON businesses (user_id, create_idempotency_key);
+
+CREATE TABLE IF NOT EXISTS provisioning_jobs (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  status TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  next_attempt_at BIGINT NOT NULL,
+  leased_until BIGINT,
+  last_error TEXT,
+  created_at BIGINT NOT NULL,
+  updated_at BIGINT NOT NULL,
+  UNIQUE (business_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS provisioning_jobs_due ON provisioning_jobs (status, next_attempt_at);
+`,
+  },
 ] as const;
 
 export const SCHEMA_MIGRATIONS_SQL = `
