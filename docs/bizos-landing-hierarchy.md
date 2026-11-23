@@ -30,7 +30,7 @@
 
 ## Hero (`LandingHero`)
 
-Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: gradient `h1` + partial hex; `.hero-overlap-hex-spacer` = computed descent; `overflow: hidden` + `contain: paint` so hex never paints on copy), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). E2E: `pnpm test:hero-e2e` asserts `leadTop` / button `top` ≥ hex bottom + 8px. No hero eyebrow.
+Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: gradient `h1` + partial hex; `.hero-overlap-hex-spacer` = computed descent; `overflow-y: clip` + `contain: layout` so hex never paints on copy while **S** is not cropped), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). E2E: `pnpm test:hero-e2e` asserts copy gap and **S** not clipped. No hero eyebrow.
 
 ## Layout wrapper
 

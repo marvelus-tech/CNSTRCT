@@ -92,11 +92,12 @@ test.describe("landing hero hex isolation", () => {
     expect(firstScreen.shellBottom).toBeGreaterThanOrEqual(firstScreen.vh - 2);
   });
 
-  test("suffix OS (including S) is not covered by hex bbox", async ({ page }) => {
-    const clear = await page.evaluate(() => {
+  test("S glyph is not clipped by the brand stack or hero section", async ({ page }) => {
+    const metrics = await page.evaluate(() => {
+      const stack = document.querySelector(".hero-overlap-brand-stack");
+      const section = document.querySelector('section[aria-label="BizOS introduction"]');
       const suffix = document.querySelector(".hero-overlap-brand__suffix");
-      const hex = document.querySelector(".hero-overlap-hex__mark");
-      if (!suffix || !hex) {
+      if (!stack || !section || !suffix) {
         return { ok: false as const, reason: "missing hero brand parts" };
       }
       const text = suffix.textContent ?? "";
@@ -110,19 +111,29 @@ test.describe("landing hero hex isolation", () => {
       range.setStart(node, sIdx);
       range.setEnd(node, sIdx + 1);
       const sb = range.getBoundingClientRect();
-      const xb = hex.getBoundingClientRect();
-      const overlaps =
-        sb.left < xb.right &&
-        sb.right > xb.left &&
-        sb.top < xb.bottom &&
-        sb.bottom > xb.top;
-      const overlapX = Math.min(sb.right, xb.right) - Math.max(sb.left, xb.left);
-      return { ok: true as const, overlaps, overlapX };
+      const stackRect = stack.getBoundingClientRect();
+      const sectionRect = section.getBoundingClientRect();
+      const stackStyle = getComputedStyle(stack);
+      const clientRects = range.getClientRects();
+      let maxRight = sb.right;
+      for (let i = 0; i < clientRects.length; i++) {
+        maxRight = Math.max(maxRight, clientRects[i].right);
+      }
+      const bleed = stack.scrollWidth - stack.clientWidth;
+      return {
+        ok: true as const,
+        bleed,
+        overflowX: stackStyle.overflowX,
+        insetStackEnd: stackRect.right - maxRight,
+        insetSectionEnd: sectionRect.right - maxRight,
+      };
     });
 
-    expect(clear.ok, clear.ok ? "" : clear.reason).toBe(true);
-    if (!clear.ok) return;
-    expect(clear.overlaps).toBe(false);
-    expect(clear.overlapX).toBeLessThanOrEqual(0);
+    expect(metrics.ok, metrics.ok ? "" : metrics.reason).toBe(true);
+    if (!metrics.ok) return;
+    expect(metrics.overflowX).toBe("visible");
+    /* Padding reserve on the core should keep S ink inside the stack box (visible overflow is intentional). */
+    expect(metrics.insetStackEnd).toBeGreaterThanOrEqual(1);
+    expect(metrics.insetSectionEnd).toBeGreaterThanOrEqual(8);
   });
 });
