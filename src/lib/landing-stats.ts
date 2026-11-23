@@ -8,9 +8,7 @@ export type SurveyLandingStat = {
 
 export type LandingStat = SurveyLandingStat;
 
-export const LANDING_PROOF_HEADLINE = "The world is no longer guessing.";
-
-export const LANDING_PROOF_SUBHEAD =
+export const LANDING_PROOF_TITLE =
   "AI is default. New businesses are forming faster than ever.";
 
 export const LANDING_PROOF_STATS: readonly LandingStat[] = [
@@ -39,7 +37,7 @@ export const LANDING_PROOF_STATS: readonly LandingStat[] = [
 ] as const;
 
 export const LANDING_PROOF_KICKER =
-  "Start with AI working for you on day one, with your approval on what ships.";
+  "Start with AI working for you on day one working on your behalf.";
 
 export const LANDING_PROOF_SOURCES: readonly { name: string; url: string }[] = [
   {

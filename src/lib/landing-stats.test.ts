@@ -5,11 +5,10 @@ import {
   LANDING_PROOF_CHART_ENDPOINTS,
 } from "./landing-proof-chart-data";
 import {
-  LANDING_PROOF_HEADLINE,
   LANDING_PROOF_KICKER,
   LANDING_PROOF_SOURCES,
   LANDING_PROOF_STATS,
-  LANDING_PROOF_SUBHEAD,
+  LANDING_PROOF_TITLE,
 } from "./landing-stats";
 
 test("landing proof strip config matches plan: three survey stats and census source", () => {
@@ -24,11 +23,15 @@ test("landing proof strip config matches plan: three survey stats and census sou
   assert.equal(LANDING_PROOF_SOURCES.length, 4);
   assert.match(LANDING_PROOF_SOURCES[3]?.name ?? "", /Census/i);
 
-  assert.equal(LANDING_PROOF_HEADLINE, "The world is no longer guessing.");
-  assert.ok(LANDING_PROOF_SUBHEAD.includes("AI is default"));
+  assert.equal(
+    LANDING_PROOF_TITLE,
+    "AI is default. New businesses are forming faster than ever.",
+  );
 
-  assert.equal(LANDING_PROOF_KICKER.includes("day one"), true);
-  assert.equal(LANDING_PROOF_KICKER.includes("approval"), true);
+  assert.equal(
+    LANDING_PROOF_KICKER,
+    "Start with AI working for you on day one working on your behalf.",
+  );
   assert.equal(LANDING_PROOF_KICKER.includes("—") || LANDING_PROOF_KICKER.includes("–"), false);
 });
 

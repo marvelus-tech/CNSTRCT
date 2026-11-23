@@ -1,11 +1,10 @@
 import { LandingProofTrendChart } from "@/components/landing-proof-trend-chart";
 import { LandingSection } from "@/components/landing-section";
 import {
-  LANDING_PROOF_HEADLINE,
   LANDING_PROOF_KICKER,
   LANDING_PROOF_SOURCES,
   LANDING_PROOF_STATS,
-  LANDING_PROOF_SUBHEAD,
+  LANDING_PROOF_TITLE,
 } from "@/lib/landing-stats";
 
 export function LandingProofStrip() {
@@ -16,10 +15,7 @@ export function LandingProofStrip() {
       className="[&>div]:max-w-3xl md:[&>div]:py-4"
     >
       <div className="mx-auto max-w-3xl text-center">
-        <h2 className="landing-section-title text-pretty">{LANDING_PROOF_HEADLINE}</h2>
-        <p className="landing-section-lead mx-auto mt-6 max-w-xl text-pretty">
-          {LANDING_PROOF_SUBHEAD}
-        </p>
+        <h2 className="landing-section-title text-pretty">{LANDING_PROOF_TITLE}</h2>
 
         <div className="mt-14 w-full text-left">
           <LandingProofTrendChart />
