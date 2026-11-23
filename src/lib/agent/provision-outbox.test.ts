@@ -75,6 +75,15 @@ test("worker records composio success and does not leak secrets", async () => {
   const local = { ...profile, userId: user.id };
   await saveProfile(local);
   const desk = await openDesk(user.id, local);
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const method = init?.method ?? "GET";
+    if (method === "PUT" && url.includes("treg.to") && url.includes("/budgets/customer/")) {
+      return { ok: true, status: 200, text: async () => "{}" } as Response;
+    }
+    return { ok: true, status: 200, text: async () => "{}" } as Response;
+  }) as typeof fetch;
   process.env.TREG_TOKEN = "supersecret-treg-token-value";
   process.env.TREG_ORG_ID = "org_test";
   try {
@@ -83,12 +92,16 @@ test("worker records composio success and does not leak secrets", async () => {
     const jobs = await getProvisioningJobsForBusiness(desk.business.id);
     const composio = jobs.find((job) => job.provider === "composio");
     assert.equal(composio?.status, "succeeded");
+    const treg = jobs.find((job) => job.provider === "treg");
+    assert.equal(treg?.status, "succeeded");
     const business = await getBusiness(desk.business.id);
     assert.ok(business);
+    assert.equal(business.tregBudgetStatus, "set");
     const serialized = JSON.stringify({ business, jobs });
     assert.equal(serialized.includes("supersecret-treg-token-value"), false);
     assert.equal((business.provisionError ?? "").includes("supersecret"), false);
   } finally {
+    globalThis.fetch = original;
     delete process.env.TREG_TOKEN;
     delete process.env.TREG_ORG_ID;
   }

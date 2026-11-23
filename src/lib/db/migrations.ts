@@ -223,6 +223,12 @@ CREATE TABLE IF NOT EXISTS provisioning_jobs (
 CREATE INDEX IF NOT EXISTS provisioning_jobs_due ON provisioning_jobs (status, next_attempt_at);
 `,
   },
+  {
+    version: "003_treg_budget",
+    sql: `
+ALTER TABLE businesses ADD COLUMN treg_budget_status TEXT NOT NULL DEFAULT 'unset';
+`,
+  },
 ] as const;
 
 export const SCHEMA_MIGRATIONS_SQL = `

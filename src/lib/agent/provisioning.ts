@@ -1,5 +1,6 @@
 import { composioUserId, orgoConfigured, tregCustomerTag } from "./adapters";
 import { provisionOrgoForBusiness } from "./provision-orgo";
+import { provisionTregForBusiness } from "./provision-treg";
 import { redactProvisioningError } from "./redact";
 import {
   claimProvisioningJob,
@@ -146,10 +147,10 @@ async function runProviderStub(provider: ProvisioningProvider, business: Busines
     return { kind: "failed", reason: result.reason };
   }
   if (provider === "treg") {
-    if (!process.env.TREG_TOKEN || !process.env.TREG_ORG_ID) {
-      return { kind: "skipped", reason: "TREG_TOKEN or TREG_ORG_ID is not set." };
-    }
-    return { kind: "pending_external", reason: "Treg provisioning is not wired in this release." };
+    const result = await provisionTregForBusiness(business.id);
+    if (result.kind === "succeeded" || result.kind === "skipped") return result;
+    if (result.kind === "retry") return { kind: "retry", reason: result.reason };
+    return { kind: "failed", reason: result.reason };
   }
   return { kind: "skipped", reason: "Unknown provider." };
 }
