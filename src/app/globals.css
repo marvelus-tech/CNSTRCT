@@ -28,6 +28,8 @@
   /* Landing chrome: header row (py-4 + text-sm line) — used for hero first-screen height. */
   --landing-site-header-height: calc(2rem + 1.25rem + env(safe-area-inset-top, 0px));
   --landing-hero-min-height: calc(100svh - var(--landing-site-header-height));
+  /* Rendered hub hex; matches connectors orbit planet (84px × --orbit-scale). ~74px @390px. */
+  --landing-hub-hex-size: clamp(4.125rem, 19vw, 5.875rem);
 }
 
 .proof-chart-stroke-ai {
@@ -340,13 +342,12 @@ h4 {
 .how-step-hex-solo {
   display: flex;
   justify-content: center;
-  width: min(100%, clamp(7.25rem, 36vw, 10rem));
+  width: min(100%, var(--landing-hub-hex-size));
   margin-inline: auto;
 }
 
 @media (min-width: 768px) {
   .how-step-hex-solo {
-    width: min(100%, 11.5rem);
     margin-inline: 0;
     justify-content: flex-end;
   }
@@ -368,18 +369,12 @@ h4 {
 .how-step-hex-solo__mark {
   display: block;
   width: 100%;
-  max-width: clamp(7.25rem, 36vw, 10rem);
+  max-width: var(--landing-hub-hex-size);
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   animation: how-step-hex-solo-drift 9.5s ease-in-out infinite;
   animation-delay: -2.2s;
-}
-
-@media (min-width: 768px) {
-  .how-step-hex-solo__mark {
-    max-width: 11.5rem;
-  }
 }
 
 .how-step-cluster-stage {
@@ -433,14 +428,14 @@ h4 {
 
 .founding-team-cluster {
   position: relative;
-  width: min(100%, clamp(13.5rem, 68vw, 16.5rem));
+  width: min(100%, clamp(9.5rem, 48vw, 12rem));
   aspect-ratio: 1.22 / 1;
   margin-inline: auto;
 }
 
 @media (min-width: 768px) {
   .founding-team-cluster {
-    width: min(100%, 18.5rem);
+    width: min(100%, 14.5rem);
   }
 }
 
@@ -454,16 +449,10 @@ h4 {
 .founding-team-cluster__hex {
   display: block;
   width: 100%;
-  max-width: clamp(6.25rem, 30vw, 8.5rem);
+  max-width: var(--landing-hub-hex-size);
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
-}
-
-@media (min-width: 768px) {
-  .founding-team-cluster__hex {
-    max-width: 10.25rem;
-  }
 }
 
 .founding-team-cluster__bot {
@@ -1191,7 +1180,7 @@ h4 {
 
 .connectors-orbit-planet-hex {
   display: block;
-  width: 84px;
+  width: calc(var(--landing-hub-hex-size) / var(--orbit-scale, 1));
   height: auto;
 }
 
