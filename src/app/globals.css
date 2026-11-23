@@ -157,7 +157,7 @@ h4 {
 @media (min-width: 768px) {
   .how-step-hex-solo {
     margin-inline: 0;
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 }
 
@@ -191,7 +191,7 @@ h4 {
 
 @media (min-width: 768px) {
   .how-step-cluster-stage {
-    justify-self: end;
+    justify-self: start;
   }
 }
 
