@@ -11,7 +11,7 @@ export function FoundingTeamCluster() {
     <div className="founding-team-cluster" aria-hidden="true">
       <div className="founding-team-cluster__hex-wrap">
         <BusinessHexMark
-          className="founding-team-cluster__hex"
+          className="landing-hub-hex-mark founding-team-cluster__hex"
           shapeClassName="bizos-hex-shape--black"
           aria-hidden
         />

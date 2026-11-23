@@ -28,7 +28,7 @@ export function LandingFoundingTeam() {
           <li className="grid items-center gap-6 md:grid-cols-2 md:gap-5">
             <div className="how-step-hex-solo rise">
               <BusinessHexMark
-                className="how-step-hex-solo__mark"
+                className="landing-hub-hex-mark how-step-hex-solo__mark"
                 shapeClassName="bizos-hex-shape--black"
                 aria-hidden
               />

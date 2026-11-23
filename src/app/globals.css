@@ -29,8 +29,23 @@
   /* Landing chrome: header row (py-4 + text-sm line) — used for hero first-screen height. */
   --landing-site-header-height: calc(2rem + 1.25rem + env(safe-area-inset-top, 0px));
   --landing-hero-min-height: calc(100svh - var(--landing-site-header-height));
-  /* Rendered hub hex; matches connectors orbit planet (84px × --orbit-scale). ~74px @390px. */
-  --landing-hub-hex-size: clamp(4.125rem, 19vw, 5.875rem);
+  /*
+   * On-screen hub hex width — same footprint as connectors-orbit-planet-hex after scale-wrap.
+   * Design asset is 84px at scale 1; mobile fill is 0.87 over 352px orbit diameter.
+   */
+  --landing-hub-hex-size: clamp(
+    4.125rem,
+    calc(84px * (100vw - 2rem) * 0.87 / 352),
+    5.875rem
+  );
+}
+
+/* Shared hub hex on landing (how-it-works + orbit planet target width). */
+.landing-hub-hex-mark {
+  display: block;
+  width: var(--landing-hub-hex-size);
+  height: auto;
+  flex-shrink: 0;
 }
 
 .proof-chart-stroke-ai {
@@ -343,7 +358,7 @@ h4 {
 .how-step-hex-solo {
   display: flex;
   justify-content: center;
-  width: min(100%, var(--landing-hub-hex-size));
+  width: var(--landing-hub-hex-size);
   margin-inline: auto;
 }
 
@@ -368,12 +383,6 @@ h4 {
 }
 
 .how-step-hex-solo__mark {
-  display: block;
-  width: 100%;
-  max-width: var(--landing-hub-hex-size);
-  aspect-ratio: 0.92285 / 1;
-  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
-  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   animation: how-step-hex-solo-drift 9.5s ease-in-out infinite;
   animation-delay: -2.2s;
 }
@@ -445,15 +454,6 @@ h4 {
   inset: 8% 20% 16%;
   display: grid;
   place-items: center;
-}
-
-.founding-team-cluster__hex {
-  display: block;
-  width: 100%;
-  max-width: var(--landing-hub-hex-size);
-  aspect-ratio: 0.92285 / 1;
-  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
-  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
 }
 
 .founding-team-cluster__bot {
@@ -1180,9 +1180,7 @@ h4 {
 }
 
 .connectors-orbit-planet-hex {
-  display: block;
   width: calc(var(--landing-hub-hex-size) / var(--orbit-scale, 1));
-  height: auto;
 }
 
 .connectors-orbit-planet-hex__shape {
