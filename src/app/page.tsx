@@ -28,9 +28,9 @@ export default function HomePage() {
         operatingSystem: "Web",
         description: HOME_DESCRIPTION,
         offers: [
-          { "@type": "Offer", name: "Starter", price: "39", priceCurrency: "USD" },
-          { "@type": "Offer", name: "Pro", price: "79", priceCurrency: "USD" },
-          { "@type": "Offer", name: "Scale", price: "200", priceCurrency: "USD" },
+          { "@type": "Offer", name: "Starter", price: "75", priceCurrency: "USD" },
+          { "@type": "Offer", name: "Pro", price: "149", priceCurrency: "USD" },
+          { "@type": "Offer", name: "Scale", price: "400", priceCurrency: "USD" },
         ],
       },
       {
