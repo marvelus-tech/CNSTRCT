@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #e8e9ec;
   --foreground: #222326;
   --card: #f5f5f7;
+  /* Site canvas matches hero (`bg-card` / lightest grey). */
+  --background: var(--card);
   --muted: #6f7177;
   --type-display-weight: 500;
   --type-body-weight: 400;
