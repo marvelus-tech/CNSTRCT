@@ -33,7 +33,7 @@ Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: g
 
 ## Layout wrapper
 
-`LandingSection` (`src/components/landing-section.tsx`): `px-4 sm:px-5 md:px-10`, `py-14 md:py-16`, variants `default` | `card` | `plain`, inner `max-w-6xl`.
+`LandingSection` (`src/components/landing-section.tsx`): `px-4 sm:px-5 md:px-10`, `py-14 md:py-16`, unified `bg-background` (same as hero / `--background`); no section `border-y` dividers. Variants `default` | `card` | `plain` remain for API compat and resolve to the same surface. Inner `max-w-6xl`. Plan cards and controls keep their own borders; FAQ uses spacing only (no `divide-y`). Landing footer: `SiteFooter` with `border-t-0`.
 
 ## Copy strings (landing `/`)
 

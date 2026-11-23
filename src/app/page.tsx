@@ -45,7 +45,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="flex items-center justify-between px-4 py-4 sm:px-5 md:px-10">
         <Wordmark />
@@ -68,9 +68,9 @@ export default function HomePage() {
           <div className="mx-auto max-w-3xl">
             <p className="landing-eyebrow">FAQ</p>
             <h2 className="landing-section-title mt-2">Questions people ask first</h2>
-            <div className="mt-8 divide-y divide-border">
+            <div className="mt-8 flex flex-col gap-6">
               {FAQS.map((item) => (
-                <article key={item.question} className="py-5">
+                <article key={item.question} className="py-1">
                   <h3 className="text-lg font-medium">{item.question}</h3>
                   <p className="landing-section-lead mt-2">{item.answer}</p>
                 </article>
@@ -79,7 +79,7 @@ export default function HomePage() {
           </div>
         </LandingSection>
       </main>
-      <SiteFooter />
+      <SiteFooter className="border-t-0" />
     </div>
   );
 }
