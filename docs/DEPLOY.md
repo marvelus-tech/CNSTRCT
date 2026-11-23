@@ -2,6 +2,12 @@
 
 BizOS (repo **CNSTRCT**) is a Next.js app with API routes. Production state is Neon (Vercel Postgres) via `@neondatabase/serverless`. Local dev and `pnpm test` use SQLite (`node:sqlite`) on disk. It runs in **demo mode** with no API keys. Production: [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app).
 
+## Do not use `bizos-mu.vercel.app`
+
+**https://bizos-mu.vercel.app** is already assigned to a **different** Vercel project (another team's Spanish restaurant SaaS). It is **not** this repository. Do not set `NEXT_PUBLIC_SITE_URL`, docs links, or GitHub **Website** to that hostname.
+
+**Canonical production URL:** **https://cnstrct-mu.vercel.app** (Vercel project **cnstrct-mu**). For public branding, attach a **custom domain** on that project (Settings → Domains) instead of chasing a taken `*.vercel.app` name.
+
 ## Why `https://cnstrct.vercel.app` is not CNSTRCT
 
 That hostname is already assigned to a **different** Vercel project. A request to `/` returns **307 → `/login`** with `x-matched-path: /login`. That is another app's sign-in page, not Vercel Deployment Protection on this repository.
