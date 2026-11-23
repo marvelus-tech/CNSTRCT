@@ -3,16 +3,12 @@ import test from "node:test";
 
 import { LANDING_PROOF_KICKER, LANDING_PROOF_SOURCES, LANDING_PROOF_STATS } from "./landing-stats";
 
-test("landing proof strip config matches plan: four cards and three survey sources", () => {
-  assert.equal(LANDING_PROOF_STATS.length, 4);
-  assert.equal(LANDING_PROOF_STATS.filter((stat) => stat.kind === "survey").length, 3);
-  assert.equal(LANDING_PROOF_STATS.filter((stat) => stat.kind === "product").length, 1);
-
-  const product = LANDING_PROOF_STATS.find((stat) => stat.kind === "product");
-  assert.equal(product?.value, "3");
+test("landing proof strip config matches plan: three survey cards only", () => {
+  assert.equal(LANDING_PROOF_STATS.length, 3);
+  assert.equal(LANDING_PROOF_STATS.every((stat) => stat.kind === "survey"), true);
 
   const values = LANDING_PROOF_STATS.map((stat) => stat.value);
-  assert.deepEqual(values, ["89%", "28%", "2.4×", "3"]);
+  assert.deepEqual(values, ["89%", "28%", "2.4×"]);
 
   assert.equal(LANDING_PROOF_SOURCES.length, 3);
   assert.equal(LANDING_PROOF_KICKER.includes("BizOS"), true);

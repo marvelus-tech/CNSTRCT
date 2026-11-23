@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroCrosshairShowcase } from "@/components/hero-crosshair-showcase";
+import { LandingFoundingTeam } from "@/components/landing-founding-team";
 import { LandingConnectors } from "@/components/landing-connectors";
 import { LandingPricing } from "@/components/landing-pricing";
 import { LandingProofStrip } from "@/components/landing-proof-strip";
@@ -82,6 +83,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <LandingFoundingTeam />
         <LandingProofStrip />
         <LandingConnectors />
         <LandingPricing />

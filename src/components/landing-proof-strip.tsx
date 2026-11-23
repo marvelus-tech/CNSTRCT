@@ -9,13 +9,13 @@ export function LandingProofStrip() {
   return (
     <LandingSection
       variant="card"
-      aria-label="Enterprise AI adoption and BizOS digital workers"
+      aria-label="Enterprise AI adoption survey highlights"
       className="[&>div]:max-w-6xl"
     >
       <h2 className="landing-section-title max-w-3xl text-pretty">
         Most people are still guessing. You do not have to.
       </h2>
-      <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+      <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 lg:gap-4">
         {LANDING_PROOF_STATS.map((stat) => (
           <li
             key={stat.value + stat.label.slice(0, 24)}

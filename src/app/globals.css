@@ -106,6 +106,30 @@ h4 {
   fill: #000;
 }
 
+.bizos-hex-shape--black {
+  fill: #000;
+}
+
+.founding-team-hex-stage {
+  display: grid;
+  width: 100%;
+  max-width: 15rem;
+  margin-inline: auto;
+  place-items: center;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.founding-team-hex-stage__mark {
+  display: block;
+  width: 100%;
+  max-width: 12rem;
+  aspect-ratio: 0.92285 / 1;
+  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+}
+
 .hero-artifact__face {
   position: absolute;
   z-index: 3;
