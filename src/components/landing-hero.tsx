@@ -21,7 +21,7 @@ export function LandingHero() {
             </div>
           </div>
         </div>
-        <div className="mt-2 w-full max-w-lg sm:mt-4">
+        <div className="hero-overlap-copy-stack w-full max-w-lg">
           <p className="text-base font-normal leading-[1.55] text-muted sm:text-lg sm:leading-[1.6]">
             BizOS matches a business that fits you, gives you a founding team, so you can start being
             productive on day one.

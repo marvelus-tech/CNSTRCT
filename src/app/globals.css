@@ -113,7 +113,7 @@ h4 {
 
 /* Centered hero: gradient wordmark with black hex overlapping only the lower third (depth). */
 .hero-gradient-brand {
-  font-size: clamp(3.25rem, 13.5vw, 7.25rem);
+  font-size: clamp(3.75rem, 15.5vw, 8.75rem);
   font-weight: 600;
   letter-spacing: -0.045em;
   line-height: 0.92;
@@ -136,16 +136,21 @@ h4 {
   justify-content: center;
   width: 100%;
   padding-top: 0.25rem;
-  /* Reserve space for hex below the wordmark (not on the stack, so top: % is cap-height only). */
-  padding-bottom: clamp(2.25rem, 10vw, 4.25rem);
   overflow: visible;
+}
+
+.hero-overlap-copy-stack {
+  /* Flow sibling starts after brand stack + hex descent; no z-index layering. */
+  margin-top: clamp(0.75rem, 2.5vw, 1.25rem);
 }
 
 .hero-overlap-brand-stack {
   position: relative;
   display: inline-block;
   max-width: 100%;
+  /* Hex overlap z-index stays inside this context; padding clears full silhouette below h1. */
   isolation: isolate;
+  padding-bottom: clamp(6.5rem, 42vw, 11rem);
 }
 
 .hero-overlap-brand {
@@ -171,37 +176,37 @@ h4 {
 
 .hero-overlap-hex__mark {
   display: block;
-  width: min(38vw, 9.25rem);
+  width: min(42vw, 10.25rem);
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
 }
 
 @media (min-width: 640px) {
-  .hero-overlap-stage {
-    padding-bottom: clamp(2.5rem, 9vw, 4.75rem);
+  .hero-overlap-brand-stack {
+    padding-bottom: clamp(7rem, 36vw, 12.5rem);
   }
 
   .hero-overlap-hex {
-    top: 68%;
+    top: 69%;
   }
 
   .hero-overlap-hex__mark {
-    width: min(34vw, 11.5rem);
+    width: min(38vw, 12.5rem);
   }
 }
 
 @media (min-width: 768px) {
-  .hero-overlap-stage {
-    padding-bottom: clamp(2.75rem, 8vw, 5.25rem);
+  .hero-overlap-brand-stack {
+    padding-bottom: clamp(7.5rem, 32vw, 14.5rem);
   }
 
   .hero-overlap-hex {
-    top: 66%;
+    top: 67%;
   }
 
   .hero-overlap-hex__mark {
-    width: min(30vw, 14.25rem);
+    width: min(34vw, 15.5rem);
   }
 }
 
