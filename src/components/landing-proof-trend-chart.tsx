@@ -38,38 +38,14 @@ function yForMillions(millions: number): number {
   return MARGIN.top + (1 - t) * PLOT_H;
 }
 
-/** Catmull–Rom segments converted to cubic Beziers; passes through each year's point. */
-function seriesToSmoothPath(points: ProofChartPoint[], yScale: (v: number) => number): string {
-  const pts = points.map((p) => ({
-    x: xForYear(p.year),
-    y: yScale(p.value),
-  }));
-
-  if (pts.length === 0) return "";
-  if (pts.length === 1) {
-    return `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
-  }
-  if (pts.length === 2) {
-    return `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)} L ${pts[1].x.toFixed(2)} ${pts[1].y.toFixed(2)}`;
-  }
-
-  let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
-
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[Math.max(0, i - 1)];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[Math.min(pts.length - 1, i + 2)];
-
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-    d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
-  }
-
-  return d;
+/** Straight segments between annual data points (polyline). */
+function seriesToPath(points: ProofChartPoint[], yScale: (v: number) => number): string {
+  return points
+    .map((p, i) => {
+      const cmd = i === 0 ? "M" : "L";
+      return `${cmd} ${xForYear(p.year).toFixed(2)} ${yScale(p.value).toFixed(2)}`;
+    })
+    .join(" ");
 }
 
 const AI_STROKE_GRADIENT_STOPS = [
@@ -79,9 +55,6 @@ const AI_STROKE_GRADIENT_STOPS = [
   { offset: "74%", color: "#4ade80" },
   { offset: "100%", color: "#16a34a" },
 ] as const;
-
-const CHART_STROKE_AI = 4.7;
-const CHART_STROKE_BFS = 4.5;
 
 const GRID_PCTS = [0, 50, 100] as const;
 const BFS_TICKS_M = [0, 3, 6] as const;
@@ -125,11 +98,11 @@ export function LandingProofTrendChart() {
   }, [reducedMotion]);
 
   const aiPath = useMemo(
-    () => seriesToSmoothPath([...LANDING_PROOF_AI_ADOPTION_SERIES], yForPct),
+    () => seriesToPath([...LANDING_PROOF_AI_ADOPTION_SERIES], yForPct),
     [],
   );
   const bfsPath = useMemo(
-    () => seriesToSmoothPath([...LANDING_PROOF_BFS_SERIES], yForMillions),
+    () => seriesToPath([...LANDING_PROOF_BFS_SERIES], yForMillions),
     [],
   );
 
@@ -145,7 +118,7 @@ export function LandingProofTrendChart() {
       <div className="landing-section-lead mb-8 flex flex-col gap-2 text-left text-xs sm:text-sm md:flex-row md:flex-wrap md:items-center md:gap-x-8 md:gap-y-1">
         <span className="inline-flex items-center gap-2">
           <span
-            className="h-1 w-6 shrink-0 rounded-full"
+            className="proof-chart-legend-swatch w-6 shrink-0 rounded-full"
             style={{ background: "var(--proof-chart-ai-swatch)" }}
             aria-hidden
           />
@@ -154,7 +127,7 @@ export function LandingProofTrendChart() {
         </span>
         <span className="inline-flex items-center gap-2">
           <span
-            className="h-1 w-6 shrink-0 rounded-full"
+            className="proof-chart-legend-swatch w-6 shrink-0 rounded-full"
             style={{ backgroundColor: "var(--proof-chart-bfs-stroke)" }}
             aria-hidden
           />
@@ -240,22 +213,22 @@ export function LandingProofTrendChart() {
 
         <path
           ref={bfsPathRef}
+          className="proof-chart-stroke-bfs"
           d={bfsPath}
           fill="none"
           stroke="var(--proof-chart-bfs-stroke)"
-          strokeWidth={CHART_STROKE_BFS}
           strokeLinecap="round"
           strokeLinejoin="round"
           opacity={pathsReady ? 1 : 0.85}
         />
         <path
           ref={aiPathRef}
+          className="proof-chart-stroke-ai"
           d={aiPath}
           fill="none"
           stroke={`url(#proof-ai-stroke-${gradientId})`}
-          strokeWidth={CHART_STROKE_AI}
           strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeLinejoin="miter"
           opacity={pathsReady ? 1 : 0.85}
         />
 
