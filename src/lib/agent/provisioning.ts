@@ -1,4 +1,5 @@
 import { composioUserId, orgoConfigured, tregCustomerTag } from "./adapters";
+import { provisionComposioForBusiness } from "./provision-composio";
 import { provisionOrgoForBusiness } from "./provision-orgo";
 import { provisionTregForBusiness } from "./provision-treg";
 import { redactProvisioningError } from "./redact";
@@ -132,10 +133,10 @@ type StubOutcome =
 
 async function runProviderStub(provider: ProvisioningProvider, business: Business): Promise<StubOutcome> {
   if (provider === "composio") {
-    if (!business.composioUserId) {
-      return { kind: "retry", reason: "composio_user_id missing on business row." };
-    }
-    return { kind: "succeeded" };
+    const result = await provisionComposioForBusiness(business.id);
+    if (result.kind === "succeeded") return { kind: "succeeded" };
+    if (result.kind === "retry") return { kind: "retry", reason: result.reason };
+    return { kind: "failed", reason: result.reason };
   }
   if (provider === "orgo") {
     if (!orgoConfigured()) {

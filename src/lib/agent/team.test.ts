@@ -185,6 +185,7 @@ test("adapters stay not configured and never report a send or a VM", async () =>
   assert.equal(ORGO_SMALL.cpu, 0.5);
   assert.equal(ORGO_SMALL.ram, 4);
   const scout = sessionForRole({ businessId: "biz_123", role: "scout" });
+  assert.equal(scout.tenantUserId, "biz_biz_123:integration");
   assert.equal(scout.sessionPreset, "direct_tools");
   assert.equal(scout.manageConnections.enable, false);
   assert.equal(scout.sandbox.enable, false);

@@ -77,7 +77,7 @@ export function sessionForRole(input: {
   connectedAccountId?: string | null;
 }): DirectToolsSession {
   const base = {
-    tenantUserId: composioTenantId(input.businessId),
+    tenantUserId: composioUserId(input.businessId),
     sessionPreset: "direct_tools" as const,
     manageConnections: { enable: false as const },
     sandbox: { enable: false as const },

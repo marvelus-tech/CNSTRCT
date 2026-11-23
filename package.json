@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "NODE_ENV=test tsx --test src/lib/seo.test.ts src/lib/landing-stats.test.ts src/lib/opportunities-preview.test.ts src/lib/billing/billing-policy.test.ts src/lib/billing/billing-construction.test.ts src/lib/db/driver.test.ts src/lib/db/migrate.test.ts src/lib/db/postgres.test.ts src/lib/agent/flow.test.ts src/lib/agent/business-api.test.ts src/lib/agent/team.test.ts src/lib/agent/review.test.ts src/lib/agent/provision-outbox.test.ts src/lib/agent/provision-external.test.ts src/lib/agent/treg-provision.test.ts src/lib/connectors-orbit-math.test.ts"
+    "test": "NODE_ENV=test tsx --test src/lib/seo.test.ts src/lib/landing-stats.test.ts src/lib/opportunities-preview.test.ts src/lib/billing/billing-policy.test.ts src/lib/billing/billing-construction.test.ts src/lib/db/driver.test.ts src/lib/db/migrate.test.ts src/lib/db/postgres.test.ts src/lib/agent/flow.test.ts src/lib/agent/business-api.test.ts src/lib/agent/team.test.ts src/lib/agent/review.test.ts src/lib/agent/provision-outbox.test.ts src/lib/agent/provision-external.test.ts src/lib/agent/treg-provision.test.ts src/lib/agent/composio-lifecycle.test.ts src/lib/connectors-orbit-math.test.ts"
   },
   "dependencies": {
+    "@composio/core": "0.31.0",
     "@neondatabase/serverless": "1.2.1",
     "@radix-ui/react-slot": "^1.5.0",
     "class-variance-authority": "^0.7.1",
@@ -18,8 +19,10 @@
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "stripe": "19.1.0",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",

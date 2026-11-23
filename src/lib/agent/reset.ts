@@ -1,3 +1,4 @@
+import { deprovisionBusinessConnections } from "./connections";
 import { orgo, OrgoError, orgoWorkspaceName } from "./orgo";
 import { deleteBusinessForUser, getBusiness, listAgents, setBusinessOrgoIds } from "../store";
 
@@ -121,6 +122,14 @@ export async function resetBusiness(userId: string, businessId: string) {
   if (!business || business.userId !== userId) return { ok: false as const, error: "Business not found.", computerIds: [] as string[] };
   const cleanup = await cleanupOrgoBusiness(businessId);
   if (!cleanup.ok) return { ok: false as const, error: cleanup.error, computerIds: cleanup.computerIds };
+  const composioCleanup = await deprovisionBusinessConnections(businessId);
+  if (!composioCleanup.ok) {
+    return {
+      ok: false as const,
+      error: `Composio connections could not be removed. This business was kept. ${composioCleanup.error}`,
+      computerIds: cleanup.computerIds,
+    };
+  }
   const agentIds = await deleteBusinessForUser(userId, businessId);
   if (!agentIds) return { ok: false as const, error: "Business not found.", computerIds: [] as string[] };
   return { ok: true as const, agentIds, computerIds: cleanup.computerIds };

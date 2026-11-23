@@ -169,6 +169,27 @@ export interface AppConnection {
   updatedAt: number;
 }
 
+export type ComposioConnectionAttemptStatus = "pending" | "completed" | "failed";
+
+export interface ComposioConnectionAttempt {
+  id: string;
+  businessId: string;
+  toolkit: string;
+  composioUserId: string;
+  nonce: string;
+  sessionId: string | null;
+  status: ComposioConnectionAttemptStatus;
+  createdAt: number;
+  expiresAt: number;
+}
+
+export interface ComposioSessionRow {
+  id: string;
+  businessId: string;
+  sessionId: string;
+  createdAt: number;
+}
+
 export interface PendingState {
   calls: { callId: string; name: string; arguments: string; rowId: string }[];
   outputs: { callId: string; output: string }[];
