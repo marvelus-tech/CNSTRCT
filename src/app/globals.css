@@ -38,6 +38,10 @@
     calc(84px * (100vw - 2rem) * 0.87 / 352),
     5.875rem
   );
+  /* Vertical rhythm between landing main sections (mobile / md+). */
+  --landing-section-pad-y: 5rem;
+  --landing-section-pad-y-md: 6.5rem;
+  --landing-section-after-hero-extra: 1.25rem;
 }
 
 /* Shared hub hex on landing (how-it-works + orbit planet target width). */
@@ -200,6 +204,27 @@ h4 {
   .landing-hero-viewport {
     flex: none;
     min-height: min(var(--landing-hero-min-height), 42rem);
+  }
+}
+
+.landing-section-shell {
+  box-sizing: border-box;
+  padding-block: var(--landing-section-pad-y);
+}
+
+@media (min-width: 768px) {
+  .landing-section-shell {
+    padding-block: var(--landing-section-pad-y-md);
+  }
+}
+
+.landing-section-shell--after-hero {
+  padding-top: calc(var(--landing-section-pad-y) + var(--landing-section-after-hero-extra));
+}
+
+@media (min-width: 768px) {
+  .landing-section-shell--after-hero {
+    padding-top: calc(var(--landing-section-pad-y-md) + var(--landing-section-after-hero-extra));
   }
 }
 
