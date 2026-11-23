@@ -43,12 +43,12 @@ export function toolSchemasFor(tools: string[]) {
   return SCHEMAS.filter((schema) => allow.has(schema.function.name));
 }
 
-function charge(agentId: string) {
-  const agent = getAgent(agentId);
+async function charge(agentId: string) {
+  const agent = await getAgent(agentId);
   if (agent && agent.computerSeconds + SECONDS_PER_COMPUTER_CALL > COMPUTER_LIMIT_SECONDS) {
     throw new Error("Computer hour limit reached for this demo (2 hours).");
   }
-  addUsage(agentId, 0, SECONDS_PER_COMPUTER_CALL);
+  await addUsage(agentId, 0, SECONDS_PER_COMPUTER_CALL);
 }
 
 function recordOutbox(agentId: string, file: string, payload: Record<string, unknown>) {
@@ -72,7 +72,7 @@ export async function runTool(name: string, args: Record<string, unknown>, ctx: 
   try {
     switch (name) {
       case "shell": {
-        charge(ctx.agent.id);
+        await charge(ctx.agent.id);
         const result = await execInSandbox(ctx.agent.id, String(args.command ?? ""), ctx.city);
         return {
           output: result.output,
@@ -82,22 +82,22 @@ export async function runTool(name: string, args: Record<string, unknown>, ctx: 
         };
       }
       case "write_file": {
-        charge(ctx.agent.id);
+        await charge(ctx.agent.id);
         writeSandboxFile(ctx.agent.id, String(args.path ?? "notes/note.md"), String(args.content ?? ""));
         return { output: `Saved ${String(args.path)}`, summary: `Saved ${String(args.path)}`, status: "done", computer: true };
       }
       case "read_file": {
-        charge(ctx.agent.id);
+        await charge(ctx.agent.id);
         const text = readSandboxFile(ctx.agent.id, String(args.path ?? ""));
         return { output: text.slice(0, 8000), summary: `Read ${String(args.path)}`, status: "done", computer: true };
       }
       case "list_files": {
-        charge(ctx.agent.id);
+        await charge(ctx.agent.id);
         const files = listSandboxFiles(ctx.agent.id).map((file) => file.path).join("\n") || "(empty)";
         return { output: files, summary: "Listed files", status: "done", computer: true };
       }
       case "screenshot": {
-        charge(ctx.agent.id);
+        await charge(ctx.agent.id);
         const files = listSandboxFiles(ctx.agent.id).map((file) => file.path).join(", ") || "none yet";
         const terminal = readTerminal(ctx.agent.id) || "(terminal is clear)";
         const output = `Local sandbox files and terminal. This is not an Orgo desktop. Files: ${files}.\nTerminal:\n${terminal}`;
@@ -105,7 +105,7 @@ export async function runTool(name: string, args: Record<string, unknown>, ctx: 
         return { output, summary: "Looked at the screen", status: "done", computer: true };
       }
       case "list_leads": {
-        const leads = listLeads(ctx.business.id);
+        const leads = await listLeads(ctx.business.id);
         const output = leads.length
           ? leads.map((lead) => `${lead.name} | ${lead.service} | ${lead.address} | ${lead.phone} | ${lead.source}`).join("\n")
           : "No leads yet.";
@@ -129,7 +129,7 @@ export async function runTool(name: string, args: Record<string, unknown>, ctx: 
       case "send_outreach":
       case "send_match":
       case "spend": {
-        charge(ctx.agent.id);
+        await charge(ctx.agent.id);
         if (name === "spend") {
           recordOutbox(ctx.agent.id, "spend.json", args);
           return {

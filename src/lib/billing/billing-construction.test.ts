@@ -28,9 +28,9 @@ const profileBody = {
 test("construction blocks unpaid users in billing test mode", async () => {
   const { createUser, saveProfile } = await import("../store");
   const { constructionAccess } = await import("./access");
-  const user = createUser({ email: "unpaid@bizos.local", name: "Unpaid" });
-  saveProfile({ userId: user.id, ...profileBody });
-  const gate = constructionAccess(user.id);
+  const user = await createUser({ email: "unpaid@bizos.local", name: "Unpaid" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  const gate = await constructionAccess(user.id);
   assert.equal(gate.ok, false);
   if (!gate.ok) {
     assert.equal(gate.code, "payment_required");
@@ -44,14 +44,14 @@ test("construction allows paid starter and enforces business limit", async () =>
   const { grantTestEntitlement } = await import("./entitlements");
   const { openDesk } = await import("../agent/provision");
 
-  const user = createUser({ email: "paid@bizos.local", name: "Paid" });
-  saveProfile({ userId: user.id, ...profileBody });
-  grantTestEntitlement(user.id, "starter");
-  const gate = constructionAccess(user.id);
+  const user = await createUser({ email: "paid@bizos.local", name: "Paid" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  await grantTestEntitlement(user.id, "starter");
+  const gate = await constructionAccess(user.id);
   assert.equal(gate.ok, true);
 
   await openDesk(user.id, { userId: user.id, ...profileBody }, "home-services");
-  const blocked = constructionAccess(user.id);
+  const blocked = await constructionAccess(user.id);
   assert.equal(blocked.ok, false);
   if (!blocked.ok) assert.equal(blocked.code, "plan_limit");
 });
@@ -69,9 +69,9 @@ test("production enforces payment when Stripe is configured", async () => {
   process.env.STRIPE_PRICE_SCALE = "price_scale";
   const { createUser, saveProfile } = await import("../store");
   const { constructionAccess } = await import("./access");
-  const user = createUser({ email: "prod@bizos.local", name: "Prod" });
-  saveProfile({ userId: user.id, ...profileBody });
-  const gate = constructionAccess(user.id);
+  const user = await createUser({ email: "prod@bizos.local", name: "Prod" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  const gate = await constructionAccess(user.id);
   assert.equal(gate.ok, false);
   if (!gate.ok) assert.equal(gate.code, "payment_required");
   process.env.BILLING_TEST_MODE = prevTest ?? "true";
@@ -91,15 +91,15 @@ test("scale entitlement allows a fourth business", async () => {
   const { grantTestEntitlement } = await import("./entitlements");
   const { openDesk } = await import("../agent/provision");
 
-  const user = createUser({ email: "scale@bizos.local", name: "Scale" });
-  saveProfile({ userId: user.id, ...profileBody });
-  grantTestEntitlement(user.id, "scale");
+  const user = await createUser({ email: "scale@bizos.local", name: "Scale" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  await grantTestEntitlement(user.id, "scale");
 
   for (let i = 0; i < 4; i++) {
-    assert.equal(constructionAccess(user.id).ok, true);
+    assert.equal((await constructionAccess(user.id)).ok, true);
     await openDesk(user.id, { userId: user.id, ...profileBody }, "home-services");
   }
-  assert.equal(constructionAccess(user.id).ok, true);
+  assert.equal((await constructionAccess(user.id)).ok, true);
 });
 
 test("opportunity recommendations stay available without billing", async () => {

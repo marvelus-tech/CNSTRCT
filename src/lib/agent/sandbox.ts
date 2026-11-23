@@ -231,13 +231,13 @@ export async function execInSandbox(agentId: string, command: string, city = "th
   const root = ensureWorkspace(agentId);
   const trimmed = command.trim();
   appendTerminal(agentId, `$ ${trimmed}`);
-  const orgoId = getAgent(agentId)?.orgoComputerId ?? null;
+  const orgoId = (await getAgent(agentId))?.orgoComputerId ?? null;
   if (trimmed.startsWith("cnstrct-search")) {
     const output = /detailers/i.test(trimmed) ? searchDetailers(city) : searchTradies(city);
     appendTerminal(agentId, output);
     if (!orgoId) {
       const provider = configuredProvider() === "orgo" ? "local" : configuredProvider();
-      upsertComputer(agentId, provider === "docker" ? "docker" : "local", "running", providerNote(provider === "docker" ? "docker" : "local"));
+      await upsertComputer(agentId, provider === "docker" ? "docker" : "local", "running", providerNote(provider === "docker" ? "docker" : "local"));
     }
     return { exitCode: 0, output, provider: (orgoId ? "orgo" : "local") as SandboxProvider };
   }
@@ -259,7 +259,7 @@ export async function execInSandbox(agentId: string, command: string, city = "th
       const result = await orgo.bash(orgoId, commandLine(plan.argv));
       const output = result.output || "(no output)";
       appendTerminal(agentId, output);
-      upsertComputer(agentId, "orgo", "connected", "Orgo Small computer. App secrets are not on this VM.");
+      await upsertComputer(agentId, "orgo", "connected", "Orgo Small computer. App secrets are not on this VM.");
       return { exitCode: result.exit_code ?? 0, output, provider: "orgo" as const };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Orgo failed";
@@ -273,7 +273,7 @@ export async function execInSandbox(agentId: string, command: string, city = "th
     const result = await runDocker(root, plan.argv);
     if (result.exitCode === 0 || !result.output.includes("Unable to find image")) {
       appendTerminal(agentId, result.output);
-      upsertComputer(agentId, "docker", "running", providerNote("docker"));
+      await upsertComputer(agentId, "docker", "running", providerNote("docker"));
       return { ...result, provider: "docker" as const };
     }
     appendTerminal(agentId, "Docker image unavailable. Using the local sandbox.");
@@ -281,7 +281,7 @@ export async function execInSandbox(agentId: string, command: string, city = "th
 
   const result = await runLocal(root, plan.argv);
   appendTerminal(agentId, result.output);
-  upsertComputer(agentId, "local", "running", providerNote("local"));
+  await upsertComputer(agentId, "local", "running", providerNote("local"));
   return { ...result, provider: "local" as const };
 }
 
@@ -298,8 +298,8 @@ export function workspacePreview(agentId: string) {
   return null;
 }
 
-export function computerSnapshot(agentId: string) {
-  const saved = getComputer(agentId);
+export async function computerSnapshot(agentId: string) {
+  const saved = await getComputer(agentId);
   const provider = (saved?.provider as SandboxProvider | undefined) ?? configuredProvider();
   return {
     provider,

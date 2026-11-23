@@ -9,9 +9,9 @@ export type ConstructionAccess =
   | { ok: true; planId: PlanId }
   | { ok: false; status: number; code: string; error: string };
 
-export function constructionAccess(userId: string): ConstructionAccess {
+export async function constructionAccess(userId: string): Promise<ConstructionAccess> {
   if (billingConstructionBypassActive()) {
-    const used = listBusinessesForUser(userId).length;
+    const used = (await listBusinessesForUser(userId)).length;
     const max = PLANS.pro.maxBusinesses;
     if (used >= max) {
       return {
@@ -33,7 +33,7 @@ export function constructionAccess(userId: string): ConstructionAccess {
     };
   }
 
-  const entitlement = getEntitlement(userId);
+  const entitlement = await getEntitlement(userId);
   if (!entitlement) {
     return {
       ok: false,
@@ -43,7 +43,7 @@ export function constructionAccess(userId: string): ConstructionAccess {
     };
   }
 
-  const limit = businessLimitForUser(userId);
+  const limit = await businessLimitForUser(userId);
   if (!limit.allowed) {
     return {
       ok: false,

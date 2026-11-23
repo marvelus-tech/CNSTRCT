@@ -15,7 +15,7 @@ export default async function WorkspacePage({ params }: { params: Promise<{ busi
   const { businessId } = await params;
   const user = await currentUser();
   if (!user) redirect(`/login?next=/workspace/${businessId}`);
-  const business = getBusiness(businessId);
+  const business = await getBusiness(businessId);
   if (!business || business.userId !== user.id) notFound();
   return <DashboardApp businessId={businessId} />;
 }

@@ -64,32 +64,32 @@ test("placeholder and dialect rewrites", () => {
   ]);
 });
 
-test("fresh sqlite migration seeds once and keeps a millisecond timestamp", () => {
+test("fresh sqlite migration seeds once and keeps a millisecond timestamp", async () => {
   const file = path.join(dir, "fresh.db");
-  const first = openSqliteFile(file);
+  const first = await openSqliteFile(file);
   const stamp = 1_730_000_000_000;
   assert.ok(stamp > 2_147_483_647);
-  first.prepare("INSERT INTO users (id, email, name, created_at) VALUES (?, ?, ?, ?)").run("u_epoch", "e@example.com", "Epoch", stamp);
-  const row = first.prepare("SELECT created_at FROM users WHERE id = ?").get("u_epoch") as { created_at: number };
+  await first.prepare("INSERT INTO users (id, email, name, created_at) VALUES (?, ?, ?, ?)").run("u_epoch", "e@example.com", "Epoch", stamp);
+  const row = (await first.prepare("SELECT created_at FROM users WHERE id = ?").get("u_epoch")) as { created_at: number };
   assert.equal(Number(row.created_at), stamp);
-  const names = first.query("SELECT name FROM sqlite_master WHERE type = 'table'").map((item) => String((item as { name: string }).name));
+  const names = (await first.query("SELECT name FROM sqlite_master WHERE type = 'table'")).map((item) => String((item as { name: string }).name));
   for (const table of TABLES) assert.ok(names.includes(table), table);
-  const index = first.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?").get("agents_business_role");
+  const index = await first.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?").get("agents_business_role");
   assert.ok(index);
-  const seeded = first.prepare("SELECT slug FROM businesses WHERE slug = ?").get("harbor-tradie-desk");
+  const seeded = await first.prepare("SELECT slug FROM businesses WHERE slug = ?").get("harbor-tradie-desk");
   assert.ok(seeded);
-  const versions = first.query("SELECT version FROM schema_migrations");
+  const versions = await first.query("SELECT version FROM schema_migrations");
   assert.equal(versions.length, 1);
   first.close();
 
-  const second = openSqliteFile(file);
-  const businesses = second.query("SELECT id FROM businesses");
+  const second = await openSqliteFile(file);
+  const businesses = await second.query("SELECT id FROM businesses");
   assert.equal(businesses.length, 1);
-  assert.equal(second.query("SELECT version FROM schema_migrations").length, 1);
+  assert.equal((await second.query("SELECT version FROM schema_migrations")).length, 1);
   second.close();
 });
 
-test("legacy sqlite file gains columns and skips the role index while duplicates exist", () => {
+test("legacy sqlite file gains columns and skips the role index while duplicates exist", async () => {
   const file = path.join(dir, "legacy.db");
   const raw = new DatabaseSync(file);
   raw.exec(`
@@ -143,14 +143,14 @@ test("legacy sqlite file gains columns and skips the role index while duplicates
   `);
   raw.close();
 
-  const db = openSqliteFile(file);
-  const business = db.prepare("SELECT profile_json, orgo_workspace_id FROM businesses WHERE id = ?").get("biz_old") as {
+  const db = await openSqliteFile(file);
+  const business = (await db.prepare("SELECT profile_json, orgo_workspace_id FROM businesses WHERE id = ?").get("biz_old")) as {
     profile_json: string | null;
     orgo_workspace_id: string | null;
   };
   assert.equal(business.profile_json, null);
   assert.equal(business.orgo_workspace_id, null);
-  const agent = db.prepare("SELECT specialty, tools_json, orgo_computer_id FROM agents WHERE id = ?").get("agt_a") as {
+  const agent = (await db.prepare("SELECT specialty, tools_json, orgo_computer_id FROM agents WHERE id = ?").get("agt_a")) as {
     specialty: string;
     tools_json: string;
     orgo_computer_id: string | null;
@@ -158,11 +158,11 @@ test("legacy sqlite file gains columns and skips the role index while duplicates
   assert.equal(agent.specialty, "");
   assert.equal(agent.tools_json, "");
   assert.equal(agent.orgo_computer_id, null);
-  const auditColumns = db.query("PRAGMA table_info(audit_events)") as { name: string }[];
+  const auditColumns = (await db.query("PRAGMA table_info(audit_events)")) as { name: string }[];
   assert.ok(auditColumns.some((column) => column.name === "ref_id"));
-  const index = db.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?").get("agents_business_role");
+  const index = await db.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?").get("agents_business_role");
   assert.equal(index, undefined);
-  assert.ok(db.prepare("SELECT id FROM businesses WHERE slug = ?").get("harbor-tradie-desk"));
+  assert.ok(await db.prepare("SELECT id FROM businesses WHERE slug = ?").get("harbor-tradie-desk"));
   db.close();
 });
 
@@ -170,12 +170,12 @@ test("store and billing SQL run on the migrated database", async () => {
   process.env.CNSTRCT_DATA_DIR = path.join(dir, "store");
   fs.mkdirSync(process.env.CNSTRCT_DATA_DIR, { recursive: true });
   const { closeDb } = await import("./index");
-  closeDb();
+  await closeDb();
   const { createUser, getProfile, saveProfile } = await import("../store");
   const { getEntitlement, upsertEntitlement } = await import("../billing/entitlements");
   try {
-    const user = createUser({ email: "migrate@example.com", name: "Migrate" });
-    saveProfile({
+    const user = await createUser({ email: "migrate@example.com", name: "Migrate" });
+    await saveProfile({
       userId: user.id,
       interests: "wood",
       skills: "talking",
@@ -187,21 +187,21 @@ test("store and billing SQL run on the migrated database", async () => {
       location: "Austin",
       constraints: "nights",
     });
-    const profile = getProfile(user.id);
+    const profile = await getProfile(user.id);
     assert.equal(profile?.hasIdea, true);
     assert.equal(profile?.location, "Austin");
     const periodEnd = Date.now() + 86_400_000;
-    upsertEntitlement({
+    await upsertEntitlement({
       userId: user.id,
       planId: "starter",
       currentPeriodEnd: periodEnd,
       stripeCustomerId: "cus_test",
       stripeSubscriptionId: "sub_test",
     });
-    const entitlement = getEntitlement(user.id);
+    const entitlement = await getEntitlement(user.id);
     assert.equal(entitlement?.planId, "starter");
     assert.equal(entitlement?.currentPeriodEnd, periodEnd);
   } finally {
-    closeDb();
+    await closeDb();
   }
 });

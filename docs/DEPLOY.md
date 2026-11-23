@@ -57,7 +57,7 @@ pnpm start
 
 ## Durable database
 
-Production state (users, sessions, profiles, businesses, agents, routines, messages, approvals, policies, leads, tasks, audit, connections, billing) is Neon. The first request applies `001_baseline` inside one transaction and records it in `schema_migrations`. A failed boot does not record the version, so the next boot retries. `CREATE TABLE IF NOT EXISTS` makes that retry safe.
+Production state (users, sessions, profiles, businesses, agents, routines, messages, approvals, policies, leads, tasks, audit, connections, billing) is Neon. The store awaits the Neon HTTP driver. Production does not open a worker thread and does not open SQLite. The first request applies `001_baseline` inside one transaction and records it in `schema_migrations`. A failed boot does not record the version, so the next boot retries. `CREATE TABLE IF NOT EXISTS` makes that retry safe.
 
 Epoch columns are `BIGINT`. Postgres `INTEGER` is 32-bit and cannot store `Date.now()`.
 

@@ -1,4 +1,5 @@
 import { businessName, cityOf, type TemplateId } from "../copy";
+import { mapSeq } from "../seq";
 import { newId } from "../ids";
 import {
   getAgent,
@@ -40,9 +41,9 @@ function slugify(input: string) {
   return base || "desk";
 }
 
-function uniqueSlug(name: string) {
+async function uniqueSlug(name: string) {
   const base = slugify(name);
-  if (!slugTaken(base)) return base;
+  if (!await slugTaken(base)) return base;
   return `${base}-${newId("s").slice(-4)}`;
 }
 
@@ -61,11 +62,11 @@ export async function provisionBlueprint(
   const city = cityOf(profile.location);
   const businessNameText = name ?? `${city} Desk`;
   const ctx: BlueprintContext = { city, businessName: businessNameText };
-  const business = insertBusiness({
+  const business = await insertBusiness({
     userId,
     templateId: blueprint.templateId,
     name: businessNameText,
-    slug: uniqueSlug(businessNameText),
+    slug: await uniqueSlug(businessNameText),
     city,
     profileJson: JSON.stringify(profile),
     orgoWorkspaceId: null,
@@ -73,7 +74,7 @@ export async function provisionBlueprint(
 
   const agents: Agent[] = [];
   for (const role of blueprint.roles) {
-    const agent = insertAgent({
+    const agent = await insertAgent({
       businessId: business.id,
       userId,
       role: role.role,
@@ -85,9 +86,9 @@ export async function provisionBlueprint(
       tools: role.tools,
     });
     ensureWorkspace(agent.id);
-    upsertComputer(agent.id, "local", "not_connected", LOCAL_COMPUTER_NOTE);
+    await upsertComputer(agent.id, "local", "not_connected", LOCAL_COMPUTER_NOTE);
     for (const routine of role.routines) {
-      insertRoutine({
+      await insertRoutine({
         agentId: agent.id,
         name: routine.name,
         prompt: textOf(routine.prompt, ctx),
@@ -101,7 +102,7 @@ export async function provisionBlueprint(
   }
 
   const lead = blueprint.exampleLead(city);
-  insertLead({
+  await insertLead({
     businessId: business.id,
     name: lead.name,
     phone: lead.phone,
@@ -109,13 +110,13 @@ export async function provisionBlueprint(
     service: lead.service,
     source: "example",
   });
-  upsertConnection({
+  await upsertConnection({
     businessId: business.id,
     toolkit: "gmail",
     status: "not_configured",
     connectedAccountId: null,
   });
-  recordAudit({
+  await recordAudit({
     businessId: business.id,
     userId,
     actor: "owner",
@@ -125,7 +126,7 @@ export async function provisionBlueprint(
   await provisionOrgo(business, agents);
   return {
     business: { ...business, orgoWorkspaceId: business.orgoWorkspaceId ?? null },
-    agents: agents.map((agent) => getAgent(agent.id) ?? agent),
+    agents: await mapSeq(agents, async (agent) => await getAgent(agent.id) ?? agent),
   };
 }
 
@@ -137,17 +138,17 @@ export async function openDesk(
   const blueprint = blueprintFor(templateId);
   if (!blueprint) throw new Error("No blueprint for that template.");
   const name = businessName(profile, templateId as TemplateId);
-  return provisionBlueprint(userId, profile, blueprint, name);
+  return await provisionBlueprint(userId, profile, blueprint, name);
 }
 
 /**
  * Older desks have scout and matcher only. Add Bizzie so the workspace still has one owner thread.
  * A business with zero agents (the seeded public sample) is left alone.
  */
-export function ensureTeamShape(businessId: string): Agent[] {
-  const business = getBusiness(businessId);
+export async function ensureTeamShape(businessId: string): Promise<Agent[]> {
+  const business = await getBusiness(businessId);
   if (!business) return [];
-  let agents = listAgents(businessId);
+  let agents = await listAgents(businessId);
   if (agents.length === 0) return agents;
   const blueprint = blueprintFor(business.templateId);
   if (!agents.some((agent) => agent.role === "orchestrator")) {
@@ -155,7 +156,7 @@ export function ensureTeamShape(businessId: string): Agent[] {
     const ctx: BlueprintContext = { city: business.city, businessName: business.name };
     let created;
     try {
-      created = insertAgent({
+      created = await insertAgent({
         businessId: business.id,
         userId: business.userId,
         role: "orchestrator",
@@ -170,11 +171,12 @@ export function ensureTeamShape(businessId: string): Agent[] {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
-      if (!message.includes("UNIQUE")) throw error;
-      return listAgents(businessId);
+      // SQLite says "UNIQUE constraint failed". Postgres says "duplicate key".
+      if (!/unique|duplicate key/i.test(message)) throw error;
+      return await listAgents(businessId);
     }
     const routine = role?.routines[0];
-    insertRoutine({
+    await insertRoutine({
       agentId: created.id,
       name: routine?.name ?? "Morning owner brief",
       prompt: routine ? textOf(routine.prompt, ctx) : "Summarize queued specialist work. Do not send anything.",
@@ -184,8 +186,8 @@ export function ensureTeamShape(businessId: string): Agent[] {
       nextRunAt: Date.now() + (routine?.intervalMs ?? 86_400_000),
     });
     ensureWorkspace(created.id);
-    upsertComputer(created.id, "local", "not_connected", LOCAL_COMPUTER_NOTE);
-    recordAudit({
+    await upsertComputer(created.id, "local", "not_connected", LOCAL_COMPUTER_NOTE);
+    await recordAudit({
       businessId: business.id,
       userId: business.userId,
       agentId: created.id,
@@ -193,7 +195,7 @@ export function ensureTeamShape(businessId: string): Agent[] {
       kind: "team.backfilled",
       summary: `Added ${created.name} so this existing desk has an owner-facing orchestrator.`,
     });
-    agents = listAgents(businessId);
+    agents = await listAgents(businessId);
   }
   const ctx: BlueprintContext = { city: business.city, businessName: business.name };
   if (blueprint) {
@@ -201,14 +203,14 @@ export function ensureTeamShape(businessId: string): Agent[] {
       const role = blueprint.roles.find((item) => item.role === agent.role);
       if (!role) continue;
       if (agent.role === "orchestrator" && agent.name === "Quinn") {
-        setAgentName(agent.id, "Bizzie");
-        setAgentInstructions(agent.id, role.instructions(ctx));
+        await setAgentName(agent.id, "Bizzie");
+        await setAgentInstructions(agent.id, role.instructions(ctx));
       }
-      if (!agent.specialty) setAgentSpecialty(agent.id, role.specialty);
-      if (!agent.tools.length) setAgentTools(agent.id, role.tools);
+      if (!agent.specialty) await setAgentSpecialty(agent.id, role.specialty);
+      if (!agent.tools.length) await setAgentTools(agent.id, role.tools);
     }
   }
-  return listAgents(businessId);
+  return await listAgents(businessId);
 }
 
 async function provisionOrgo(business: Business, agents: Agent[]) {
@@ -219,14 +221,14 @@ async function provisionOrgo(business: Business, agents: Agent[]) {
     if (!workspaceId) {
       const created = await orgo.createWorkspace(`cnstrct-${business.id}`);
       workspaceId = created.id;
-      setBusinessWorkspace(business.id, workspaceId);
+      await setBusinessWorkspace(business.id, workspaceId);
     }
     for (const agent of specialists) {
       const name = `${agent.role}-${agent.id.slice(-8)}`.slice(0, 80);
       const computer = await orgo.createComputer({ workspaceId, name });
-      setAgentOrgoComputer(agent.id, computer.id);
-      upsertComputer(agent.id, "orgo", "connected", ORGO_COMPUTER_NOTE);
-      recordAudit({
+      await setAgentOrgoComputer(agent.id, computer.id);
+      await upsertComputer(agent.id, "orgo", "connected", ORGO_COMPUTER_NOTE);
+      await recordAudit({
         businessId: business.id,
         userId: business.userId,
         agentId: agent.id,
@@ -238,7 +240,7 @@ async function provisionOrgo(business: Business, agents: Agent[]) {
     }
   } catch (error) {
     const detail = error instanceof Error ? error.message : "Orgo create failed";
-    recordAudit({
+    await recordAudit({
       businessId: business.id,
       userId: business.userId,
       actor: "owner",

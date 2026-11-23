@@ -8,17 +8,17 @@ import type { Queryable } from "./types";
  * has two agents with the same role used to skip the index and keep running.
  * Later boots create it once the duplicates are gone.
  */
-export function migrate(db: Queryable, dialect: "postgres" | "sqlite") {
-  db.exec(sqlForDialect(SCHEMA_MIGRATIONS_SQL, dialect));
+export async function migrate(db: Queryable, dialect: "postgres" | "sqlite") {
+  await db.exec(sqlForDialect(SCHEMA_MIGRATIONS_SQL, dialect));
   const applied = new Set(
-    db.query("SELECT version FROM schema_migrations").map((row) => String(record(row).version ?? "")),
+    (await db.query("SELECT version FROM schema_migrations")).map((row) => String(record(row).version ?? "")),
   );
   let roleIndex: string | null = null;
   for (const migration of MIGRATIONS) {
     const parts = partitionRoleIndex(sqlForDialect(migration.sql, dialect));
     if (parts.roleIndex) roleIndex = parts.roleIndex;
     if (applied.has(migration.version)) continue;
-    db.transaction([
+    await db.transaction([
       ...parts.statements.map((sql) => ({ sql })),
       {
         sql: "INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
@@ -26,15 +26,13 @@ export function migrate(db: Queryable, dialect: "postgres" | "sqlite") {
       },
     ]);
   }
-  if (roleIndex) ensureRoleIndex(db, roleIndex);
+  if (roleIndex) await ensureRoleIndex(db, roleIndex);
 }
 
-export function ensureRoleIndex(db: Queryable, statement: string) {
-  const dupes = db.query(
-    "SELECT business_id, role FROM agents GROUP BY business_id, role HAVING COUNT(*) > 1",
-  );
+export async function ensureRoleIndex(db: Queryable, statement: string) {
+  const dupes = await db.query("SELECT business_id, role FROM agents GROUP BY business_id, role HAVING COUNT(*) > 1");
   if (dupes.length > 0) return;
-  db.exec(statement);
+  await db.exec(statement);
 }
 
 function record(value: unknown): Record<string, unknown> {

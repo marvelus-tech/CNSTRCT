@@ -4,6 +4,8 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { mapSeq } from "../seq";
+
 
 process.env.CNSTRCT_DATA_DIR = mkdtempSync(path.join(tmpdir(), "cnstrct-review-"));
 delete process.env.ORGO_API_KEY;
@@ -37,21 +39,21 @@ test("approval buttons follow the textarea, and a dirty allow does not run", asy
   const { enqueue, resolveApproval } = await import("./loop");
   const { listRows } = await import("../store");
   const { readTerminal } = await import("./sandbox");
-  const user = createUser({ email: "draft@cnstrct.local", name: "Draft" });
+  const user = await createUser({ email: "draft@cnstrct.local", name: "Draft" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
   const desk = await openDesk(user.id, local);
   const quinn = desk.agents.find((agent) => agent.role === "orchestrator")!;
   const mara = desk.agents.find((agent) => agent.role === "scout")!;
   await enqueue(quinn.id, { type: "user", text: "Find tradies and draft outreach" });
-  const card = listRows(mara.id).find((row) => row.kind === "card" && row.body.status === "pending");
+  const card = (await listRows(mara.id)).find((row) => row.kind === "card" && row.body.status === "pending");
   await assert.rejects(
-    async () => resolveApproval(user.id, String(card?.body.approvalId), "allow", { command: "echo pwned" }, mara.id),
+    async () => await resolveApproval(user.id, String(card?.body.approvalId), "allow", { command: "echo pwned" }, mara.id),
     /edited draft/,
   );
-  assert.equal(getApproval(String(card?.body.approvalId))?.status, "pending");
+  assert.equal((await getApproval(String(card?.body.approvalId)))?.status, "pending");
   assert.equal(readTerminal(mara.id).includes("pwned"), false);
-  await assert.rejects(async () => resolveApproval(user.id, String(card?.body.approvalId), "ship-it", undefined, mara.id), /not allowed/);
+  await assert.rejects(async () => await resolveApproval(user.id, String(card?.body.approvalId), "ship-it", undefined, mara.id), /not allowed/);
 });
 
 test("a new message to Bizzie expires the specialist approval before it can run", async () => {
@@ -60,20 +62,20 @@ test("a new message to Bizzie expires the specialist approval before it can run"
   const { enqueue, resolveApproval } = await import("./loop");
   const { listRows } = await import("../store");
   const { readTerminal } = await import("./sandbox");
-  const user = createUser({ email: "expire@cnstrct.local", name: "Expire" });
+  const user = await createUser({ email: "expire@cnstrct.local", name: "Expire" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
   const desk = await openDesk(user.id, local);
   const quinn = desk.agents.find((agent) => agent.role === "orchestrator")!;
   const mara = desk.agents.find((agent) => agent.role === "scout")!;
   await enqueue(quinn.id, { type: "user", text: "Find tradies and draft outreach" });
-  const card = listRows(mara.id).find((row) => row.kind === "card" && row.body.status === "pending");
+  const card = (await listRows(mara.id)).find((row) => row.kind === "card" && row.body.status === "pending");
   const approvalId = String(card?.body.approvalId);
   await enqueue(quinn.id, { type: "user", text: "Stop that request" });
-  assert.equal(getApproval(approvalId)?.status, "expired");
-  assert.equal(listTasks(desk.business.id)[0]?.status, "cancelled");
+  assert.equal((await getApproval(approvalId))?.status, "expired");
+  assert.equal((await listTasks(desk.business.id))[0]?.status, "cancelled");
   await resolveApproval(user.id, approvalId, "allow", undefined, mara.id);
-  assert.equal(getApproval(approvalId)?.status, "expired");
+  assert.equal((await getApproval(approvalId))?.status, "expired");
   assert.equal(readTerminal(mara.id).includes("cnstrct-search"), false);
 });
 
@@ -91,9 +93,9 @@ test("commands reject chaining and interpreters, and a failed Orgo bash stays on
   const { createUser, getComputer, saveProfile } = await import("../store");
   const { openDesk } = await import("./provision");
   const { execInSandbox } = await import("./sandbox");
-  const user = createUser({ email: "orgo@cnstrct.local", name: "Orgo" });
+  const user = await createUser({ email: "orgo@cnstrct.local", name: "Orgo" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
   const calls: { method: string; url: string; body: string }[] = [];
   let computers = 0;
   const original = globalThis.fetch;
@@ -144,7 +146,7 @@ test("commands reject chaining and interpreters, and a failed Orgo bash stays on
     );
     assert.equal(calls.some((call) => call.body.includes("cd /root")), false);
     assert.match(calls.at(-1)?.body ?? "", /echo/);
-    assert.equal(getComputer(mara.id)?.provider, "orgo");
+    assert.equal((await getComputer(mara.id))?.provider, "orgo");
   } finally {
     globalThis.fetch = original;
     delete process.env.ORGO_API_KEY;
@@ -180,9 +182,9 @@ test("blueprint tools are the runtime list, always is per agent, and start over 
     exampleLead: () => ({ name: "Example", phone: "555", address: "1 St", service: "test" }),
   };
   assert.equal(validateBlueprint(blueprint).ok, true);
-  const user = createUser({ email: "scope@cnstrct.local", name: "Scope" });
+  const user = await createUser({ email: "scope@cnstrct.local", name: "Scope" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
   const desk = await provisionBlueprint(user.id, local, blueprint, "Scope Desk");
   const bea = desk.agents.find((agent) => agent.name === "Bea")!;
   assert.deepEqual(
@@ -196,13 +198,13 @@ test("blueprint tools are the runtime list, always is per agent, and start over 
   const second = await openDesk(user.id, local);
   const firstScout = first.agents.find((agent) => agent.role === "scout")!;
   const secondScout = second.agents.find((agent) => agent.role === "scout")!;
-  setActionPolicy(first.business.id, firstScout.id, "shell", "always_allow");
-  assert.equal(policyFor(user.id, "shell", { businessId: first.business.id, agentId: firstScout.id }).decision, "allow");
-  assert.equal(policyFor(user.id, "shell", { businessId: second.business.id, agentId: secondScout.id }).decision, "ask");
-  assert.equal(policyFor(user.id, "send_outreach", { businessId: first.business.id, agentId: firstScout.id }).decision, "ask");
+  await setActionPolicy(first.business.id, firstScout.id, "shell", "always_allow");
+  assert.equal((await policyFor(user.id, "shell", { businessId: first.business.id, agentId: firstScout.id })).decision, "allow");
+  assert.equal((await policyFor(user.id, "shell", { businessId: second.business.id, agentId: secondScout.id })).decision, "ask");
+  assert.equal((await policyFor(user.id, "send_outreach", { businessId: first.business.id, agentId: firstScout.id })).decision, "ask");
 
-  assert.throws(() =>
-    insertAgent({
+  await assert.rejects(async () =>
+    await insertAgent({
       businessId: first.business.id,
       userId: user.id,
       role: "orchestrator",
@@ -214,11 +216,11 @@ test("blueprint tools are the runtime list, always is per agent, and start over 
       tools: ["delegate"],
     }),
   );
-  const removed = deleteBusinessForUser(user.id, first.business.id);
+  const removed = await deleteBusinessForUser(user.id, first.business.id);
   assert.ok(removed);
-  assert.equal(getBusiness(first.business.id), null);
-  assert.ok(getBusiness(second.business.id));
-  assert.ok(getProfile(user.id));
+  assert.equal(await getBusiness(first.business.id), null);
+  assert.ok(await getBusiness(second.business.id));
+  assert.ok(await getProfile(user.id));
 });
 
 test("find -exec stays rejected, including when shell is always allowed", async () => {
@@ -227,9 +229,9 @@ test("find -exec stays rejected, including when shell is always allowed", async 
   const { openDesk } = await import("./provision");
   const { policyFor } = await import("./policy");
   const { runTool } = await import("./tools");
-  const user = createUser({ email: "exec@cnstrct.local", name: "Exec" });
+  const user = await createUser({ email: "exec@cnstrct.local", name: "Exec" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
   const { business, agents } = await openDesk(user.id, local);
   const scout = agents.find((agent) => agent.role === "scout");
   assert.ok(scout);
@@ -252,8 +254,8 @@ test("find -exec stays rejected, including when shell is always allowed", async 
   assert.equal(planCommand("echo hi").ok, true);
   assert.equal(planCommand("ls -la notes").ok, true);
 
-  setActionPolicy(business.id, scout.id, "shell", "always_allow");
-  assert.equal(policyFor(user.id, "shell", { businessId: business.id, agentId: scout.id }).decision, "allow");
+  await setActionPolicy(business.id, scout.id, "shell", "always_allow");
+  assert.equal((await policyFor(user.id, "shell", { businessId: business.id, agentId: scout.id })).decision, "allow");
   const ctx = { agent: scout, business, city: "Austin" };
   const first = await runTool("shell", { command: "find . -exec /usr/bin/id {} +" }, ctx);
   const replay = await runTool("shell", { command: "find . -exec /usr/bin/id {} +" }, ctx);
@@ -273,19 +275,19 @@ test("start over deletes Orgo computers before local rows, and a failed delete k
   const { cleanupOrgoComputers, resetBusiness } = await import("./reset");
   const calls: string[] = [];
   try {
-    const user = createUser({ email: "reset-orgo@cnstrct.local", name: "Reset" });
+    const user = await createUser({ email: "reset-orgo@cnstrct.local", name: "Reset" });
     const local = { ...profile, userId: user.id };
-    saveProfile(local);
+    await saveProfile(local);
     const { business, agents } = await openDesk(user.id, local);
     const specialists = agents.filter((agent) => agent.role !== "orchestrator");
     assert.equal(specialists.length, 2);
-    specialists.forEach((agent, index) => setAgentOrgoComputer(agent.id, `comp_reset_${index}`));
-    const keptUser = createUser({ email: "reset-fail@cnstrct.local", name: "Keep" });
+    await mapSeq(specialists, async (agent, index) => await setAgentOrgoComputer(agent.id, `comp_reset_${index}`));
+    const keptUser = await createUser({ email: "reset-fail@cnstrct.local", name: "Keep" });
     const keptProfile = { ...profile, userId: keptUser.id };
-    saveProfile(keptProfile);
+    await saveProfile(keptProfile);
     const kept = await openDesk(keptUser.id, keptProfile);
     const keptSpecialists = kept.agents.filter((agent) => agent.role !== "orchestrator");
-    keptSpecialists.forEach((agent, index) => setAgentOrgoComputer(agent.id, `comp_keep_${index}`));
+    await mapSeq(keptSpecialists, async (agent, index) => await setAgentOrgoComputer(agent.id, `comp_keep_${index}`));
 
     const blocked = await resetBusiness(user.id, business.id);
     assert.equal(blocked.ok, false);
@@ -294,7 +296,7 @@ test("start over deletes Orgo computers before local rows, and a failed delete k
       assert.equal(blocked.error.includes(key), false);
       assert.deepEqual(blocked.computerIds, ["comp_reset_0", "comp_reset_1"]);
     }
-    assert.ok(getBusiness(business.id));
+    assert.ok(await getBusiness(business.id));
 
     process.env.ORGO_API_KEY = key;
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -308,7 +310,7 @@ test("start over deletes Orgo computers before local rows, and a failed delete k
     }) as typeof fetch;
     const cleared = await resetBusiness(user.id, business.id);
     assert.equal(cleared.ok, true);
-    assert.equal(getBusiness(business.id), null);
+    assert.equal(await getBusiness(business.id), null);
     assert.deepEqual(calls, [
       "DELETE https://www.orgo.ai/api/computers/comp_reset_0",
       "DELETE https://www.orgo.ai/api/computers/comp_reset_1",
@@ -329,9 +331,9 @@ test("start over deletes Orgo computers before local rows, and a failed delete k
       assert.match(failed.error, /kept so you can retry/i);
       assert.deepEqual(failed.computerIds, ["comp_keep_1"]);
     }
-    assert.ok(getBusiness(kept.business.id));
-    assert.equal(getAgent(keptSpecialists[0].id)?.orgoComputerId, "comp_keep_0");
-    assert.equal(getAgent(keptSpecialists[1].id)?.orgoComputerId, "comp_keep_1");
+    assert.ok(await getBusiness(kept.business.id));
+    assert.equal((await getAgent(keptSpecialists[0].id))?.orgoComputerId, "comp_keep_0");
+    assert.equal((await getAgent(keptSpecialists[1].id))?.orgoComputerId, "comp_keep_1");
 
     const unsafe = await cleanupOrgoComputers(["comp/../secret"]);
     assert.equal(unsafe.ok, false);

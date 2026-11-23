@@ -3,20 +3,22 @@ export type SqlStatement = {
   params?: readonly unknown[];
 };
 
-/** Shared by the migration runner. Both adapters speak this. */
+/**
+ * Async on both drivers. Neon HTTP cannot return a row synchronously.
+ * The SQLite adapter fulfills the same promises from `node:sqlite`.
+ */
 export type Queryable = {
-  query(sql: string, params?: readonly unknown[]): unknown[];
-  exec(sql: string): void;
-  transaction(statements: readonly SqlStatement[]): void;
+  query(sql: string, params?: readonly unknown[]): Promise<unknown[]>;
+  exec(sql: string): Promise<void>;
+  transaction(statements: readonly SqlStatement[]): Promise<void>;
 };
 
 export type Statement = {
-  run(...params: unknown[]): { changes: number };
-  get(...params: unknown[]): unknown;
-  all(...params: unknown[]): unknown[];
+  run(...params: unknown[]): Promise<{ changes: number }>;
+  get(...params: unknown[]): Promise<unknown>;
+  all(...params: unknown[]): Promise<unknown[]>;
 };
 
-/** Same shape store.ts already uses: prepare().get/all/run. */
 export type AppDatabase = Queryable & {
   prepare(sql: string): Statement;
   close(): void;

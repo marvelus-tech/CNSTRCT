@@ -9,7 +9,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   const { id } = await context.params;
-  const desk = loadDesk(user.id, id);
+  const desk = await loadDesk(user.id, id);
   if (!desk) return NextResponse.json({ error: "Business not found." }, { status: 404 });
   return NextResponse.json({
     businessId: id,

@@ -50,14 +50,14 @@ export async function cleanupOrgoComputers(ids: string[]): Promise<{ ok: true } 
 }
 
 export async function resetBusiness(userId: string, businessId: string) {
-  const business = getBusiness(businessId);
+  const business = await getBusiness(businessId);
   if (!business || business.userId !== userId) return { ok: false as const, error: "Business not found.", computerIds: [] as string[] };
-  const computerIds = listAgents(businessId)
+  const computerIds = (await listAgents(businessId))
     .map((agent) => agent.orgoComputerId)
     .filter((id): id is string => Boolean(id));
   const cleanup = await cleanupOrgoComputers(computerIds);
   if (!cleanup.ok) return { ok: false as const, error: cleanup.error, computerIds: cleanup.remaining };
-  const agentIds = deleteBusinessForUser(userId, businessId);
+  const agentIds = await deleteBusinessForUser(userId, businessId);
   if (!agentIds) return { ok: false as const, error: "Business not found.", computerIds: [] as string[] };
   return { ok: true as const, agentIds };
 }

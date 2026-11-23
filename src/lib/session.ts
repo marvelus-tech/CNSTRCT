@@ -11,15 +11,15 @@ export async function currentUser(): Promise<User | null> {
   const jar = await cookies();
   const sid = jar.get(SESSION_COOKIE)?.value;
   if (!sid) return null;
-  return userForSession(sid);
+  return await userForSession(sid);
 }
 
 export async function ensureDemoUser(): Promise<User> {
   const existing = await currentUser();
   if (existing) return existing;
   const stamp = newId("demo");
-  const user = createUser({ email: `${stamp}@cnstrct.local`, name: "Demo owner" });
-  const sid = createSession(user.id);
+  const user = await createUser({ email: `${stamp}@cnstrct.local`, name: "Demo owner" });
+  const sid = await createSession(user.id);
   const jar = await cookies();
   jar.set(SESSION_COOKIE, sid, {
     httpOnly: true,
@@ -31,7 +31,7 @@ export async function ensureDemoUser(): Promise<User> {
 }
 
 export async function requireUser(): Promise<User | null> {
-  return currentUser();
+  return await currentUser();
 }
 
 const sessionCookieOptions = {
@@ -55,7 +55,7 @@ export async function ensureDemoSession(): Promise<{ user: User; sessionId: stri
 }
 
 export async function startSession(user: User) {
-  const sid = createSession(user.id);
+  const sid = await createSession(user.id);
   const jar = await cookies();
   jar.set(SESSION_COOKIE, sid, {
     httpOnly: true,

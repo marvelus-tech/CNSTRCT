@@ -9,7 +9,7 @@ import { enqueue } from "./loop";
  */
 
 export async function runRoutine(id: string) {
-  return queueRoutine(id);
+  return await queueRoutine(id);
 }
 
 /**
@@ -17,13 +17,13 @@ export async function runRoutine(id: string) {
  * because the server stayed up. Queueing still runs the same turn loop.
  */
 export async function queueRoutine(id: string) {
-  const routine = getRoutine(id);
+  const routine = await getRoutine(id);
   if (!routine || !routine.enabled) return;
-  const agent = getAgent(routine.agentId);
+  const agent = await getAgent(routine.agentId);
   if (!agent) return;
-  markRoutineRan(id, Date.now() + routine.intervalMs);
+  await markRoutineRan(id, Date.now() + routine.intervalMs);
   if (agent.role === "orchestrator") {
-    recordAudit({
+    await recordAudit({
       businessId: agent.businessId,
       userId: agent.userId,
       agentId: agent.id,
@@ -38,14 +38,14 @@ export async function queueRoutine(id: string) {
       prompt: routine.prompt,
     });
   }
-  const orchestrator = listAgents(agent.businessId).find((item) => item.role === "orchestrator");
-  const task = insertTask({
+  const orchestrator = (await listAgents(agent.businessId)).find((item) => item.role === "orchestrator");
+  const task = await insertTask({
     businessId: agent.businessId,
     fromAgentId: orchestrator?.id ?? agent.id,
     toAgentId: agent.id,
     instruction: routine.prompt,
   });
-  recordAudit({
+  await recordAudit({
     businessId: agent.businessId,
     userId: agent.userId,
     agentId: agent.id,

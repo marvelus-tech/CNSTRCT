@@ -26,8 +26,8 @@ function mapRow(row: Record<string, unknown>): EntitlementRow {
   };
 }
 
-export function getEntitlement(userId: string): EntitlementRow | null {
-  const row = getDb().prepare("SELECT * FROM billing_entitlements WHERE user_id = ?").get(userId) as
+export async function getEntitlement(userId: string): Promise<EntitlementRow | null> {
+  const row = await (await (await getDb()).prepare("SELECT * FROM billing_entitlements WHERE user_id = ?").get(userId)) as
     | Record<string, unknown>
     | undefined;
   if (!row) return null;
@@ -37,7 +37,7 @@ export function getEntitlement(userId: string): EntitlementRow | null {
   return mapped;
 }
 
-export function upsertEntitlement(input: {
+export async function upsertEntitlement(input: {
   userId: string;
   planId: PlanId;
   status?: EntitlementRow["status"];
@@ -46,7 +46,7 @@ export function upsertEntitlement(input: {
   currentPeriodEnd?: number | null;
 }) {
   const now = Date.now();
-  getDb()
+  await (await getDb())
     .prepare(
       `INSERT INTO billing_entitlements (user_id, plan_id, status, stripe_customer_id, stripe_subscription_id, current_period_end, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -70,12 +70,12 @@ export function upsertEntitlement(input: {
 }
 
 /** Test harness only. Throws if not in billing test mode. */
-export function grantTestEntitlement(userId: string, planId: PlanId) {
+export async function grantTestEntitlement(userId: string, planId: PlanId) {
   if (!billingTestModeEnabled()) {
     throw new Error("grantTestEntitlement is only available in BILLING_TEST_MODE tests.");
   }
   const periodEnd = Date.now() + 30 * 24 * 60 * 60 * 1000;
-  upsertEntitlement({
+  await upsertEntitlement({
     userId,
     planId,
     status: "active",
@@ -85,19 +85,19 @@ export function grantTestEntitlement(userId: string, planId: PlanId) {
   });
 }
 
-export function businessLimitForUser(userId: string): { plan: PlanId | null; max: number; used: number; allowed: boolean } {
-  const entitlement = getEntitlement(userId);
+export async function businessLimitForUser(userId: string): Promise<{ plan: PlanId | null; max: number; used: number; allowed: boolean }> {
+  const entitlement = await getEntitlement(userId);
   if (!entitlement) {
-    return { plan: null, max: 0, used: listBusinessesForUser(userId).length, allowed: false };
+    return { plan: null, max: 0, used: (await listBusinessesForUser(userId)).length, allowed: false };
   }
   const plan = planFromId(entitlement.planId);
   if (!plan) return { plan: null, max: 0, used: 0, allowed: false };
-  const used = listBusinessesForUser(userId).length;
+  const used = (await listBusinessesForUser(userId)).length;
   return { plan: plan.id, max: plan.maxBusinesses, used, allowed: used < plan.maxBusinesses };
 }
 
-export function planLimitsForUser(userId: string) {
-  const entitlement = getEntitlement(userId);
+export async function planLimitsForUser(userId: string) {
+  const entitlement = await getEntitlement(userId);
   if (!entitlement) return null;
   return PLANS[entitlement.planId];
 }

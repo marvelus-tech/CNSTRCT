@@ -1,4 +1,5 @@
 import { composioConfigured, computerState, connectionState, orgoConfigured } from "./agent/adapters";
+import { mapSeq } from "./seq";
 import { COMPUTER_LIMIT_SECONDS, TOKEN_LIMIT } from "./agent/limits";
 import { modelMode } from "./agent/model";
 import { ensureTeamShape } from "./agent/provision";
@@ -17,29 +18,24 @@ import {
   upsertConnection,
 } from "./store";
 
-export function loadDesk(userId: string, businessId?: string) {
-  const user = getUser(userId);
+export async function loadDesk(userId: string, businessId?: string) {
+  const user = await getUser(userId);
   if (!user) return null;
-  const profile = getProfile(userId);
-  const business = businessId
-    ? (() => {
-        const row = getBusiness(businessId);
-        if (!row || row.userId !== userId) return null;
-        return row;
-      })()
-  : getBusinessForUser(userId);
+  const profile = await getProfile(userId);
+  const loaded = businessId ? await getBusiness(businessId) : await getBusinessForUser(userId);
+  const business = loaded && (!businessId || loaded.userId === userId) ? loaded : null;
   if (businessId && !business) return null;
   const agents = business
-    ? ensureTeamShape(business.id).map((agent) => ({
+    ? await mapSeq(await ensureTeamShape(business.id), async (agent) => ({
         ...agent,
         tools: agent.tools,
-        rows: listRows(agent.id),
-        routines: listRoutines(agent.id),
-        computer: computerSnapshot(agent.id),
+        rows: await listRows(agent.id),
+        routines: await listRoutines(agent.id),
+        computer: await computerSnapshot(agent.id),
       }))
     : [];
-  if (business && !listConnections(business.id).some((item) => item.toolkit === "gmail")) {
-    upsertConnection({ businessId: business.id, toolkit: "gmail", status: "not_configured", connectedAccountId: null });
+  if (business && !(await listConnections(business.id)).some((item) => item.toolkit === "gmail")) {
+    await upsertConnection({ businessId: business.id, toolkit: "gmail", status: "not_configured", connectedAccountId: null });
   }
   const keySet = composioConfigured();
   const orgoKey = orgoConfigured();
@@ -48,13 +44,13 @@ export function loadDesk(userId: string, businessId?: string) {
     profile,
     business,
     agents,
-    leads: business ? listLeads(business.id) : [],
-    tasks: business ? listTasks(business.id) : [],
-    audit: business ? listAudit(business.id, 12) : [],
+    leads: business ? await listLeads(business.id) : [],
+    tasks: business ? await listTasks(business.id) : [],
+    audit: business ? await listAudit(business.id, 12) : [],
     connections: {
       composioConfigured: keySet,
       apps: business
-        ? listConnections(business.id).map((item) => ({
+        ? (await listConnections(business.id)).map((item) => ({
             toolkit: item.toolkit,
             state: connectionState({
               keySet,
@@ -97,4 +93,4 @@ export function loadDesk(userId: string, businessId?: string) {
   };
 }
 
-export type DeskPayload = NonNullable<ReturnType<typeof loadDesk>>;
+export type DeskPayload = NonNullable<Awaited<ReturnType<typeof loadDesk>>>;

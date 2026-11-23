@@ -42,9 +42,9 @@ test("local development allows construction when Stripe is unset", async () => {
   const { constructionAccess } = await import("./access");
   assert.equal(billingStripePending(), true);
   assert.equal(billingConstructionBypassActive(), true);
-  const user = createUser({ email: "local@bizos.local", name: "Local" });
-  saveProfile({ userId: user.id, ...profileBody });
-  assert.equal(constructionAccess(user.id).ok, true);
+  const user = await createUser({ email: "local@bizos.local", name: "Local" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  assert.equal((await constructionAccess(user.id)).ok, true);
 });
 
 test("Vercel preview skips paywall when Stripe is unset", async () => {
@@ -57,9 +57,9 @@ test("Vercel preview skips paywall when Stripe is unset", async () => {
   const { constructionAccess } = await import("./access");
   assert.equal(billingDeployment(), "preview");
   assert.equal(billingConstructionBypassActive(), true);
-  const user = createUser({ email: "preview@bizos.local", name: "Preview" });
-  saveProfile({ userId: user.id, ...profileBody });
-  assert.equal(constructionAccess(user.id).ok, true);
+  const user = await createUser({ email: "preview@bizos.local", name: "Preview" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  assert.equal((await constructionAccess(user.id)).ok, true);
 });
 
 test("production allows construction while Stripe is not configured", async () => {
@@ -72,9 +72,9 @@ test("production allows construction while Stripe is not configured", async () =
   const { constructionAccess } = await import("./access");
   assert.equal(billingStripePending(), true);
   assert.equal(billingConstructionBypassActive(), true);
-  const user = createUser({ email: "prod-open@bizos.local", name: "Launch" });
-  saveProfile({ userId: user.id, ...profileBody });
-  assert.equal(constructionAccess(user.id).ok, true);
+  const user = await createUser({ email: "prod-open@bizos.local", name: "Launch" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  assert.equal((await constructionAccess(user.id)).ok, true);
 });
 
 test("production enforces paywall when Stripe is configured and user is unpaid", async () => {
@@ -87,9 +87,9 @@ test("production enforces paywall when Stripe is configured and user is unpaid",
   const { constructionAccess } = await import("./access");
   assert.equal(effectiveBillingMode(), "enforce");
   assert.equal(billingConstructionBypassActive(), false);
-  const user = createUser({ email: "unpaid-prod@bizos.local", name: "Unpaid" });
-  saveProfile({ userId: user.id, ...profileBody });
-  const gate = constructionAccess(user.id);
+  const user = await createUser({ email: "unpaid-prod@bizos.local", name: "Unpaid" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  const gate = await constructionAccess(user.id);
   assert.equal(gate.ok, false);
   if (!gate.ok) assert.equal(gate.code, "payment_required");
 });
@@ -102,15 +102,15 @@ test("production with Stripe and entitlement allows construction", async () => {
   const { createUser, saveProfile } = await import("../store");
   const { constructionAccess } = await import("./access");
   const { upsertEntitlement } = await import("./entitlements");
-  const user = createUser({ email: "paid-prod@bizos.local", name: "Paid" });
-  saveProfile({ userId: user.id, ...profileBody });
-  upsertEntitlement({
+  const user = await createUser({ email: "paid-prod@bizos.local", name: "Paid" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  await upsertEntitlement({
     userId: user.id,
     planId: "starter",
     status: "active",
     currentPeriodEnd: Date.now() + 86_400_000,
   });
-  const gate = constructionAccess(user.id);
+  const gate = await constructionAccess(user.id);
   assert.equal(gate.ok, true);
   if (gate.ok) assert.equal(gate.planId, "starter");
 });
@@ -124,7 +124,7 @@ test("preview with Stripe configured and BILLING_MODE=bypass allows unpaid const
   const { createUser, saveProfile } = await import("../store");
   const { constructionAccess } = await import("./access");
   assert.equal(billingConstructionBypassActive(), true);
-  const user = createUser({ email: "prev-bypass@bizos.local", name: "Prev" });
-  saveProfile({ userId: user.id, ...profileBody });
-  assert.equal(constructionAccess(user.id).ok, true);
+  const user = await createUser({ email: "prev-bypass@bizos.local", name: "Prev" });
+  await saveProfile({ userId: user.id, ...profileBody });
+  assert.equal((await constructionAccess(user.id)).ok, true);
 });
