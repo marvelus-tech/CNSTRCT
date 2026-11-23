@@ -209,8 +209,10 @@ h4 {
   flex-direction: column;
   align-items: center;
   max-width: 100%;
-  overflow: hidden;
-  contain: layout paint;
+  /* Clip vertically so the hex silhouette cannot paint on copy; keep X open so S ink is not cropped. */
+  overflow-x: visible;
+  overflow-y: clip;
+  contain: layout;
   isolation: isolate;
 }
 
@@ -219,6 +221,8 @@ h4 {
   position: relative;
   display: inline-block;
   max-width: 100%;
+  /* Room for the S terminal curve inside paint bounds when paired with inline-block suffix. */
+  padding-inline-end: 0.22em;
 }
 
 .hero-overlap-hex-spacer {
@@ -282,9 +286,7 @@ h4 {
   justify-content: center;
   margin: 0;
   pointer-events: none;
-  /* Nudge left so the silhouette stays on Biz; never intersects OS / S. */
-  --hero-hex-nudge: clamp(3.55rem, 10.5vw, 3.75rem);
-  transform: translateX(calc(-50% - var(--hero-hex-nudge)));
+  transform: translateX(-50%);
 }
 
 .hero-overlap-hex__mark {
