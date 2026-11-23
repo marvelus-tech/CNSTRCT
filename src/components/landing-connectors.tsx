@@ -6,7 +6,6 @@ const CONNECTORS_HEADLINE = "All your favorite tools, accessible to your new bus
 export function LandingConnectors() {
   return (
     <LandingSection
-      variant="card"
       aria-label="Integrations with popular business tools"
       className="[&>div]:max-w-6xl"
     >
