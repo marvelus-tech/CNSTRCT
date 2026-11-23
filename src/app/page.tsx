@@ -55,7 +55,7 @@ export default function HomePage() {
             Log in
           </Link>
           <Link href="/triage" className="font-medium">
-            Find my business
+            Start a BIZ
           </Link>
         </nav>
       </header>
@@ -74,7 +74,7 @@ export default function HomePage() {
               </p>
               <div className="mt-8">
                 <Button size="lg" asChild>
-                  <Link href="/triage">Find my business</Link>
+                  <Link href="/triage">Start a BIZ</Link>
                 </Button>
               </div>
             </div>

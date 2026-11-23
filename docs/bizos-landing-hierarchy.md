@@ -19,10 +19,10 @@
 | Surface | String |
 |---------|--------|
 | Hero eyebrow | **Business** operating system (accent on "Business") |
-| Nav CTA | Find my business → `/triage` |
+| Nav CTA | Start a BIZ → `/triage` |
 | Hero H1 | Your founding team ships on day one. |
 | Hero sub | BizOS finds a business that fits you, then starts your bots. They do the work. You approve it. |
-| Hero CTA | Find my business |
+| Hero CTA | Start a BIZ |
 | Proof H2 | Most people are still guessing. You do not have to. |
 | Proof card 4 label | Bots on your desk. They work. You approve. |
 | Proof kicker | Bot-led businesses are pulling ahead. BizOS gives you the same shape: work gets done, nothing sensitive ships without your yes. |
