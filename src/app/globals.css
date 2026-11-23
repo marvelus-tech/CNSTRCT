@@ -113,7 +113,7 @@ h4 {
 
 /* Centered hero: gradient wordmark with black hex overlapping only the lower third (depth). */
 .hero-gradient-brand {
-  font-size: clamp(3.75rem, 15.5vw, 8.75rem);
+  font-size: var(--hero-font-size, clamp(3.75rem, 15.5vw, 8.75rem));
   font-weight: 600;
   letter-spacing: -0.045em;
   line-height: 0.92;
@@ -136,19 +136,28 @@ h4 {
   justify-content: center;
   width: 100%;
   padding-top: 0.25rem;
-  overflow: visible;
 }
 
 .hero-overlap-copy-stack {
-  /* Flow sibling starts after brand stack + hex descent; no z-index layering. */
-  margin-top: clamp(0.75rem, 2.5vw, 1.25rem);
+  /* Outside brand stack; never stacks with hex (no z-index). */
+  position: relative;
+  margin-top: max(0.5rem, clamp(0.75rem, 2.5vw, 1.25rem));
 }
 
 .hero-overlap-brand-stack {
+  --hero-font-size: clamp(3.75rem, 15.5vw, 8.75rem);
+  --hero-cap-height: calc(var(--hero-font-size) * 0.92);
+  --hero-hex-width: min(42vw, 10.25rem);
+  --hero-hex-height: calc(var(--hero-hex-width) / 0.92285);
+  /* descent = hex below h1 box when hex top is 70% of cap. */
+  --hero-hex-descent: calc(var(--hero-hex-height) - 0.3 * var(--hero-cap-height) + 0.5rem);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   max-width: 100%;
+  overflow: hidden;
+  contain: layout paint;
+  isolation: isolate;
 }
 
 /* top: % on the hex anchors to cap height here only (not spacer). */
@@ -156,14 +165,13 @@ h4 {
   position: relative;
   display: inline-block;
   max-width: 100%;
-  isolation: isolate;
 }
 
 .hero-overlap-hex-spacer {
-  width: 1px;
   flex: 0 0 auto;
-  /* Hex descent below h1 cap: hex height minus upper cap slice (~30%). */
-  height: clamp(6.5rem, 42vw, 11rem);
+  width: 100%;
+  min-height: 0.5rem;
+  height: max(clamp(6.5rem, 42vw, 11rem), var(--hero-hex-descent));
   pointer-events: none;
 }
 
@@ -190,37 +198,41 @@ h4 {
 
 .hero-overlap-hex__mark {
   display: block;
-  width: min(42vw, 10.25rem);
+  width: var(--hero-hex-width, min(42vw, 10.25rem));
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
 }
 
 @media (min-width: 640px) {
+  .hero-overlap-brand-stack {
+    --hero-font-size: clamp(3.75rem, 15.5vw, 8.75rem);
+    --hero-hex-width: min(38vw, 12.5rem);
+    --hero-hex-descent: calc(var(--hero-hex-height) - 0.31 * var(--hero-cap-height) + 0.5rem);
+  }
+
   .hero-overlap-hex-spacer {
-    height: clamp(7rem, 36vw, 12.5rem);
+    height: max(clamp(7rem, 36vw, 12.5rem), var(--hero-hex-descent));
   }
 
   .hero-overlap-hex {
     top: 69%;
   }
-
-  .hero-overlap-hex__mark {
-    width: min(38vw, 12.5rem);
-  }
 }
 
 @media (min-width: 768px) {
+  .hero-overlap-brand-stack {
+    --hero-font-size: clamp(3.75rem, 15.5vw, 8.75rem);
+    --hero-hex-width: min(34vw, 15.5rem);
+    --hero-hex-descent: calc(var(--hero-hex-height) - 0.33 * var(--hero-cap-height) + 0.5rem);
+  }
+
   .hero-overlap-hex-spacer {
-    height: clamp(7.5rem, 32vw, 14.5rem);
+    height: max(clamp(7.5rem, 32vw, 14.5rem), var(--hero-hex-descent));
   }
 
   .hero-overlap-hex {
     top: 67%;
-  }
-
-  .hero-overlap-hex__mark {
-    width: min(34vw, 15.5rem);
   }
 }
 
