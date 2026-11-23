@@ -6,13 +6,7 @@ export type SurveyLandingStat = {
   sourceUrl: string;
 };
 
-export type ProductLandingStat = {
-  kind: "product";
-  value: string;
-  label: string;
-};
-
-export type LandingStat = SurveyLandingStat | ProductLandingStat;
+export type LandingStat = SurveyLandingStat;
 
 export const LANDING_PROOF_STATS: readonly LandingStat[] = [
   {
@@ -36,11 +30,6 @@ export const LANDING_PROOF_STATS: readonly LandingStat[] = [
     label: "Revenue growth for AI leaders vs laggards",
     sourceName: "BCG",
     sourceUrl: "https://www.bcg.com/publications/2026/the-formula-for-agentic-ai-value",
-  },
-  {
-    kind: "product",
-    value: "3",
-    label: "Bots on your desk. They work. You approve.",
   },
 ] as const;
 
