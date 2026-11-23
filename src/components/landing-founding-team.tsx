@@ -4,7 +4,7 @@ import { LandingSection } from "@/components/landing-section";
 
 const STEPS = [
   {
-    title: "Take the questionnaire",
+    title: "Custom Business",
     body: "Our matching engine pairs you with a business built for your interests and situation.",
   },
   {

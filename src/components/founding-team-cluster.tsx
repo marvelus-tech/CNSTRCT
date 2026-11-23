@@ -3,7 +3,7 @@
 import { BusinessHexMark } from "@/components/business-hex-mark";
 import { GrokBotFace } from "@/components/grok-bot-face";
 
-const BOT_SIZE = 72;
+const BOT_SIZE = 86;
 
 export function FoundingTeamCluster() {
   return (
