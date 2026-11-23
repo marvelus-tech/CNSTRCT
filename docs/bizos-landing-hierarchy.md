@@ -15,7 +15,7 @@
 | `.landing-eyebrow` | Section kickers, plan labels, FAQ eyebrow (sentence case, weight 500) |
 | `.landing-section-title` | Section `h2`, proof H2, pricing title, connectors headline |
 | `.how-step-title` | How-it-works step titles (`h3`) |
-| `.landing-section-lead` | Supporting copy, FAQ answers, proof kicker, pricing intro |
+| `.landing-section-lead` | Supporting copy, FAQ answers, pricing intro |
 | `.how-step-lead` | How-it-works step body copy |
 | `.hero-gradient-brand` | Gradient hero `h1` (“BizOS”) behind hex |
 | `.hero-overlap-stage` | Centered hero stage container |
@@ -44,11 +44,10 @@ Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: g
 | Hero lead | BizOS matches a business that fits you, gives you a founding team, so you can start being productive on day one. |
 | Hero CTA | Start a BIZ |
 | Proof H2 | AI is default. New businesses are forming faster than ever. |
-| Proof chart | `LandingProofTrendChart`: dual-axis SVG (McKinsey AI % + Census BFS), x ticks 2017/2020/2023/2026 only, Y ticks 0/50/100% and 0/3/6M, compact legend (“AI adoption”, “New business applications”) with sr-only detail, 89% + 5.7M in a row below plot (no overlap), doubled stroke widths (AI 4.7px, BFS 4.5px), `prefers-reduced-motion` respected |
+| Proof chart | `LandingProofTrendChart`: dual-axis SVG (McKinsey AI % + Census BFS), x ticks 2017/2020/2023/2026 only, Y ticks 0/50/100% and 0/3/6M, compact legend (“AI adoption”, “New business applications”) with sr-only detail, AI stroke gradient ends green (`#16a34a`), 89% + 5.7M in a row below plot (no overlap), doubled stroke widths (AI 4.7px, BFS 4.5px), `prefers-reduced-motion` respected |
 | Proof stat 1 | **89%** — Orgs using AI in at least one function |
 | Proof stat 2 | **28%** — Reporting AI revenue gains |
 | Proof stat 3 | **2.4×** — AI leaders' revenue growth vs. laggards |
-| Proof closing | Start with AI working for you on day one working on your behalf. |
 | Proof sources | McKinsey State of AI (2026), Deloitte State of AI in the Enterprise (2026), BCG Applied AI Index (2026), US Census Bureau Business Formation Statistics |
 | Steps section | **How it works** (`h2`); 01 Tell us who you are / 02 Get a business that fits / 03 Turn the key |
 | FAQ eyebrow | FAQ |

@@ -36,9 +36,6 @@ export const LANDING_PROOF_STATS: readonly LandingStat[] = [
   },
 ] as const;
 
-export const LANDING_PROOF_KICKER =
-  "Start with AI working for you on day one working on your behalf.";
-
 export const LANDING_PROOF_SOURCES: readonly { name: string; url: string }[] = [
   {
     name: "McKinsey State of AI (2026)",

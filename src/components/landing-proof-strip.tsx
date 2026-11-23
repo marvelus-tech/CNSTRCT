@@ -1,7 +1,6 @@
 import { LandingProofTrendChart } from "@/components/landing-proof-trend-chart";
 import { LandingSection } from "@/components/landing-section";
 import {
-  LANDING_PROOF_KICKER,
   LANDING_PROOF_SOURCES,
   LANDING_PROOF_STATS,
   LANDING_PROOF_TITLE,
@@ -36,8 +35,7 @@ export function LandingProofStrip() {
           ))}
         </ul>
 
-        <p className="landing-section-lead mx-auto mt-14 max-w-xl text-pretty">{LANDING_PROOF_KICKER}</p>
-        <p className="landing-fine-print mt-6 text-xs sm:text-[0.6875rem]">
+        <p className="landing-fine-print mt-10 text-xs sm:text-[0.6875rem]">
           Sources:{" "}
           {LANDING_PROOF_SOURCES.map((source, index) => (
             <span key={source.name}>

@@ -76,8 +76,8 @@ const AI_STROKE_GRADIENT_STOPS = [
   { offset: "0%", color: "#b45309" },
   { offset: "22%", color: "#e85d04" },
   { offset: "48%", color: "#f9738a" },
-  { offset: "74%", color: "#93a4f8" },
-  { offset: "100%", color: "#5b67d6" },
+  { offset: "74%", color: "#4ade80" },
+  { offset: "100%", color: "#16a34a" },
 ] as const;
 
 const CHART_STROKE_AI = 4.7;
@@ -259,7 +259,7 @@ export function LandingProofTrendChart() {
           opacity={pathsReady ? 1 : 0.85}
         />
 
-        <circle cx={aiEndX} cy={aiEndY} r={4} fill="#5b67d6" />
+        <circle cx={aiEndX} cy={aiEndY} r={4} fill="#16a34a" />
         <circle cx={aiEndX} cy={bfsEndY} r={4} fill="var(--proof-chart-bfs-stroke)" />
       </svg>
 

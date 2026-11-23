@@ -10,16 +10,25 @@ function isProtected(pathname: string) {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (!isProtected(pathname)) return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
 
-  const sid = request.cookies.get(SESSION_COOKIE)?.value;
-  if (sid) return NextResponse.next();
+  if (isProtected(pathname)) {
+    const sid = request.cookies.get(SESSION_COOKIE)?.value;
+    if (!sid) {
+      const login = new URL("/login", request.url);
+      login.searchParams.set("next", pathname + request.nextUrl.search);
+      return NextResponse.redirect(login);
+    }
+  }
 
-  const login = new URL("/login", request.url);
-  login.searchParams.set("next", pathname + request.nextUrl.search);
-  return NextResponse.redirect(login);
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {
-  matcher: ["/command-center/:path*", "/constructing", "/workspace/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
