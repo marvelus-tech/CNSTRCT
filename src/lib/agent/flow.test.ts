@@ -29,10 +29,10 @@ test("desk sweep asks before send and can be refused", async () => {
   const { execInSandbox, sandboxRoot } = await import("./sandbox");
   const { liveCardCopy } = await import("../copy");
   const fs = await import("node:fs");
-  const user = createUser({ email: "owner@cnstrct.local", name: "Owner" });
+  const user = await createUser({ email: "owner@cnstrct.local", name: "Owner" });
   profile.userId = user.id;
-  saveProfile(profile);
-  const card = liveCardCopy(getProfile(user.id)!);
+  await saveProfile(profile);
+  const card = liveCardCopy((await getProfile(user.id))!);
   assert.match(card.summary, /Austin/);
   assert.match(card.summary, /basically no cash/);
   assert.match(card.summary, /cookie stand/);
@@ -42,7 +42,7 @@ test("desk sweep asks before send and can be refused", async () => {
   assert.equal(desk.business.city, "Austin");
   assert.equal(desk.agents.length, 3);
   assert.equal(desk.agents.filter((agent) => agent.role === "orchestrator").length, 1);
-  assert.equal(listRows(desk.agents[0]!.id).some((row) => row.kind === "card"), false);
+  assert.equal((await listRows(desk.agents[0]!.id)).some((row) => row.kind === "card"), false);
 
   const scout = desk.agents.find((agent) => agent.role === "scout")!;
   const blocked = await execInSandbox(scout.id, "curl https://example.com");
@@ -57,9 +57,9 @@ test("mobile detailing desk provisions Riley and Sam", async () => {
   const { detailingCardCopy } = await import("../copy");
   const { TEMPLATES } = await import("../templates");
 
-  const user = createUser({ email: "detail@cnstrct.local", name: "Detailer" });
+  const user = await createUser({ email: "detail@cnstrct.local", name: "Detailer" });
   const local = { ...profile, userId: user.id, location: "Austin, TX" };
-  saveProfile(local);
+  await saveProfile(local);
   const card = detailingCardCopy(local);
   assert.match(card.summary, /Driveway Detail/);
   assert.equal(TEMPLATES.find((t) => t.id === "mobile-detailing")?.live, true);
@@ -77,9 +77,9 @@ test("openDesk stores profile_json and allows multiple desks per template", asyn
   const { createUser, saveProfile } = await import("../store");
   const { openDesk } = await import("./provision");
 
-  const user = createUser({ email: "multi@cnstrct.local", name: "Multi" });
+  const user = await createUser({ email: "multi@cnstrct.local", name: "Multi" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
 
   const first = await openDesk(user.id, local, "home-services");
   const second = await openDesk(user.id, local, "home-services");

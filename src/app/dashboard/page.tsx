@@ -5,7 +5,7 @@ import { getBusinessForUser } from "@/lib/store";
 export default async function DashboardPage() {
   const user = await currentUser();
   if (!user) redirect("/login?next=/dashboard");
-  const business = getBusinessForUser(user.id);
+  const business = await getBusinessForUser(user.id);
   if (!business) redirect("/command-center");
   redirect(`/workspace/${business.id}`);
 }

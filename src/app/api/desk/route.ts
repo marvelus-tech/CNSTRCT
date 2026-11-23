@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "businessId is required." }, { status: 400 });
   }
 
-  const desk = loadDesk(user.id, businessId);
+  const desk = await loadDesk(user.id, businessId);
   if (!desk) return NextResponse.json({ error: "Business not found." }, { status: 404 });
   return NextResponse.json(desk);
 }

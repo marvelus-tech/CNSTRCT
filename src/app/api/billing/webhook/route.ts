@@ -18,7 +18,7 @@ function periodEnd(subscription: Stripe.Subscription | null | undefined) {
 }
 
 async function applySubscription(userId: string, planId: PlanId, subscription: Stripe.Subscription) {
-  upsertEntitlement({
+  await upsertEntitlement({
     userId,
     planId,
     status: subscription.status === "active" || subscription.status === "trialing" ? "active" : "canceled",
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       if (!userId || !planId) break;
       if (session.mode !== "subscription") break;
       const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
-      upsertEntitlement({
+      await upsertEntitlement({
         userId,
         planId,
         status: "active",

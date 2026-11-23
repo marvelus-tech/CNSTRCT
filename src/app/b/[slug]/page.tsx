@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const business = getBusinessBySlug(slug);
+  const business = await getBusinessBySlug(slug);
   if (!business) {
     return { title: { absolute: NOT_FOUND_TITLE }, robots: { index: false, follow: false } };
   }
@@ -25,9 +25,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BusinessPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const business = getBusinessBySlug(slug);
+  const business = await getBusinessBySlug(slug);
   if (!business) notFound();
-  const profile = getProfile(business.userId);
+  const profile = await getProfile(business.userId);
   if (!profile) notFound();
   return (
     <DeskSite

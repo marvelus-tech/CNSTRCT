@@ -1,4 +1,5 @@
 import { newId } from "../ids";
+import { mapSeq } from "../seq";
 import {
   addUsage,
   appendRow,
@@ -45,9 +46,9 @@ const MAX_STEPS = 8;
 
 export function enqueue(agentId: string, trigger: Trigger) {
   const prev = queues.get(agentId) ?? Promise.resolve();
-  const next = prev.then(() => runTurn(agentId, trigger)).catch((error: unknown) => {
+  const next = prev.then(async () => await runTurn(agentId, trigger)).catch(async (error: unknown) => {
     const message = error instanceof Error ? error.message : "Turn failed";
-    appendRow(agentId, "notice", { tone: "error", text: message });
+    await appendRow(agentId, "notice", { tone: "error", text: message });
   });
   queues.set(agentId, next);
   next.finally(() => {
@@ -61,40 +62,40 @@ export function ownerCanMessage(agent: { role: Agent["role"] }) {
 }
 
 async function runTurn(agentId: string, trigger: Trigger) {
-  const agent = getAgent(agentId);
+  const agent = await getAgent(agentId);
   if (!agent) return;
-  const business = getBusiness(agent.businessId);
-  const profile = getProfile(agent.userId);
+  const business = await getBusiness(agent.businessId);
+  const profile = await getProfile(agent.userId);
   if (!business || !profile) return;
 
   if (trigger.type !== "resume") {
     if (trigger.type === "user" && agent.role === "orchestrator") {
-      expireDeskChain(business.id);
+      await expireDeskChain(business.id);
     } else {
-      const pending = getPending(agentId);
-      if (pending) expirePending(agentId, pending);
+      const pending = await getPending(agentId);
+      if (pending) await expirePending(agentId, pending);
     }
   }
 
-  let startSeq = maxSeq(agentId) + 1;
+  let startSeq = await maxSeq(agentId) + 1;
   if (trigger.type === "resume") {
-    const state = getPending(agentId);
+    const state = await getPending(agentId);
     if (!state) return;
     startSeq = state.startSeq;
     const paused = await processCalls(agentId, state, trigger);
     if (paused) return;
   } else if (trigger.type === "user") {
-    appendRow(agentId, "message", { role: "user", text: trigger.text });
+    await appendRow(agentId, "message", { role: "user", text: trigger.text });
   } else if (trigger.type === "task") {
-    const task = getTask(trigger.taskId);
+    const task = await getTask(trigger.taskId);
     if (!task || task.status === "cancelled" || task.status === "failed") {
-      appendRow(agentId, "notice", { tone: "info", text: "This task was closed before it ran." });
+      await appendRow(agentId, "notice", { tone: "info", text: "This task was closed before it ran." });
       return;
     }
-    setTaskStatus(trigger.taskId, "running");
-    appendRow(agentId, "event", { event: "task", text: trigger.instruction, taskId: trigger.taskId });
+    await setTaskStatus(trigger.taskId, "running");
+    await appendRow(agentId, "event", { event: "task", text: trigger.instruction, taskId: trigger.taskId });
   } else {
-    appendRow(agentId, "event", {
+    await appendRow(agentId, "event", {
       event: "routine-run",
       text: `Running routine: ${trigger.name}`,
       routineId: trigger.routineId,
@@ -102,43 +103,43 @@ async function runTurn(agentId: string, trigger: Trigger) {
   }
 
   for (let step = 0; step < MAX_STEPS; step += 1) {
-    const fresh = getAgent(agentId);
+    const fresh = await getAgent(agentId);
     if (!fresh) return;
     if (fresh.tokensUsed >= TOKEN_LIMIT) {
-      appendRow(agentId, "notice", {
+      await appendRow(agentId, "notice", {
         tone: "error",
         text: "Demo token budget is used up (50,000). Model calls stop at the cap until you reset.",
       });
       return;
     }
-    const visible = rowsSince(agentId, startSeq);
+    const visible = await rowsSince(agentId, startSeq);
     const modelInput = {
       agent: fresh,
       business,
       profile,
       trigger,
       turnRows: visible,
-      leads: listLeads(business.id),
+      leads: await listLeads(business.id),
     };
     let result;
     try {
       result = await callModel(modelInput, toolSchemasFor(fresh.tools));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Model failed";
-      appendRow(agentId, "notice", { tone: "info", text: `${message} Falling back to the scripted demo model.` });
+      await appendRow(agentId, "notice", { tone: "info", text: `${message} Falling back to the scripted demo model.` });
       result = mockModel(modelInput);
     }
-    addUsage(agentId, result.tokens, 0);
-    if (result.text) appendRow(agentId, "message", { role: "assistant", text: result.text });
+    await addUsage(agentId, result.tokens, 0);
+    if (result.text) await appendRow(agentId, "message", { role: "assistant", text: result.text });
     if (!result.calls.length) {
-      settleSpecialist(fresh, result.text);
+      await settleSpecialist(fresh, result.text);
       return;
     }
 
     const state: PendingState = {
-      calls: result.calls.map((call) => {
+      calls: await mapSeq(result.calls, async (call) => {
         const callId = newId("call");
-        const row = appendRow(agentId, "tool-call", {
+        const row = await appendRow(agentId, "tool-call", {
           callId,
           name: call.name,
           args: call.arguments,
@@ -156,15 +157,15 @@ async function runTurn(agentId: string, trigger: Trigger) {
 }
 
 async function processCalls(agentId: string, state: PendingState, trigger: Trigger) {
-  const agent = getAgent(agentId);
-  const business = agent ? getBusiness(agent.businessId) : null;
+  const agent = await getAgent(agentId);
+  const business = agent ? await getBusiness(agent.businessId) : null;
   if (!agent || !business) return false;
 
   while (state.calls.length) {
     const call = state.calls[0]!;
     const args = parseArgs(call.arguments);
-    const approval = state.approvalId ? getApproval(state.approvalId) : null;
-    const policy = policyFor(agent.userId, call.name, { businessId: business.id, agentId: agent.id });
+    const approval = state.approvalId ? await getApproval(state.approvalId) : null;
+    const policy = await policyFor(agent.userId, call.name, { businessId: business.id, agentId: agent.id });
     let decision = policy.decision;
     if (approval && approval.callId === call.callId) {
       if (approval.status === "pending") return true;
@@ -172,7 +173,7 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
       state.approvalId = "";
     } else if (decision === "ask") {
       const approvalId = newId("apr");
-      const card = appendRow(agentId, "card", {
+      const card = await appendRow(agentId, "card", {
         card: "approval",
         approvalId,
         title: `Allow ${agent.name} to ${policy.title}?`,
@@ -181,7 +182,7 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         args,
         status: "pending",
       });
-      insertApproval({
+      await insertApproval({
         id: approvalId,
         agentId,
         userId: agent.userId,
@@ -189,10 +190,10 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         callId: call.callId,
         tool: call.name,
       });
-      markTool(agentId, call.rowId, "awaiting-approval");
+      await markTool(agentId, call.rowId, "awaiting-approval");
       state.approvalId = approvalId;
-      setPending(agentId, state);
-      recordAudit({
+      await setPending(agentId, state);
+      await recordAudit({
         businessId: business.id,
         userId: agent.userId,
         agentId,
@@ -204,15 +205,15 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         refId: approvalId,
       });
       if (agent.role !== "orchestrator") {
-        const task = trigger.type === "task" ? getTask(trigger.taskId) : openTaskForAgent(agent.id);
-        if (task && task.status !== "cancelled" && task.status !== "failed") setTaskStatus(task.id, "waiting_approval");
-        tellOrchestrator(business.id, `${agent.name} is waiting for you to approve ${policy.title}.`);
+        const task = trigger.type === "task" ? await getTask(trigger.taskId) : await openTaskForAgent(agent.id);
+        if (task && task.status !== "cancelled" && task.status !== "failed") await setTaskStatus(task.id, "waiting_approval");
+        await tellOrchestrator(business.id, `${agent.name} is waiting for you to approve ${policy.title}.`);
       }
       return true;
     }
 
     if (decision === "block") {
-      appendRow(agentId, "tool-result", {
+      await appendRow(agentId, "tool-result", {
         tool: call.name,
         callId: call.callId,
         output: "The user declined this action. Do not retry it.",
@@ -220,7 +221,7 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         summary: "Not allowed",
         args,
       });
-      markTool(agentId, call.rowId, "denied");
+      await markTool(agentId, call.rowId, "denied");
       state.calls.shift();
       continue;
     }
@@ -228,9 +229,9 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
     // allow and always_allow both land here. Shell still goes through planCommand.
     const outcome = await runTool(call.name, args, { agent, business, city: business.city });
     if (outcome.handoff && agent.role === "orchestrator") {
-      const target = listAgents(business.id).find((item) => item.role === outcome.handoff?.role);
+      const target = (await listAgents(business.id)).find((item) => item.role === outcome.handoff?.role);
       if (!target) {
-        appendRow(agentId, "tool-result", {
+        await appendRow(agentId, "tool-result", {
           tool: call.name,
           callId: call.callId,
           output: `No ${outcome.handoff.role} on this desk.`,
@@ -238,17 +239,17 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
           summary: "Missing specialist",
           args,
         });
-        markTool(agentId, call.rowId, "error");
+        await markTool(agentId, call.rowId, "error");
         state.calls.shift();
         continue;
       }
-      const task = insertTask({
+      const task = await insertTask({
         businessId: business.id,
         fromAgentId: agent.id,
         toAgentId: target.id,
         instruction: outcome.handoff.task,
       });
-      recordAudit({
+      await recordAudit({
         businessId: business.id,
         userId: agent.userId,
         agentId: agent.id,
@@ -258,8 +259,8 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         refId: task.id,
       });
       await enqueue(target.id, { type: "task", taskId: task.id, instruction: outcome.handoff.task });
-      const finished = getTask(task.id);
-      appendRow(agentId, "tool-result", {
+      const finished = await getTask(task.id);
+      await appendRow(agentId, "tool-result", {
         tool: call.name,
         callId: call.callId,
         output: finished?.report || `${target.name} has the task (${finished?.status ?? "queued"}).`,
@@ -268,12 +269,12 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         args,
         taskId: task.id,
       });
-      markTool(agentId, call.rowId, "done");
+      await markTool(agentId, call.rowId, "done");
       state.calls.shift();
       continue;
     }
 
-    appendRow(agentId, "tool-result", {
+    await appendRow(agentId, "tool-result", {
       tool: call.name,
       callId: call.callId,
       output: outcome.output,
@@ -281,9 +282,9 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
       summary: outcome.summary,
       args,
     });
-    markTool(agentId, call.rowId, outcome.status === "done" ? "done" : "error");
+    await markTool(agentId, call.rowId, outcome.status === "done" ? "done" : "error");
     if (outcome.status === "done" && (call.name === "send_outreach" || call.name === "send_match" || call.name === "shell")) {
-      recordAudit({
+      await recordAudit({
         businessId: business.id,
         userId: agent.userId,
         agentId,
@@ -298,18 +299,18 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
     state.calls.shift();
   }
 
-  clearPending(agentId);
+  await clearPending(agentId);
   return false;
 }
 
-function settleSpecialist(agent: Agent, text: string) {
+async function settleSpecialist(agent: Agent, text: string) {
   if (agent.role === "orchestrator") return;
-  const task = openTaskForAgent(agent.id);
+  const task = await openTaskForAgent(agent.id);
   if (!task) return;
   const report = text || `${agent.name} finished without a draft.`;
-  setTaskStatus(task.id, "reported", report);
-  tellOrchestrator(agent.businessId, `${agent.name}: ${report}`);
-  recordAudit({
+  await setTaskStatus(task.id, "reported", report);
+  await tellOrchestrator(agent.businessId, `${agent.name}: ${report}`);
+  await recordAudit({
     businessId: agent.businessId,
     userId: agent.userId,
     agentId: agent.id,
@@ -320,22 +321,22 @@ function settleSpecialist(agent: Agent, text: string) {
   });
 }
 
-function tellOrchestrator(businessId: string, text: string) {
-  const orchestrator = listAgents(businessId).find((agent) => agent.role === "orchestrator");
+async function tellOrchestrator(businessId: string, text: string) {
+  const orchestrator = (await listAgents(businessId)).find((agent) => agent.role === "orchestrator");
   if (!orchestrator) return;
-  appendRow(orchestrator.id, "notice", { tone: "info", text });
+  await appendRow(orchestrator.id, "notice", { tone: "info", text });
 }
 
-function expirePending(agentId: string, state: PendingState) {
+async function expirePending(agentId: string, state: PendingState) {
   if (state.approvalId) {
-    const approval = getApproval(state.approvalId);
+    const approval = await getApproval(state.approvalId);
     if (approval?.status === "pending") {
-      setApprovalStatus(approval.id, "expired");
-      const card = listRows(agentId).find((row) => row.id === approval.rowId);
-      if (card) updateRow(card.id, { ...card.body, status: "expired" });
-      const agent = getAgent(agentId);
+      await setApprovalStatus(approval.id, "expired");
+      const card = (await listRows(agentId)).find((row) => row.id === approval.rowId);
+      if (card) await updateRow(card.id, { ...card.body, status: "expired" });
+      const agent = await getAgent(agentId);
       if (agent) {
-        recordAudit({
+        await recordAudit({
           businessId: agent.businessId,
           userId: agent.userId,
           agentId,
@@ -350,28 +351,28 @@ function expirePending(agentId: string, state: PendingState) {
     }
   }
   for (const call of state.calls) {
-    appendRow(agentId, "tool-result", {
+    await appendRow(agentId, "tool-result", {
       tool: call.name,
       callId: call.callId,
       output: "Skipped: a new message arrived before approval.",
       status: "denied",
       summary: "Skipped",
     });
-    markTool(agentId, call.rowId, "denied");
+    await markTool(agentId, call.rowId, "denied");
   }
-  clearPending(agentId);
+  await clearPending(agentId);
 }
 
-function expireDeskChain(businessId: string) {
-  for (const member of listAgents(businessId)) {
-    const pending = getPending(member.id);
-    if (pending) expirePending(member.id, pending);
+async function expireDeskChain(businessId: string) {
+  for (const member of await listAgents(businessId)) {
+    const pending = await getPending(member.id);
+    if (pending) await expirePending(member.id, pending);
   }
-  for (const approval of listPendingApprovalsForBusiness(businessId)) {
-    setApprovalStatus(approval.id, "expired");
-    const card = listRows(approval.agentId).find((row) => row.id === approval.rowId);
-    if (card) updateRow(card.id, { ...card.body, status: "expired" });
-    recordAudit({
+  for (const approval of await listPendingApprovalsForBusiness(businessId)) {
+    await setApprovalStatus(approval.id, "expired");
+    const card = (await listRows(approval.agentId)).find((row) => row.id === approval.rowId);
+    if (card) await updateRow(card.id, { ...card.body, status: "expired" });
+    await recordAudit({
       businessId,
       userId: approval.userId,
       agentId: approval.agentId,
@@ -383,13 +384,13 @@ function expireDeskChain(businessId: string) {
       refId: approval.id,
     });
   }
-  cancelOpenTasks(businessId, "Closed because a new owner message arrived.");
+  await cancelOpenTasks(businessId, "Closed because a new owner message arrived.");
 }
 
-function markTool(agentId: string, rowId: string, status: string) {
-  const row = listRows(agentId).find((item) => item.id === rowId);
+async function markTool(agentId: string, rowId: string, status: string) {
+  const row = (await listRows(agentId)).find((item) => item.id === rowId);
   if (!row) return;
-  updateRow(rowId, { ...row.body, status });
+  await updateRow(rowId, { ...row.body, status });
 }
 
 function parseArgs(raw: string) {
@@ -403,7 +404,7 @@ function parseArgs(raw: string) {
 
 const APPROVAL_DECISIONS = new Set(["allow", "deny", "edit", "always"]);
 
-export function resolveApproval(
+export async function resolveApproval(
   userId: string,
   approvalId: string,
   decision: string,
@@ -411,27 +412,27 @@ export function resolveApproval(
   expectedAgentId?: string,
 ) {
   if (!APPROVAL_DECISIONS.has(decision)) throw new Error("That decision is not allowed.");
-  const approval = getApproval(approvalId);
+  const approval = await getApproval(approvalId);
   if (!approval || approval.userId !== userId) throw new Error("Approval not found.");
   if (expectedAgentId && approval.agentId !== expectedAgentId) throw new Error("Approval not found.");
   if (approval.status !== "pending") return Promise.resolve();
-  const agent = getAgent(approval.agentId);
+  const agent = await getAgent(approval.agentId);
   if (!agent) throw new Error("Approval not found.");
-  if (decision === "allow" || decision === "always") assertDraftUnchanged(approval.agentId, approval.callId, draft);
-  if (decision === "edit") applyDraft(approval.agentId, approval.callId, draft);
+  if (decision === "allow" || decision === "always") await assertDraftUnchanged(approval.agentId, approval.callId, draft);
+  if (decision === "edit") await applyDraft(approval.agentId, approval.callId, draft);
   const status = decision === "deny" ? "denied" : "allowed";
-  setApprovalStatus(approval.id, status);
-  if (decision === "always") setActionPolicy(agent.businessId, agent.id, approval.tool, "always_allow");
-  const card = listRows(approval.agentId).find((row) => row.id === approval.rowId);
+  await setApprovalStatus(approval.id, status);
+  if (decision === "always") await setActionPolicy(agent.businessId, agent.id, approval.tool, "always_allow");
+  const card = (await listRows(approval.agentId)).find((row) => row.id === approval.rowId);
   if (card) {
     const nextBody: Record<string, unknown> = { ...card.body, status: decision === "edit" ? "edited" : status };
     if (decision === "edit" && draft) {
       const current = card.body.args && typeof card.body.args === "object" ? (card.body.args as Record<string, unknown>) : {};
       nextBody.args = { ...current, ...draft };
     }
-    updateRow(card.id, nextBody);
+    await updateRow(card.id, nextBody);
   }
-  recordAudit({
+  await recordAudit({
     businessId: agent.businessId,
     userId,
     agentId: agent.id,
@@ -452,9 +453,9 @@ export function resolveApproval(
   return enqueue(approval.agentId, { type: "resume" });
 }
 
-function assertDraftUnchanged(agentId: string, callId: string, draft?: Record<string, string>) {
+async function assertDraftUnchanged(agentId: string, callId: string, draft?: Record<string, string>) {
   if (!draft) return;
-  const state = getPending(agentId);
+  const state = await getPending(agentId);
   const call = state?.calls.find((item) => item.callId === callId);
   if (!call) return;
   const args = parseArgs(call.arguments);
@@ -467,9 +468,9 @@ function assertDraftUnchanged(agentId: string, callId: string, draft?: Record<st
   }
 }
 
-function applyDraft(agentId: string, callId: string, draft?: Record<string, string>) {
+async function applyDraft(agentId: string, callId: string, draft?: Record<string, string>) {
   if (!draft) return;
-  const state = getPending(agentId);
+  const state = await getPending(agentId);
   if (!state) return;
   const allowed = new Set(["to", "subject", "body", "command", "leadName", "tradieName", "purpose"]);
   const call = state.calls.find((item) => item.callId === callId);
@@ -480,5 +481,5 @@ function applyDraft(agentId: string, callId: string, draft?: Record<string, stri
     args[key] = value;
   }
   call.arguments = JSON.stringify(args);
-  setPending(agentId, state);
+  await setPending(agentId, state);
 }

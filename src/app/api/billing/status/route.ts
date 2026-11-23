@@ -24,8 +24,8 @@ export async function GET() {
       paymentsMessage,
     });
   }
-  const entitlement = getEntitlement(user.id);
-  const limits = businessLimitForUser(user.id);
+  const entitlement = await getEntitlement(user.id);
+  const limits = await businessLimitForUser(user.id);
   const plan = entitlement ? PLANS[entitlement.planId] : null;
   const entitled = Boolean(entitlement) || billing.devBypassActive;
   return NextResponse.json({

@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   const { id } = await context.params;
-  const agent = getAgent(id);
+  const agent = await getAgent(id);
   if (!user || !agent || agent.userId !== user.id) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
   const body = (await request.json()) as {
     approvalId?: string;
@@ -22,5 +22,5 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const message = error instanceof Error ? error.message : "Could not resolve that card.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
-  return NextResponse.json({ rows: listRows(agent.id) });
+  return NextResponse.json({ rows: await listRows(agent.id) });
 }

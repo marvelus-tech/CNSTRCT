@@ -63,16 +63,16 @@ test("a new blueprint provisions three roles without a code branch", async () =>
     exampleLead: () => ({ name: "Example", phone: "555", address: "1 St", service: "test" }),
   };
   assert.equal(validateBlueprint(blueprint).ok, true);
-  const user = createUser({ email: "fixture@cnstrct.local", name: "Fixture" });
+  const user = await createUser({ email: "fixture@cnstrct.local", name: "Fixture" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
   const desk = await provisionBlueprint(user.id, local, blueprint, "Fixture Desk");
   assert.equal(desk.business.templateId, "fixture-desk");
   assert.deepEqual(
     desk.agents.map((agent) => agent.role),
     ["orchestrator", "scout", "matcher"],
   );
-  assert.equal(listRoutines(desk.agents[1]!.id)[0]?.lastRunAt ?? null, null);
+  assert.equal((await listRoutines(desk.agents[1]!.id))[0]?.lastRunAt ?? null, null);
   assert.deepEqual(
     desk.agents.find((agent) => agent.name === "Bea")?.tools,
     ["shell", "send_outreach"],
@@ -87,30 +87,30 @@ test("owner delegates through Bizzie and shell waits for approval", async () => 
   const fs = await import("node:fs");
   const { sandboxRoot } = await import("./sandbox");
 
-  const user = createUser({ email: "team@cnstrct.local", name: "Owner" });
+  const user = await createUser({ email: "team@cnstrct.local", name: "Owner" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
   const desk = await openDesk(user.id, local);
   const quinn = desk.agents.find((agent) => agent.role === "orchestrator")!;
   const mara = desk.agents.find((agent) => agent.role === "scout")!;
   assert.equal(ownerCanMessage(quinn), true);
   assert.equal(ownerCanMessage(mara), false);
-  assert.equal(policyFor(user.id, "delegate").decision, "allow");
-  assert.equal(policyFor(user.id, "shell").decision, "ask");
-  assert.equal(policyFor(user.id, "send_outreach").decision, "ask");
+  assert.equal((await policyFor(user.id, "delegate")).decision, "allow");
+  assert.equal((await policyFor(user.id, "shell")).decision, "ask");
+  assert.equal((await policyFor(user.id, "send_outreach")).decision, "ask");
 
   await enqueue(quinn.id, { type: "user", text: "Find tradies and draft outreach" });
-  const tasks = listTasks(desk.business.id);
+  const tasks = await listTasks(desk.business.id);
   assert.equal(tasks.length, 1);
   assert.equal(tasks[0]?.toAgentId, mara.id);
-  const card = listRows(mara.id).find((row) => row.kind === "card" && row.body.status === "pending");
+  const card = (await listRows(mara.id)).find((row) => row.kind === "card" && row.body.status === "pending");
   assert.equal(card?.body.tool, "shell");
   assert.equal(fs.existsSync(path.join(sandboxRoot(mara.id), "outbox", "outreach.json")), false);
-  assert.ok(listAudit(desk.business.id).some((event) => event.kind === "task.delegated"));
-  assert.ok(listAudit(desk.business.id).some((event) => event.kind === "approval.requested"));
+  assert.ok((await listAudit(desk.business.id)).some((event) => event.kind === "task.delegated"));
+  assert.ok((await listAudit(desk.business.id)).some((event) => event.kind === "approval.requested"));
 
   await resolveApproval(user.id, String(card?.body.approvalId), "deny");
-  const denied = listRows(mara.id).find((row) => row.id === card?.id);
+  const denied = (await listRows(mara.id)).find((row) => row.id === card?.id);
   assert.equal(denied?.body.status, "denied");
   assert.equal(fs.existsSync(path.join(sandboxRoot(mara.id), "outbox", "outreach.json")), false);
 });
@@ -122,14 +122,14 @@ test("edited shell approval runs the edited command", async () => {
   const { listRows } = await import("../store");
   const { readTerminal } = await import("./sandbox");
 
-  const user = createUser({ email: "edit@cnstrct.local", name: "Editor" });
+  const user = await createUser({ email: "edit@cnstrct.local", name: "Editor" });
   const local = { ...profile, userId: user.id };
-  saveProfile(local);
+  await saveProfile(local);
   const desk = await openDesk(user.id, local, "mobile-detailing");
   const quinn = desk.agents.find((agent) => agent.name === "Bizzie")!;
   const riley = desk.agents.find((agent) => agent.name === "Riley")!;
   await enqueue(quinn.id, { type: "user", text: "Find detailers and draft outreach" });
-  const card = listRows(riley.id).find((row) => row.kind === "card" && row.body.status === "pending");
+  const card = (await listRows(riley.id)).find((row) => row.kind === "card" && row.body.status === "pending");
   assert.equal(card?.body.tool, "shell");
   await resolveApproval(user.id, String(card?.body.approvalId), "edit", { command: "echo edited-ok" });
   assert.match(readTerminal(riley.id), /edited-ok/);
@@ -138,9 +138,9 @@ test("edited shell approval runs the edited command", async () => {
 test("existing two-agent desk gains an orchestrator without dropping specialists", async () => {
   const { createUser, insertAgent, insertBusiness, listAgents, saveProfile } = await import("../store");
   const { ensureTeamShape } = await import("./provision");
-  const user = createUser({ email: "legacy@cnstrct.local", name: "Legacy" });
-  saveProfile({ ...profile, userId: user.id });
-  const business = insertBusiness({
+  const user = await createUser({ email: "legacy@cnstrct.local", name: "Legacy" });
+  await saveProfile({ ...profile, userId: user.id });
+  const business = await insertBusiness({
     userId: user.id,
     templateId: "home-services",
     name: "Legacy Home Match",
@@ -148,7 +148,7 @@ test("existing two-agent desk gains an orchestrator without dropping specialists
     city: "Austin",
     profileJson: JSON.stringify(profile),
   });
-  insertAgent({
+  await insertAgent({
     businessId: business.id,
     userId: user.id,
     role: "scout",
@@ -158,7 +158,7 @@ test("existing two-agent desk gains an orchestrator without dropping specialists
     instructions: "legacy",
     status: "active",
   });
-  insertAgent({
+  await insertAgent({
     businessId: business.id,
     userId: user.id,
     role: "matcher",
@@ -168,11 +168,11 @@ test("existing two-agent desk gains an orchestrator without dropping specialists
     instructions: "legacy",
     status: "active",
   });
-  const team = ensureTeamShape(business.id);
+  const team = await ensureTeamShape(business.id);
   assert.equal(team.filter((agent) => agent.role === "orchestrator").length, 1);
   assert.equal(team.find((agent) => agent.role === "orchestrator")?.name, "Bizzie");
   assert.deepEqual(team.filter((agent) => agent.role !== "orchestrator").map((agent) => agent.name).sort(), ["Jules", "Mara"]);
-  assert.ok((listAgents(business.id).find((agent) => agent.name === "Mara")?.specialty.length ?? 0) > 0);
+  assert.ok(((await listAgents(business.id)).find((agent) => agent.name === "Mara")?.specialty.length ?? 0) > 0);
 });
 
 test("adapters stay not configured and never report a send or a VM", async () => {

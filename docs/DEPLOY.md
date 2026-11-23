@@ -1,6 +1,6 @@
 # Deploy BizOS on Vercel
 
-BizOS (repo **CNSTRCT**) is a Next.js app with API routes and SQLite (`node:sqlite`). It runs in **demo mode** with no API keys. Production: [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app).
+BizOS (repo **CNSTRCT**) is a Next.js app with API routes. Production state is Neon (Vercel Postgres) via `@neondatabase/serverless`. Local dev and `pnpm test` use SQLite (`node:sqlite`) on disk. It runs in **demo mode** with no API keys. Production: [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app).
 
 ## Why `https://cnstrct.vercel.app` is not CNSTRCT
 
@@ -29,8 +29,10 @@ You only need to do this once per Vercel team. After that, every push to `main` 
 
    | Name | Value |
    | --- | --- |
-   | `CNSTRCT_DATA_DIR` | `/tmp/cnstrct-data` (ephemeral on serverless; see README **Hosted demo: what persists**) |
+   | `DATABASE_URL` or `POSTGRES_URL` | Neon connection string from the Vercel Postgres / Neon integration. Required. Do not commit it. |
    | `NEXT_PUBLIC_SITE_URL` | `https://cnstrct-mu.vercel.app` (no trailing slash) |
+
+   Do **not** set `CNSTRCT_DATA_DIR=/tmp/cnstrct-data`. `vercel.json` no longer does. On Vercel the app refuses to boot SQLite. If that variable is still in the project dashboard from an older deploy, delete it. Sandbox scratch files use `/tmp/cnstrct-sandboxes` and are not application state.
 
 8. **Deployment Protection:** Project → Settings → Deployment Protection → set **Production** to **None** (or "Only Preview Deployments") so colleagues can open the demo without a Vercel login.
 9. Click **Deploy**. When the build finishes, copy **Visit** on the Production deployment. That URL is the shareable app link.
@@ -52,6 +54,28 @@ pnpm install
 pnpm build
 pnpm start
 ```
+
+## Durable database
+
+Production state (users, sessions, profiles, businesses, agents, routines, messages, approvals, policies, leads, tasks, audit, connections, billing) is Neon. The store awaits the Neon HTTP driver. Production does not open a worker thread and does not open SQLite. The first request applies `001_baseline` inside one transaction and records it in `schema_migrations`. A failed boot does not record the version, so the next boot retries. `CREATE TABLE IF NOT EXISTS` makes that retry safe.
+
+Epoch columns are `BIGINT`. Postgres `INTEGER` is 32-bit and cannot store `Date.now()`.
+
+### Cutover
+
+1. Create a Neon database (Vercel project Storage, or a Neon project) and set `DATABASE_URL` or `POSTGRES_URL` on Production. Preview can use the same database or its own branch. Never put the URL in git.
+2. Deploy this release. The first server process creates the tables and, if the slug is absent, the seeded desk `harbor-tradie-desk`.
+3. There is nothing durable to copy from the old hosted database. It lived under `/tmp` and already disappeared on cold start. Signed-in demo sessions start over once. The seeded public desk is created again.
+4. A local `data/cnstrct.db` stays local until you set `DATABASE_URL`. To keep that file, load it into Neon after `001_baseline` (CSV, `pgloader`, or SQL inserts). Do that before the app seeds `harbor-tradie-desk` if you need that slug yourself, or delete the seeded rows you do not want. This repo does not run a live copy.
+5. Remove `CNSTRCT_DATA_DIR=/tmp/cnstrct-data` from the Vercel project if it is still set.
+6. Smoke: create a session and a business, then redeploy or open a new instance. The business should still be there. `/b/harbor-tradie-desk` should load.
+
+### Rollback
+
+1. Redeploy the previous release.
+2. Put `CNSTRCT_DATA_DIR=/tmp/cnstrct-data` back only if that release still reads SQLite on Vercel. Rows written only to Neon are not copied back. Rollback restores the old ephemeral behavior.
+3. Leave the Neon database in place. Deploying this release again skips `001_baseline` when `schema_migrations` already has that version, so those rows remain.
+4. Do not delete the Neon branch until you are sure you do not need the rows written after cutover.
 
 ## Updating marvelus-tech.github.io
 

@@ -65,7 +65,8 @@ Copy `.env.example` to `.env.local` only when you want a live provider. Every va
 | `COMPOSIO_API_KEY` | Reserved. This MVP does not send Gmail. A set key is still not a sent message. Approved drafts stay in the local outbox with `network: false`. |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Email magic link. The template should land on `/auth/callback` with `token_hash` and `type`. Without the keys, the demo session is the path that always works. |
 | `NEXT_PUBLIC_SITE_URL` | Canonical origin. Production: `https://cnstrct-mu.vercel.app`. Local default `http://localhost:3000`. |
-| `CNSTRCT_DATA_DIR` | Where sqlite and sandboxes live. Defaults to `./data`. |
+| `DATABASE_URL` or `POSTGRES_URL` | Neon (Vercel Postgres) connection string. Required on Vercel. Empty locally, which keeps SQLite in `./data`. | 
+| `CNSTRCT_DATA_DIR` | Local SQLite directory. Defaults to `./data`. Not used for production state. |
 | Stripe / `BILLING_MODE` | See [docs/BILLING.md](docs/BILLING.md). |
 
 Token and computer-hour meters are a hardcoded demo cap: 50,000 tokens and 2 hours per agent.
@@ -74,18 +75,16 @@ Token and computer-hour meters are a hardcoded demo cap: 50,000 tokens and 2 hou
 
 **Canonical production URL:** [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app)
 
-Vercel sets `CNSTRCT_DATA_DIR` to `/tmp/cnstrct-data`. That directory is **ephemeral** on serverless: triage answers, demo sessions, workspaces, and agent sandboxes can disappear after a cold start, a new deployment, or when the instance is recycled.
+Production requires `DATABASE_URL` or `POSTGRES_URL` (Neon via the Vercel Postgres integration). The app refuses to open SQLite on Vercel, including a data directory under `/tmp`. Sessions, triage profiles, businesses, and agent rows survive cold starts and deploys.
 
 What **does** persist without signing in:
 
 - The app code and UI on each deploy.
-- A **seeded sample desk** at [`/b/harbor-tradie-desk`](https://cnstrct-mu.vercel.app/b/harbor-tradie-desk). The first request on a fresh sqlite file inserts `user_sample` and that business. You can always open it to walk the public site and lead form.
+- A **seeded sample desk** at [`/b/harbor-tradie-desk`](https://cnstrct-mu.vercel.app/b/harbor-tradie-desk). The first request on an empty database inserts `user_sample` and that business.
 
-What **does not** persist reliably on hosted demo:
+What **does not** persist on Vercel:
 
-- Your `cnstrct_sid` cookie and sqlite rows tied to your browser session.
-- Agent notes and outbox files under `/tmp/cnstrct-data/sandboxes`.
+- Local computer sandbox files. They use `/tmp/cnstrct-sandboxes` and are scratch, not the database.
+- Anything saved before this database cutover. The old hosted SQLite file lived under `/tmp` and was already ephemeral.
 
-On production, a banner explains this when `NEXT_PUBLIC_SITE_URL` is not localhost and the data dir lives under `/tmp`. Local dev is unchanged: sqlite stays in `./data/cnstrct.db` on disk.
-
-We did not wire Turso/libsql for this sprint (no paid hosted DB or extra secrets required). Optional `TURSO_*` env vars can be added later for durable hosted sqlite.
+The amber banner shows only when hosted state is still SQLite under `/tmp`, or when production has no database URL. Local dev is unchanged: SQLite stays in `./data/cnstrct.db` until you set `DATABASE_URL`. See [docs/DEPLOY.md](docs/DEPLOY.md) for cutover and rollback.

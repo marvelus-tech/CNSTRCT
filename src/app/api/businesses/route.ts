@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mapSeq } from "@/lib/seq";
 
 import { composioConfigured, connectionState, orgoConfigured, orgoDeskLabel } from "@/lib/agent/adapters";
 import { ensureTeamShape } from "@/lib/agent/provision";
@@ -36,9 +37,9 @@ export async function GET() {
 
   const templateTitle = Object.fromEntries(TEMPLATES.map((template) => [template.id, template.title]));
 
-  const businesses = listBusinessesForUser(user.id).map((business) => {
-    const team = ensureTeamShape(business.id);
-    const gmail = listConnections(business.id).find((item) => item.toolkit === "gmail");
+  const businesses = await mapSeq((await listBusinessesForUser(user.id)), async (business) => {
+    const team = await ensureTeamShape(business.id);
+    const gmail = (await listConnections(business.id)).find((item) => item.toolkit === "gmail");
     const gmailState = connectionState({
       keySet: composioConfigured(),
       connectedAccountId: gmail?.connectedAccountId ?? null,

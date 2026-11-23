@@ -11,10 +11,10 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
-  const profile = getProfile(user.id);
+  const profile = await getProfile(user.id);
   if (!profile) return NextResponse.json({ error: "Answer the triage first." }, { status: 401 });
 
-  const paid = constructionAccess(user.id);
+  const paid = await constructionAccess(user.id);
   if (!paid.ok) {
     return NextResponse.json({ error: paid.error, code: paid.code }, { status: paid.status });
   }

@@ -9,9 +9,9 @@ export const runtime = "nodejs";
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
-  const business = getBusinessForUser(user.id);
+  const business = await getBusinessForUser(user.id);
   return NextResponse.json({
     user,
-    desk: business ? loadDesk(user.id, business.id) : loadDesk(user.id),
+    desk: business ? await loadDesk(user.id, business.id) : await loadDesk(user.id),
   });
 }

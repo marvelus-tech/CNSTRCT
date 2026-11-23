@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const user = getUserByEmail(result.email) ?? createUser({ email: result.email, name: result.email.split("@")[0] || "Owner" });
+  const user = await getUserByEmail(result.email) ?? await createUser({ email: result.email, name: result.email.split("@")[0] || "Owner" });
   await startSession(user);
   return NextResponse.json({ ok: true });
 }

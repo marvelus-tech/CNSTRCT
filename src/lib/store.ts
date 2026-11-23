@@ -19,17 +19,17 @@ import type {
   WorkTask,
 } from "./types";
 
-function db() {
-  return getDb();
+async function db() {
+  return await getDb();
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : undefined;
 }
 
-export function createUser(input: { email: string; name: string }): User {
+export async function createUser(input: { email: string; name: string }): Promise<User> {
   const user: User = { id: newId("user"), email: input.email, name: input.name, createdAt: Date.now() };
-  db().prepare("INSERT INTO users (id, email, name, created_at) VALUES (?, ?, ?, ?)").run(
+  await (await db()).prepare("INSERT INTO users (id, email, name, created_at) VALUES (?, ?, ?, ?)").run(
     user.id,
     user.email,
     user.name,
@@ -38,27 +38,27 @@ export function createUser(input: { email: string; name: string }): User {
   return user;
 }
 
-export function getUser(id: string): User | null {
-  const row = asRecord(db().prepare("SELECT * FROM users WHERE id = ?").get(id));
+export async function getUser(id: string): Promise<User | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM users WHERE id = ?").get(id));
   if (!row) return null;
   return { id: String(row.id), email: String(row.email), name: String(row.name), createdAt: Number(row.created_at) };
 }
 
-export function getUserByEmail(email: string): User | null {
-  const row = asRecord(db().prepare("SELECT * FROM users WHERE email = ?").get(email));
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM users WHERE email = ?").get(email));
   if (!row) return null;
   return { id: String(row.id), email: String(row.email), name: String(row.name), createdAt: Number(row.created_at) };
 }
 
-export function createSession(userId: string) {
+export async function createSession(userId: string) {
   const id = newId("ses");
-  db().prepare("INSERT INTO sessions (id, user_id, created_at) VALUES (?, ?, ?)").run(id, userId, Date.now());
+  await (await db()).prepare("INSERT INTO sessions (id, user_id, created_at) VALUES (?, ?, ?)").run(id, userId, Date.now());
   return id;
 }
 
-export function userForSession(sessionId: string): User | null {
+export async function userForSession(sessionId: string): Promise<User | null> {
   const row = asRecord(
-    db()
+    await (await db())
       .prepare(
         "SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ?",
       )
@@ -68,8 +68,8 @@ export function userForSession(sessionId: string): User | null {
   return { id: String(row.id), email: String(row.email), name: String(row.name), createdAt: Number(row.created_at) };
 }
 
-export function saveProfile(profile: Profile) {
-  db()
+export async function saveProfile(profile: Profile) {
+  await (await db())
     .prepare(
       `INSERT INTO profiles (user_id, interests, skills, has_idea, idea_text, space, capital, trades, location, constraints, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -100,8 +100,8 @@ export function saveProfile(profile: Profile) {
     );
 }
 
-export function getProfile(userId: string): Profile | null {
-  const row = asRecord(db().prepare("SELECT * FROM profiles WHERE user_id = ?").get(userId));
+export async function getProfile(userId: string): Promise<Profile | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM profiles WHERE user_id = ?").get(userId));
   if (!row) return null;
   return {
     userId: String(row.user_id),
@@ -117,9 +117,9 @@ export function getProfile(userId: string): Profile | null {
   };
 }
 
-export function insertBusiness(input: Omit<Business, "id" | "createdAt">): Business {
+export async function insertBusiness(input: Omit<Business, "id" | "createdAt">): Promise<Business> {
   const business: Business = { ...input, id: newId("biz"), createdAt: Date.now() };
-  db()
+  await (await db())
     .prepare(
       "INSERT INTO businesses (id, user_id, template_id, name, slug, city, created_at, profile_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     )
@@ -150,57 +150,57 @@ function mapBusiness(row: Record<string, unknown>): Business {
   };
 }
 
-export function setBusinessWorkspace(id: string, workspaceId: string) {
-  db().prepare("UPDATE businesses SET orgo_workspace_id = ? WHERE id = ?").run(workspaceId, id);
+export async function setBusinessWorkspace(id: string, workspaceId: string) {
+  await (await db()).prepare("UPDATE businesses SET orgo_workspace_id = ? WHERE id = ?").run(workspaceId, id);
 }
 
-export function getBusinessBySlug(slug: string): Business | null {
-  const row = asRecord(db().prepare("SELECT * FROM businesses WHERE slug = ?").get(slug));
+export async function getBusinessBySlug(slug: string): Promise<Business | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM businesses WHERE slug = ?").get(slug));
   return row ? mapBusiness(row) : null;
 }
 
-export function getBusinessForUser(userId: string): Business | null {
+export async function getBusinessForUser(userId: string): Promise<Business | null> {
   const row = asRecord(
-    db().prepare("SELECT * FROM businesses WHERE user_id = ? ORDER BY created_at DESC LIMIT 1").get(userId),
+    await (await db()).prepare("SELECT * FROM businesses WHERE user_id = ? ORDER BY created_at DESC LIMIT 1").get(userId),
   );
   return row ? mapBusiness(row) : null;
 }
 
-export function getBusinessForUserAndTemplate(userId: string, templateId: string): Business | null {
+export async function getBusinessForUserAndTemplate(userId: string, templateId: string): Promise<Business | null> {
   const row = asRecord(
-    db().prepare("SELECT * FROM businesses WHERE user_id = ? AND template_id = ? LIMIT 1").get(userId, templateId),
+    await (await db()).prepare("SELECT * FROM businesses WHERE user_id = ? AND template_id = ? LIMIT 1").get(userId, templateId),
   );
   return row ? mapBusiness(row) : null;
 }
 
-export function listBusinessesForUser(userId: string): Business[] {
-  return db()
+export async function listBusinessesForUser(userId: string): Promise<Business[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM businesses WHERE user_id = ? ORDER BY created_at DESC")
-    .all(userId)
+    .all(userId))
     .map((row) => mapBusiness(asRecord(row)!));
 }
 
-export function getBusiness(id: string): Business | null {
-  const row = asRecord(db().prepare("SELECT * FROM businesses WHERE id = ?").get(id));
+export async function getBusiness(id: string): Promise<Business | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM businesses WHERE id = ?").get(id));
   return row ? mapBusiness(row) : null;
 }
 
-export function listBusinessSlugs(): string[] {
-  return db()
+export async function listBusinessSlugs(): Promise<string[]> {
+  return await (await (await db())
     .prepare("SELECT slug FROM businesses ORDER BY created_at ASC")
-    .all()
+    .all())
     .map((row) => String(asRecord(row)?.slug ?? ""));
 }
 
-export function slugTaken(slug: string) {
-  return Boolean(db().prepare("SELECT 1 FROM businesses WHERE slug = ?").get(slug));
+export async function slugTaken(slug: string) {
+  return Boolean(await (await db()).prepare("SELECT 1 FROM businesses WHERE slug = ?").get(slug));
 }
 
-export function insertAgent(
+export async function insertAgent(
   input: Omit<Agent, "id" | "createdAt" | "tokensUsed" | "computerSeconds" | "orgoComputerId" | "tools"> & {
     tools?: string[];
   },
-): Agent {
+): Promise<Agent> {
   const agent: Agent = {
     ...input,
     tools: input.tools ?? [],
@@ -210,7 +210,7 @@ export function insertAgent(
     orgoComputerId: null,
     createdAt: Date.now(),
   };
-  db()
+  await (await db())
     .prepare(
       `INSERT INTO agents (id, business_id, user_id, role, name, title, specialty, instructions, status, tokens_used, computer_seconds, created_at, orgo_computer_id, tools_json)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, NULL, ?)`,
@@ -231,8 +231,8 @@ export function insertAgent(
   return agent;
 }
 
-export function setAgentTools(agentId: string, tools: string[]) {
-  db().prepare("UPDATE agents SET tools_json = ? WHERE id = ?").run(JSON.stringify(tools), agentId);
+export async function setAgentTools(agentId: string, tools: string[]) {
+  await (await db()).prepare("UPDATE agents SET tools_json = ? WHERE id = ?").run(JSON.stringify(tools), agentId);
 }
 
 function parseTools(value: unknown): string[] {
@@ -264,45 +264,45 @@ function mapAgent(row: Record<string, unknown>): Agent {
   };
 }
 
-export function getAgent(id: string): Agent | null {
-  const row = asRecord(db().prepare("SELECT * FROM agents WHERE id = ?").get(id));
+export async function getAgent(id: string): Promise<Agent | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM agents WHERE id = ?").get(id));
   return row ? mapAgent(row) : null;
 }
 
-export function listAgents(businessId: string): Agent[] {
-  return db()
+export async function listAgents(businessId: string): Promise<Agent[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM agents WHERE business_id = ? ORDER BY created_at ASC")
-    .all(businessId)
+    .all(businessId))
     .map((row) => mapAgent(asRecord(row)!));
 }
 
-export function setAgentSpecialty(id: string, specialty: string) {
-  db().prepare("UPDATE agents SET specialty = ? WHERE id = ?").run(specialty, id);
+export async function setAgentSpecialty(id: string, specialty: string) {
+  await (await db()).prepare("UPDATE agents SET specialty = ? WHERE id = ?").run(specialty, id);
 }
 
-export function setAgentName(id: string, name: string) {
-  db().prepare("UPDATE agents SET name = ? WHERE id = ?").run(name, id);
+export async function setAgentName(id: string, name: string) {
+  await (await db()).prepare("UPDATE agents SET name = ? WHERE id = ?").run(name, id);
 }
 
-export function setAgentInstructions(id: string, instructions: string) {
-  db().prepare("UPDATE agents SET instructions = ? WHERE id = ?").run(instructions, id);
+export async function setAgentInstructions(id: string, instructions: string) {
+  await (await db()).prepare("UPDATE agents SET instructions = ? WHERE id = ?").run(instructions, id);
 }
 
-export function setAgentOrgoComputer(id: string, computerId: string) {
-  db().prepare("UPDATE agents SET orgo_computer_id = ? WHERE id = ?").run(computerId, id);
+export async function setAgentOrgoComputer(id: string, computerId: string) {
+  await (await db()).prepare("UPDATE agents SET orgo_computer_id = ? WHERE id = ?").run(computerId, id);
 }
 
-export function addUsage(agentId: string, tokens: number, computerSeconds: number) {
-  db()
+export async function addUsage(agentId: string, tokens: number, computerSeconds: number) {
+  await (await db())
     .prepare(
       "UPDATE agents SET tokens_used = tokens_used + ?, computer_seconds = computer_seconds + ? WHERE id = ?",
     )
     .run(tokens, computerSeconds, agentId);
 }
 
-export function insertRoutine(input: Omit<Routine, "id" | "lastRunAt">): Routine {
+export async function insertRoutine(input: Omit<Routine, "id" | "lastRunAt">): Promise<Routine> {
   const routine: Routine = { ...input, id: newId("rtn"), lastRunAt: null };
-  db()
+  await (await db())
     .prepare(
       `INSERT INTO routines (id, agent_id, name, prompt, schedule_label, interval_ms, enabled, next_run_at, last_run_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
@@ -334,47 +334,52 @@ function mapRoutine(row: Record<string, unknown>): Routine {
   };
 }
 
-export function getRoutine(id: string): Routine | null {
-  const row = asRecord(db().prepare("SELECT * FROM routines WHERE id = ?").get(id));
+export async function getRoutine(id: string): Promise<Routine | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM routines WHERE id = ?").get(id));
   return row ? mapRoutine(row) : null;
 }
 
-export function listRoutines(agentId: string): Routine[] {
-  return db()
+export async function listRoutines(agentId: string): Promise<Routine[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM routines WHERE agent_id = ? ORDER BY name ASC")
-    .all(agentId)
+    .all(agentId))
     .map((row) => mapRoutine(asRecord(row)!));
 }
 
-export function markRoutineRan(id: string, nextRunAt: number) {
-  db().prepare("UPDATE routines SET last_run_at = ?, next_run_at = ? WHERE id = ?").run(Date.now(), nextRunAt, id);
+export async function markRoutineRan(id: string, nextRunAt: number) {
+  await (await db()).prepare("UPDATE routines SET last_run_at = ?, next_run_at = ? WHERE id = ?").run(Date.now(), nextRunAt, id);
 }
 
-export function dueRoutines(now = Date.now()): Routine[] {
-  return db()
+export async function dueRoutines(now = Date.now()): Promise<Routine[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM routines WHERE enabled = 1 AND next_run_at IS NOT NULL AND next_run_at <= ?")
-    .all(now)
+    .all(now))
     .map((row) => mapRoutine(asRecord(row)!));
 }
 
-export function appendRow(agentId: string, kind: StoredMessage["kind"], body: Record<string, unknown>): StoredMessage {
-  const seqRow = asRecord(db().prepare("SELECT COALESCE(MAX(seq), 0) AS n FROM messages WHERE agent_id = ?").get(agentId));
-  const message: StoredMessage = {
-    id: newId("msg"),
-    agentId,
-    seq: Number(seqRow?.n ?? 0) + 1,
-    kind,
-    body,
-    createdAt: Date.now(),
-  };
-  db()
-    .prepare("INSERT INTO messages (id, agent_id, seq, kind, body, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-    .run(message.id, message.agentId, message.seq, message.kind, JSON.stringify(message.body), message.createdAt);
-  return message;
+export async function appendRow(agentId: string, kind: StoredMessage["kind"], body: Record<string, unknown>): Promise<StoredMessage> {
+  // One statement so two requests cannot both read the same MAX(seq).
+  // The unique (agent_id, seq) constraint is the backstop if they still collide.
+  const createdAt = Date.now();
+  const id = newId("msg");
+  const bodyJson = JSON.stringify(body);
+  const sql = `INSERT INTO messages (id, agent_id, seq, kind, body, created_at)
+       VALUES (?, ?, (SELECT COALESCE(MAX(seq), 0) + 1 FROM messages WHERE agent_id = ?), ?, ?, ?)
+       RETURNING seq`;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      const row = asRecord(await (await db()).prepare(sql).get(id, agentId, agentId, kind, bodyJson, createdAt));
+      return { id, agentId, seq: Number(row?.seq ?? 0), kind, body, createdAt };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/unique|duplicate key/i.test(message) || attempt === 4) throw error;
+    }
+  }
+  throw new Error("Could not append the row.");
 }
 
-export function updateRow(id: string, body: Record<string, unknown>) {
-  db().prepare("UPDATE messages SET body = ? WHERE id = ?").run(JSON.stringify(body), id);
+export async function updateRow(id: string, body: Record<string, unknown>) {
+  await (await db()).prepare("UPDATE messages SET body = ? WHERE id = ?").run(JSON.stringify(body), id);
 }
 
 function mapMessage(row: Record<string, unknown>): StoredMessage {
@@ -388,28 +393,28 @@ function mapMessage(row: Record<string, unknown>): StoredMessage {
   };
 }
 
-export function listRows(agentId: string): StoredMessage[] {
-  return db()
+export async function listRows(agentId: string): Promise<StoredMessage[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM messages WHERE agent_id = ? ORDER BY seq ASC")
-    .all(agentId)
+    .all(agentId))
     .map((row) => mapMessage(asRecord(row)!));
 }
 
-export function rowsSince(agentId: string, seq: number): StoredMessage[] {
-  return db()
+export async function rowsSince(agentId: string, seq: number): Promise<StoredMessage[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM messages WHERE agent_id = ? AND seq >= ? ORDER BY seq ASC")
-    .all(agentId, seq)
+    .all(agentId, seq))
     .map((row) => mapMessage(asRecord(row)!));
 }
 
-export function maxSeq(agentId: string) {
-  const row = asRecord(db().prepare("SELECT COALESCE(MAX(seq), 0) AS n FROM messages WHERE agent_id = ?").get(agentId));
+export async function maxSeq(agentId: string) {
+  const row = asRecord(await (await db()).prepare("SELECT COALESCE(MAX(seq), 0) AS n FROM messages WHERE agent_id = ?").get(agentId));
   return Number(row?.n ?? 0);
 }
 
-export function insertApproval(
+export async function insertApproval(
   input: Omit<Approval, "id" | "createdAt" | "resolvedAt" | "status"> & { id?: string; status?: Approval["status"] },
-): Approval {
+): Promise<Approval> {
   const approval: Approval = {
     ...input,
     id: input.id ?? newId("apr"),
@@ -417,7 +422,7 @@ export function insertApproval(
     createdAt: Date.now(),
     resolvedAt: null,
   };
-  db()
+  await (await db())
     .prepare(
       "INSERT INTO approvals (id, agent_id, user_id, row_id, call_id, tool, status, created_at, resolved_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)",
     )
@@ -425,8 +430,8 @@ export function insertApproval(
   return approval;
 }
 
-export function getApproval(id: string): Approval | null {
-  const row = asRecord(db().prepare("SELECT * FROM approvals WHERE id = ?").get(id));
+export async function getApproval(id: string): Promise<Approval | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM approvals WHERE id = ?").get(id));
   if (!row) return null;
   return {
     id: String(row.id),
@@ -441,17 +446,17 @@ export function getApproval(id: string): Approval | null {
   };
 }
 
-export function setApprovalStatus(id: string, status: Approval["status"]) {
-  db().prepare("UPDATE approvals SET status = ?, resolved_at = ? WHERE id = ?").run(status, Date.now(), id);
+export async function setApprovalStatus(id: string, status: Approval["status"]) {
+  await (await db()).prepare("UPDATE approvals SET status = ?, resolved_at = ? WHERE id = ?").run(status, Date.now(), id);
 }
 
-export function getPolicy(userId: string, tool: string): string | null {
-  const row = asRecord(db().prepare("SELECT mode FROM policies WHERE user_id = ? AND tool = ?").get(userId, tool));
+export async function getPolicy(userId: string, tool: string): Promise<string | null> {
+  const row = asRecord(await (await db()).prepare("SELECT mode FROM policies WHERE user_id = ? AND tool = ?").get(userId, tool));
   return row ? String(row.mode) : null;
 }
 
-export function setPolicy(userId: string, tool: string, mode: string) {
-  db()
+export async function setPolicy(userId: string, tool: string, mode: string) {
+  await (await db())
     .prepare(
       `INSERT INTO policies (user_id, tool, mode) VALUES (?, ?, ?)
        ON CONFLICT(user_id, tool) DO UPDATE SET mode = excluded.mode`,
@@ -459,17 +464,17 @@ export function setPolicy(userId: string, tool: string, mode: string) {
     .run(userId, tool, mode);
 }
 
-export function getActionPolicy(businessId: string, agentId: string, tool: string): string | null {
+export async function getActionPolicy(businessId: string, agentId: string, tool: string): Promise<string | null> {
   const row = asRecord(
-    db()
+    await (await db())
       .prepare("SELECT mode FROM action_policies WHERE business_id = ? AND agent_id = ? AND tool = ?")
       .get(businessId, agentId, tool),
   );
   return row ? String(row.mode) : null;
 }
 
-export function setActionPolicy(businessId: string, agentId: string, tool: string, mode: string) {
-  db()
+export async function setActionPolicy(businessId: string, agentId: string, tool: string, mode: string) {
+  await (await db())
     .prepare(
       `INSERT INTO action_policies (business_id, agent_id, tool, mode) VALUES (?, ?, ?, ?)
        ON CONFLICT(business_id, agent_id, tool) DO UPDATE SET mode = excluded.mode`,
@@ -477,14 +482,14 @@ export function setActionPolicy(businessId: string, agentId: string, tool: strin
     .run(businessId, agentId, tool, mode);
 }
 
-export function listPendingApprovalsForBusiness(businessId: string): Approval[] {
-  return db()
+export async function listPendingApprovalsForBusiness(businessId: string): Promise<Approval[]> {
+  return await (await (await db())
     .prepare(
       `SELECT approvals.* FROM approvals
        JOIN agents ON agents.id = approvals.agent_id
        WHERE agents.business_id = ? AND approvals.status = 'pending'`,
     )
-    .all(businessId)
+    .all(businessId))
     .map((row) => {
       const record = asRecord(row)!;
       return {
@@ -501,8 +506,8 @@ export function listPendingApprovalsForBusiness(businessId: string): Approval[] 
     });
 }
 
-export function setPending(agentId: string, state: PendingState) {
-  db()
+export async function setPending(agentId: string, state: PendingState) {
+  await (await db())
     .prepare(
       `INSERT INTO pending_turns (agent_id, state) VALUES (?, ?)
        ON CONFLICT(agent_id) DO UPDATE SET state = excluded.state`,
@@ -510,19 +515,19 @@ export function setPending(agentId: string, state: PendingState) {
     .run(agentId, JSON.stringify(state));
 }
 
-export function getPending(agentId: string): PendingState | null {
-  const row = asRecord(db().prepare("SELECT state FROM pending_turns WHERE agent_id = ?").get(agentId));
+export async function getPending(agentId: string): Promise<PendingState | null> {
+  const row = asRecord(await (await db()).prepare("SELECT state FROM pending_turns WHERE agent_id = ?").get(agentId));
   if (!row) return null;
   return JSON.parse(String(row.state)) as PendingState;
 }
 
-export function clearPending(agentId: string) {
-  db().prepare("DELETE FROM pending_turns WHERE agent_id = ?").run(agentId);
+export async function clearPending(agentId: string) {
+  await (await db()).prepare("DELETE FROM pending_turns WHERE agent_id = ?").run(agentId);
 }
 
-export function insertLead(input: Omit<Lead, "id" | "createdAt">): Lead {
+export async function insertLead(input: Omit<Lead, "id" | "createdAt">): Promise<Lead> {
   const lead: Lead = { ...input, id: newId("lead"), createdAt: Date.now() };
-  db()
+  await (await db())
     .prepare(
       "INSERT INTO leads (id, business_id, name, phone, address, service, source, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     )
@@ -530,10 +535,10 @@ export function insertLead(input: Omit<Lead, "id" | "createdAt">): Lead {
   return lead;
 }
 
-export function listLeads(businessId: string): Lead[] {
-  return db()
+export async function listLeads(businessId: string): Promise<Lead[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM leads WHERE business_id = ? ORDER BY created_at DESC")
-    .all(businessId)
+    .all(businessId))
     .map((row) => {
       const record = asRecord(row)!;
       return {
@@ -549,15 +554,15 @@ export function listLeads(businessId: string): Lead[] {
     });
 }
 
-export function countRecentLeads(businessId: string, since: number) {
+export async function countRecentLeads(businessId: string, since: number) {
   const row = asRecord(
-    db().prepare("SELECT COUNT(*) AS n FROM leads WHERE business_id = ? AND created_at >= ?").get(businessId, since),
+    await (await db()).prepare("SELECT COUNT(*) AS n FROM leads WHERE business_id = ? AND created_at >= ?").get(businessId, since),
   );
   return Number(row?.n ?? 0);
 }
 
-export function upsertComputer(agentId: string, provider: string, status: string, note: string) {
-  db()
+export async function upsertComputer(agentId: string, provider: string, status: string, note: string) {
+  await (await db())
     .prepare(
       `INSERT INTO computers (agent_id, provider, status, note, updated_at) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(agent_id) DO UPDATE SET provider = excluded.provider, status = excluded.status, note = excluded.note, updated_at = excluded.updated_at`,
@@ -565,8 +570,8 @@ export function upsertComputer(agentId: string, provider: string, status: string
     .run(agentId, provider, status, note, Date.now());
 }
 
-export function getComputer(agentId: string) {
-  const row = asRecord(db().prepare("SELECT * FROM computers WHERE agent_id = ?").get(agentId));
+export async function getComputer(agentId: string) {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM computers WHERE agent_id = ?").get(agentId));
   if (!row) return null;
   return {
     agentId: String(row.agent_id),
@@ -577,12 +582,12 @@ export function getComputer(agentId: string) {
   };
 }
 
-export function insertTask(input: {
+export async function insertTask(input: {
   businessId: string;
   fromAgentId: string;
   toAgentId: string;
   instruction: string;
-}): WorkTask {
+}): Promise<WorkTask> {
   const now = Date.now();
   const task: WorkTask = {
     id: newId("task"),
@@ -595,7 +600,7 @@ export function insertTask(input: {
     createdAt: now,
     updatedAt: now,
   };
-  db()
+  await (await db())
     .prepare(
       `INSERT INTO tasks (id, business_id, from_agent_id, to_agent_id, instruction, status, report, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, '', ?, ?)`,
@@ -618,21 +623,21 @@ function mapTask(row: Record<string, unknown>): WorkTask {
   };
 }
 
-export function getTask(id: string): WorkTask | null {
-  const row = asRecord(db().prepare("SELECT * FROM tasks WHERE id = ?").get(id));
+export async function getTask(id: string): Promise<WorkTask | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM tasks WHERE id = ?").get(id));
   return row ? mapTask(row) : null;
 }
 
-export function listTasks(businessId: string): WorkTask[] {
-  return db()
+export async function listTasks(businessId: string): Promise<WorkTask[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM tasks WHERE business_id = ? ORDER BY created_at DESC")
-    .all(businessId)
+    .all(businessId))
     .map((row) => mapTask(asRecord(row)!));
 }
 
-export function openTaskForAgent(agentId: string): WorkTask | null {
+export async function openTaskForAgent(agentId: string): Promise<WorkTask | null> {
   const row = asRecord(
-    db()
+    await (await db())
       .prepare(
         "SELECT * FROM tasks WHERE to_agent_id = ? AND status IN ('queued', 'running', 'waiting_approval') ORDER BY created_at DESC LIMIT 1",
       )
@@ -641,8 +646,8 @@ export function openTaskForAgent(agentId: string): WorkTask | null {
   return row ? mapTask(row) : null;
 }
 
-export function cancelOpenTasks(businessId: string, report: string) {
-  db()
+export async function cancelOpenTasks(businessId: string, report: string) {
+  await (await db())
     .prepare(
       `UPDATE tasks SET status = 'cancelled', report = ?, updated_at = ?
        WHERE business_id = ? AND status IN ('queued', 'running', 'waiting_approval')`,
@@ -650,17 +655,17 @@ export function cancelOpenTasks(businessId: string, report: string) {
     .run(report, Date.now(), businessId);
 }
 
-export function setTaskStatus(id: string, status: TaskStatus, report?: string) {
+export async function setTaskStatus(id: string, status: TaskStatus, report?: string) {
   if (report == null) {
-    db().prepare("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?").run(status, Date.now(), id);
+    await (await db()).prepare("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?").run(status, Date.now(), id);
     return;
   }
-  db()
+  await (await db())
     .prepare("UPDATE tasks SET status = ?, report = ?, updated_at = ? WHERE id = ?")
     .run(status, report, Date.now(), id);
 }
 
-export function recordAudit(input: {
+export async function recordAudit(input: {
   businessId: string;
   userId: string;
   agentId?: string | null;
@@ -670,7 +675,7 @@ export function recordAudit(input: {
   decision?: string | null;
   summary: string;
   refId?: string | null;
-}): AuditEvent {
+}): Promise<AuditEvent> {
   const event: AuditEvent = {
     id: newId("aud"),
     businessId: input.businessId,
@@ -684,7 +689,7 @@ export function recordAudit(input: {
     refId: input.refId ?? null,
     createdAt: Date.now(),
   };
-  db()
+  await (await db())
     .prepare(
       `INSERT INTO audit_events (id, business_id, user_id, agent_id, actor, kind, tool, decision, summary, created_at, ref_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -705,10 +710,10 @@ export function recordAudit(input: {
   return event;
 }
 
-export function listAudit(businessId: string, limit = 20): AuditEvent[] {
-  return db()
+export async function listAudit(businessId: string, limit = 20): Promise<AuditEvent[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM audit_events WHERE business_id = ? ORDER BY created_at DESC LIMIT ?")
-    .all(businessId, limit)
+    .all(businessId, limit))
     .map((row) => {
       const record = asRecord(row)!;
       return {
@@ -727,53 +732,42 @@ export function listAudit(businessId: string, limit = 20): AuditEvent[] {
     });
 }
 
-export function upsertConnection(input: {
+export async function upsertConnection(input: {
   businessId: string;
   toolkit: string;
   status: AppConnection["status"];
   connectedAccountId?: string | null;
-}): AppConnection {
-  const existing = asRecord(
-    db().prepare("SELECT * FROM app_connections WHERE business_id = ? AND toolkit = ?").get(input.businessId, input.toolkit),
-  );
+}): Promise<AppConnection> {
   const now = Date.now();
-  if (!existing) {
-    const row: AppConnection = {
-      id: newId("conn"),
-      businessId: input.businessId,
-      toolkit: input.toolkit,
-      connectedAccountId: input.connectedAccountId ?? null,
-      status: input.status,
-      createdAt: now,
-      updatedAt: now,
-    };
-    db()
+  const row = asRecord(
+    await (await db())
       .prepare(
         `INSERT INTO app_connections (id, business_id, toolkit, connected_account_id, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT (business_id, toolkit) DO UPDATE SET
+           status = excluded.status,
+           connected_account_id = COALESCE(excluded.connected_account_id, app_connections.connected_account_id),
+           updated_at = excluded.updated_at
+         RETURNING *`,
       )
-      .run(row.id, row.businessId, row.toolkit, row.connectedAccountId, row.status, row.createdAt, row.updatedAt);
-    return row;
-  }
-  const id = String(existing.id);
-  db()
-    .prepare("UPDATE app_connections SET status = ?, connected_account_id = ?, updated_at = ? WHERE id = ?")
-    .run(input.status, input.connectedAccountId ?? existing.connected_account_id ?? null, now, id);
+      .get(newId("conn"), input.businessId, input.toolkit, input.connectedAccountId ?? null, input.status, now, now),
+  );
+  if (!row) throw new Error("Connection was not saved.");
   return {
-    id,
-    businessId: input.businessId,
-    toolkit: input.toolkit,
-    connectedAccountId: input.connectedAccountId ?? (existing.connected_account_id == null ? null : String(existing.connected_account_id)),
-    status: input.status,
-    createdAt: Number(existing.created_at),
-    updatedAt: now,
+    id: String(row.id),
+    businessId: String(row.business_id),
+    toolkit: String(row.toolkit),
+    connectedAccountId: row.connected_account_id == null ? null : String(row.connected_account_id),
+    status: String(row.status) as AppConnection["status"],
+    createdAt: Number(row.created_at),
+    updatedAt: Number(row.updated_at),
   };
 }
 
-export function listConnections(businessId: string): AppConnection[] {
-  return db()
+export async function listConnections(businessId: string): Promise<AppConnection[]> {
+  return await (await (await db())
     .prepare("SELECT * FROM app_connections WHERE business_id = ? ORDER BY toolkit ASC")
-    .all(businessId)
+    .all(businessId))
     .map((row) => {
       const record = asRecord(row)!;
       return {
@@ -788,23 +782,34 @@ export function listConnections(businessId: string): AppConnection[] {
     });
 }
 
-export function deleteBusinessForUser(userId: string, businessId: string) {
-  const business = getBusiness(businessId);
+export async function deleteBusinessForUser(userId: string, businessId: string) {
+  const business = await getBusiness(businessId);
   if (!business || business.userId !== userId) return null;
-  const agents = listAgents(business.id);
+  const agents = await listAgents(business.id);
+  // One transaction so a failed delete does not leave messages behind a missing business.
+  const statements: { sql: string; params: unknown[] }[] = [];
   for (const agent of agents) {
-    db().prepare("DELETE FROM messages WHERE agent_id = ?").run(agent.id);
-    db().prepare("DELETE FROM approvals WHERE agent_id = ?").run(agent.id);
-    db().prepare("DELETE FROM pending_turns WHERE agent_id = ?").run(agent.id);
-    db().prepare("DELETE FROM routines WHERE agent_id = ?").run(agent.id);
-    db().prepare("DELETE FROM computers WHERE agent_id = ?").run(agent.id);
-    db().prepare("DELETE FROM action_policies WHERE agent_id = ?").run(agent.id);
+    for (const sql of [
+      "DELETE FROM messages WHERE agent_id = ?",
+      "DELETE FROM approvals WHERE agent_id = ?",
+      "DELETE FROM pending_turns WHERE agent_id = ?",
+      "DELETE FROM routines WHERE agent_id = ?",
+      "DELETE FROM computers WHERE agent_id = ?",
+      "DELETE FROM action_policies WHERE agent_id = ?",
+    ]) {
+      statements.push({ sql, params: [agent.id] });
+    }
   }
-  db().prepare("DELETE FROM leads WHERE business_id = ?").run(business.id);
-  db().prepare("DELETE FROM tasks WHERE business_id = ?").run(business.id);
-  db().prepare("DELETE FROM audit_events WHERE business_id = ?").run(business.id);
-  db().prepare("DELETE FROM app_connections WHERE business_id = ?").run(business.id);
-  db().prepare("DELETE FROM agents WHERE business_id = ?").run(business.id);
-  db().prepare("DELETE FROM businesses WHERE id = ?").run(business.id);
+  for (const sql of [
+    "DELETE FROM leads WHERE business_id = ?",
+    "DELETE FROM tasks WHERE business_id = ?",
+    "DELETE FROM audit_events WHERE business_id = ?",
+    "DELETE FROM app_connections WHERE business_id = ?",
+    "DELETE FROM agents WHERE business_id = ?",
+    "DELETE FROM businesses WHERE id = ?",
+  ]) {
+    statements.push({ sql, params: [business.id] });
+  }
+  await (await db()).transaction(statements);
   return agents.map((agent) => agent.id);
 }
