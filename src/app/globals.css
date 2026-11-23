@@ -24,8 +24,8 @@
     #4ade80 74%,
     #16a34a 100%
   );
-  --proof-chart-stroke-ai: 5.5;
-  --proof-chart-stroke-bfs: 5.5;
+  --proof-chart-stroke-ai: 4.75;
+  --proof-chart-stroke-bfs: 4.75;
   /* Landing chrome: header row (py-4 + text-sm line) — used for hero first-screen height. */
   --landing-site-header-height: calc(2rem + 1.25rem + env(safe-area-inset-top, 0px));
   --landing-hero-min-height: calc(100svh - var(--landing-site-header-height));
@@ -66,9 +66,13 @@
 
 @media (min-width: 640px) {
   :root {
-    --proof-chart-stroke-ai: 6;
-    --proof-chart-stroke-bfs: 6;
+    --proof-chart-stroke-ai: 5.5;
+    --proof-chart-stroke-bfs: 5.5;
   }
+}
+
+.proof-chart-figure {
+  width: 100%;
 }
 
 @theme inline {

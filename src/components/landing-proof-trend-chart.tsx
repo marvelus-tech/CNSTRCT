@@ -17,10 +17,16 @@ import {
 } from "@/lib/landing-proof-chart-data";
 
 const VIEW_W = 800;
-const VIEW_H = 300;
-const MARGIN = { top: 12, right: 52, bottom: 32, left: 44 };
+const VIEW_H = 320;
+const MARGIN = { top: 28, right: 108, bottom: 36, left: 28 };
 const PLOT_W = VIEW_W - MARGIN.left - MARGIN.right;
 const PLOT_H = VIEW_H - MARGIN.top - MARGIN.bottom;
+
+const ENDPOINT_LABEL_DX = 10;
+const AI_LABEL_DY_VALUE = -18;
+const AI_LABEL_DY_SUB = -4;
+const BFS_LABEL_DY_VALUE = 14;
+const BFS_LABEL_DY_SUB = 28;
 
 function xForYear(year: number): number {
   const span = LANDING_PROOF_CHART_YEAR_MAX - LANDING_PROOF_CHART_YEAR_MIN;
@@ -55,9 +61,6 @@ const AI_STROKE_GRADIENT_STOPS = [
   { offset: "74%", color: "#4ade80" },
   { offset: "100%", color: "#16a34a" },
 ] as const;
-
-const GRID_PCTS = [0, 50, 100] as const;
-const BFS_TICKS_M = [0, 3, 6] as const;
 
 export function LandingProofTrendChart() {
   const gradientId = useId().replace(/:/g, "");
@@ -112,28 +115,14 @@ export function LandingProofTrendChart() {
   const aiEndX = xForYear(endYear);
   const aiEndY = yForPct(aiEnd.value);
   const bfsEndY = yForMillions(bfsEnd.value);
+  const baselineY = yForPct(0);
 
   return (
-    <figure className="w-full">
-      <div className="landing-section-lead mb-8 flex flex-col gap-2 text-left text-xs sm:text-sm md:flex-row md:flex-wrap md:items-center md:gap-x-8 md:gap-y-1">
-        <span className="inline-flex items-center gap-2">
-          <span
-            className="proof-chart-legend-swatch w-6 shrink-0 rounded-full"
-            style={{ background: "var(--proof-chart-ai-swatch)" }}
-            aria-hidden
-          />
-          {LANDING_PROOF_CHART_LEGEND.aiAdoption}
-          <span className="sr-only">: {LANDING_PROOF_CHART_LEGEND_DETAIL.aiAdoption}</span>
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <span
-            className="proof-chart-legend-swatch w-6 shrink-0 rounded-full"
-            style={{ backgroundColor: "var(--proof-chart-bfs-stroke)" }}
-            aria-hidden
-          />
-          {LANDING_PROOF_CHART_LEGEND.businessApplications}
-          <span className="sr-only">: {LANDING_PROOF_CHART_LEGEND_DETAIL.businessApplications}</span>
-        </span>
+    <figure className="proof-chart-figure mx-auto w-full max-w-md sm:max-w-lg">
+      <div className="sr-only">
+        {LANDING_PROOF_CHART_LEGEND.aiAdoption}: {LANDING_PROOF_CHART_LEGEND_DETAIL.aiAdoption}.{" "}
+        {LANDING_PROOF_CHART_LEGEND.businessApplications}:{" "}
+        {LANDING_PROOF_CHART_LEGEND_DETAIL.businessApplications}.
       </div>
 
       <svg
@@ -157,53 +146,21 @@ export function LandingProofTrendChart() {
           </linearGradient>
         </defs>
 
-        {GRID_PCTS.map((pct) => {
-          const y = yForPct(pct);
-          return (
-            <g key={pct}>
-              <line
-                x1={MARGIN.left}
-                y1={y}
-                x2={VIEW_W - MARGIN.right}
-                y2={y}
-                stroke="currentColor"
-                strokeOpacity={0.1}
-                strokeWidth={1}
-              />
-              {pct < 100 ? (
-                <text
-                  x={MARGIN.left - 8}
-                  y={y + 4}
-                  textAnchor="end"
-                  className="fill-muted-foreground text-[11px] tabular-nums"
-                >
-                  {pct}%
-                </text>
-              ) : null}
-            </g>
-          );
-        })}
-
-        {BFS_TICKS_M.map((m) => {
-          const y = yForMillions(m);
-          return (
-            <text
-              key={m}
-              x={VIEW_W - MARGIN.right + 8}
-              y={y + 4}
-              textAnchor="start"
-              className="fill-muted-foreground text-[11px] tabular-nums"
-            >
-              {m}M
-            </text>
-          );
-        })}
+        <line
+          x1={MARGIN.left}
+          y1={baselineY}
+          x2={VIEW_W - MARGIN.right}
+          y2={baselineY}
+          stroke="currentColor"
+          strokeOpacity={0.08}
+          strokeWidth={1}
+        />
 
         {LANDING_PROOF_CHART_X_TICK_YEARS.map((year) => (
           <text
             key={year}
             x={xForYear(year)}
-            y={VIEW_H - 10}
+            y={VIEW_H - 12}
             textAnchor="middle"
             className="fill-muted-foreground text-[10px] tabular-nums sm:text-[11px]"
           >
@@ -234,25 +191,42 @@ export function LandingProofTrendChart() {
 
         <circle cx={aiEndX} cy={aiEndY} r={4} fill="#16a34a" />
         <circle cx={aiEndX} cy={bfsEndY} r={4} fill="var(--proof-chart-bfs-stroke)" />
-      </svg>
 
-      <div
-        className="mt-2 grid grid-cols-2 gap-4 border-t border-border/25 pt-4 sm:ml-auto sm:max-w-sm sm:gap-6"
-        aria-hidden
-      >
-        <div className="text-left sm:text-right">
-          <p className="text-lg font-semibold tabular-nums tracking-tight text-foreground">
+        <g aria-hidden>
+          <text
+            x={aiEndX + ENDPOINT_LABEL_DX}
+            y={aiEndY + AI_LABEL_DY_VALUE}
+            textAnchor="start"
+            className="fill-foreground text-[13px] font-semibold tabular-nums sm:text-[14px]"
+          >
             {LANDING_PROOF_CHART_ENDPOINTS.aiAdoptionPct}%
-          </p>
-          <p className="landing-section-lead text-[11px] leading-snug">AI adoption (2026)</p>
-        </div>
-        <div className="text-left sm:text-right">
-          <p className="text-lg font-semibold tabular-nums tracking-tight text-foreground">
+          </text>
+          <text
+            x={aiEndX + ENDPOINT_LABEL_DX}
+            y={aiEndY + AI_LABEL_DY_SUB}
+            textAnchor="start"
+            className="fill-muted-foreground text-[11px]"
+          >
+            AI adoption (2026)
+          </text>
+          <text
+            x={aiEndX + ENDPOINT_LABEL_DX}
+            y={bfsEndY + BFS_LABEL_DY_VALUE}
+            textAnchor="start"
+            className="fill-foreground text-[13px] font-semibold tabular-nums sm:text-[14px]"
+          >
             {LANDING_PROOF_CHART_ENDPOINTS.businessApplicationsMillions}M
-          </p>
-          <p className="landing-section-lead text-[11px] leading-snug">New applications, US (2026)</p>
-        </div>
-      </div>
+          </text>
+          <text
+            x={aiEndX + ENDPOINT_LABEL_DX}
+            y={bfsEndY + BFS_LABEL_DY_SUB}
+            textAnchor="start"
+            className="fill-muted-foreground text-[11px]"
+          >
+            New applications, US (2026)
+          </text>
+        </g>
+      </svg>
 
       <table className="sr-only">
         <caption>Proof section trend data</caption>
