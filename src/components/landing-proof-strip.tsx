@@ -1,33 +1,46 @@
+import { LandingProofTrendChart } from "@/components/landing-proof-trend-chart";
 import { LandingSection } from "@/components/landing-section";
 import {
+  LANDING_PROOF_HEADLINE,
   LANDING_PROOF_KICKER,
   LANDING_PROOF_SOURCES,
   LANDING_PROOF_STATS,
+  LANDING_PROOF_SUBHEAD,
 } from "@/lib/landing-stats";
 
 export function LandingProofStrip() {
   return (
-    <LandingSection variant="card" aria-label="Enterprise AI adoption survey highlights">
-      <div className="mx-auto max-w-3xl">
-        <h2 className="landing-section-title text-pretty">
-          Most people are still guessing. You do not have to.
-        </h2>
-        <ul className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-4">
+    <LandingSection
+      variant="plain"
+      aria-label="Enterprise AI adoption and business formation trends"
+      className="[&>div]:max-w-3xl"
+    >
+      <div className="mx-auto max-w-3xl text-center">
+        <h2 className="landing-section-title text-pretty">{LANDING_PROOF_HEADLINE}</h2>
+        <p className="landing-section-lead mx-auto mt-4 max-w-2xl text-pretty">
+          {LANDING_PROOF_SUBHEAD}
+        </p>
+
+        <div className="mt-10 w-full text-left">
+          <LandingProofTrendChart />
+        </div>
+
+        <ul className="mt-10 grid grid-cols-1 gap-6 text-left md:grid-cols-3 md:gap-8">
           {LANDING_PROOF_STATS.map((stat) => (
             <li
               key={stat.value + stat.label.slice(0, 24)}
-              className="flex flex-col rounded-none border border-border bg-card p-4 sm:min-h-[7.5rem] md:p-5"
+              className="flex flex-col gap-2 py-4 md:py-6"
             >
-              <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-3xl md:text-4xl">
+              <p className="text-3xl font-semibold tabular-nums tracking-tight text-foreground md:text-4xl">
                 {stat.value}
               </p>
-              <p className="landing-section-lead mt-2 text-sm leading-relaxed sm:text-sm">
-                {stat.label}
-              </p>
+              <span className="h-px w-8 bg-accent/40" aria-hidden />
+              <p className="landing-section-lead text-sm leading-relaxed">{stat.label}</p>
             </li>
           ))}
         </ul>
-        <p className="landing-section-lead mt-6 sm:mt-8">{LANDING_PROOF_KICKER}</p>
+
+        <p className="landing-section-lead mx-auto mt-8 max-w-2xl text-pretty">{LANDING_PROOF_KICKER}</p>
         <p className="landing-fine-print mt-4 text-xs sm:text-[0.6875rem]">
           Figures from{" "}
           {LANDING_PROOF_SOURCES.map((source, index) => (
@@ -43,8 +56,8 @@ export function LandingProofStrip() {
                 {source.name}
               </a>
             </span>
-          ))}{" "}
-          enterprise surveys, 2026. Results vary by industry and execution.
+          ))}
+          . Results vary by industry and execution.
         </p>
       </div>
     </LandingSection>
