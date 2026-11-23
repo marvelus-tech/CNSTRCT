@@ -64,6 +64,8 @@ Production state (users, sessions, profiles, businesses, agents, routines, messa
 
 Business creation enqueues Orgo, Treg, and Composio jobs in the same transaction as the business row. External calls run from `/api/cron/provisioning` (schedule in `vercel.json`), not from `POST /api/business`.
 
+The checked-in cron runs once daily (`0 6 * * *` UTC) so deployments pass on **Vercel Hobby**, which rejects expressions that would run more than once per day. Owners can still drain the outbox immediately via `POST /api/businesses/{id}/provision` (retry). On **Pro**, change `vercel.json` to `*/5 * * * *` for a five-minute worker cadence, or call the cron route from an external scheduler with the same `CRON_SECRET`.
+
 Epoch columns are `BIGINT`. Postgres `INTEGER` is 32-bit and cannot store `Date.now()`.
 
 ### Cutover
