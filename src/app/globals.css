@@ -25,6 +25,9 @@
   );
   --proof-chart-stroke-ai: 5.5;
   --proof-chart-stroke-bfs: 5.5;
+  /* Landing chrome: header row (py-4 + text-sm line) — used for hero first-screen height. */
+  --landing-site-header-height: calc(2rem + 1.25rem + env(safe-area-inset-top, 0px));
+  --landing-hero-min-height: calc(100svh - var(--landing-site-header-height));
 }
 
 .proof-chart-stroke-ai {
@@ -159,6 +162,27 @@ h4 {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+}
+
+/* First screen: flex shell fills small viewport; hero grows to header’s remainder on mobile. */
+.landing-first-screen {
+  box-sizing: border-box;
+}
+
+.landing-hero-viewport {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+@media (min-width: 768px) {
+  .landing-hero-viewport {
+    flex: none;
+    min-height: min(var(--landing-hero-min-height), 42rem);
+  }
 }
 
 .hero-overlap-stage {

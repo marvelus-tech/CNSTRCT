@@ -58,6 +58,40 @@ test.describe("landing hero hex isolation", () => {
     expect(overlap).toBe(true);
   });
 
+  test("hero fills mobile viewport without the next section peeking", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    const firstScreen = await page.evaluate(() => {
+      const hero = document.querySelector('section[aria-label="BizOS introduction"]');
+      const next = document.querySelector('section[aria-label="How BizOS works"]');
+      if (!hero || !next) {
+        return { ok: false as const, reason: "missing hero or next section" };
+      }
+      const shell = document.querySelector(".landing-first-screen");
+      const heroBox = hero.getBoundingClientRect();
+      const nextTop = next.getBoundingClientRect().top;
+      const shellBottom = shell?.getBoundingClientRect().bottom ?? heroBox.bottom;
+      const vh =
+        window.visualViewport?.height ??
+        document.documentElement.clientHeight;
+      return {
+        ok: true as const,
+        vh,
+        shellBottom,
+        heroBottom: heroBox.bottom,
+        nextTop,
+        nextVisible: nextTop < shellBottom - 0.5,
+      };
+    });
+
+    expect(firstScreen.ok, firstScreen.ok ? "" : firstScreen.reason).toBe(true);
+    if (!firstScreen.ok) return;
+    expect(firstScreen.nextVisible).toBe(false);
+    expect(firstScreen.shellBottom).toBeGreaterThanOrEqual(firstScreen.vh - 2);
+  });
+
   test("suffix OS (including S) is not covered by hex bbox", async ({ page }) => {
     const clear = await page.evaluate(() => {
       const suffix = document.querySelector(".hero-overlap-brand__suffix");

@@ -47,19 +47,21 @@ export default function HomePage() {
   return (
     <div className="min-h-full bg-card">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <header className="flex items-center justify-between px-4 py-4 sm:px-5 md:px-10">
-        <Wordmark />
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/login?next=/command-center" className="text-muted">
-            Log in
-          </Link>
-          <Link href="/triage" className="font-medium">
-            Start a BIZ
-          </Link>
-        </nav>
-      </header>
-      <main>
+      <div className="landing-first-screen flex flex-col max-md:min-h-svh">
+        <header className="landing-site-header flex shrink-0 items-center justify-between px-4 py-4 sm:px-5 md:px-10">
+          <Wordmark />
+          <nav className="flex items-center gap-4 text-sm">
+            <Link href="/login?next=/command-center" className="text-muted">
+              Log in
+            </Link>
+            <Link href="/triage" className="font-medium">
+              Start a BIZ
+            </Link>
+          </nav>
+        </header>
         <LandingHero />
+      </div>
+      <main>
         <LandingFoundingTeam />
         <LandingProofStrip />
         <LandingConnectors />
