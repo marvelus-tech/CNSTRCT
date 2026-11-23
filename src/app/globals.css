@@ -145,6 +145,7 @@ h4 {
 .hero-overlap-brand {
   grid-area: 1 / 1;
   z-index: 0;
+  margin: 0;
   pointer-events: none;
   user-select: none;
 }
