@@ -189,6 +189,8 @@ h4 {
   display: flex;
   justify-content: center;
   width: 100%;
+  max-width: 100%;
+  overflow-x: visible;
   padding-top: 0.25rem;
 }
 
@@ -208,7 +210,8 @@ h4 {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  max-width: 100%;
+  width: max-content;
+  max-width: min(100%, max-content);
   /* Clip vertically so the hex silhouette cannot paint on copy; keep X open so S ink is not cropped. */
   overflow-x: visible;
   overflow-y: clip;
@@ -220,9 +223,8 @@ h4 {
 .hero-overlap-brand-core {
   position: relative;
   display: inline-block;
-  max-width: 100%;
-  /* Room for the S terminal curve inside paint bounds when paired with inline-block suffix. */
-  padding-inline-end: 0.22em;
+  max-width: none;
+  width: max-content;
 }
 
 .hero-overlap-hex-spacer {
@@ -233,47 +235,15 @@ h4 {
   pointer-events: none;
 }
 
-/* display:contents lets prefix (under hex) and suffix (above hex) stack as siblings of the hex. */
-.hero-overlap-brand-title {
-  display: contents;
-  margin: 0;
-}
-
-.hero-overlap-brand-part {
-  display: inline-block;
-  font-size: var(--hero-font-size, clamp(3.75rem, 15.5vw, 8.75rem));
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 0.92;
-  --hero-brand-word-ch: 5;
-  --hero-brand-prefix-ch: 3;
-  background-image: linear-gradient(
-    98deg,
-    #b45309 0%,
-    #e85d04 22%,
-    #f9738a 48%,
-    #93a4f8 74%,
-    #5b67d6 100%
-  );
-  background-size: calc(var(--hero-brand-word-ch) * 1ch) 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  pointer-events: none;
-  user-select: none;
-}
-
-.hero-overlap-brand__prefix {
+.hero-overlap-brand {
   position: relative;
   z-index: 0;
-  background-position: 0 0;
-}
-
-.hero-overlap-brand__suffix {
-  position: relative;
-  z-index: 11;
-  background-position: calc(-1 * var(--hero-brand-prefix-ch) * 1ch) 0;
+  display: inline-block;
+  margin: 0;
+  /* Reserve space past the S advance width so background-clip text anti-alias isn't cropped. */
+  padding-inline-end: 0.35em;
+  pointer-events: none;
+  user-select: none;
 }
 
 .hero-overlap-hex {

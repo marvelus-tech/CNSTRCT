@@ -12,14 +12,7 @@ export function LandingHero() {
         <div className="hero-overlap-stage">
           <div className="hero-overlap-brand-stack">
             <div className="hero-overlap-brand-core">
-              <h1 className="hero-overlap-brand-title">
-                <span className="hero-overlap-brand__prefix hero-overlap-brand-part">
-                  Biz
-                </span>
-                <span className="hero-overlap-brand__suffix hero-overlap-brand-part">
-                  OS
-                </span>
-              </h1>
+              <h1 className="hero-overlap-brand hero-gradient-brand">BizOS</h1>
               <div className="hero-overlap-hex" aria-hidden="true">
                 <BusinessHexMark
                   className="hero-overlap-hex__mark"

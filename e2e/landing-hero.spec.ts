@@ -46,16 +46,42 @@ test.describe("landing hero hex isolation", () => {
 
   test("gradient BizOS still overlaps hex on the wordmark", async ({ page }) => {
     const overlap = await page.evaluate(() => {
-      const prefix = document.querySelector(".hero-overlap-brand__prefix");
+      const h1 = document.querySelector(".hero-overlap-brand");
       const hex = document.querySelector(".hero-overlap-hex__mark");
-      if (!prefix || !hex) return false;
-      const hb = prefix.getBoundingClientRect();
+      if (!h1 || !hex) return false;
+      const hb = h1.getBoundingClientRect();
       const xb = hex.getBoundingClientRect();
       const verticalOverlap = hb.bottom > xb.top + 4;
       const horizontalOverlap = hb.left < xb.right && hb.right > xb.left;
       return verticalOverlap && horizontalOverlap;
     });
     expect(overlap).toBe(true);
+  });
+
+  test("full wordmark sits beneath hex layer (no OS elevation)", async ({ page }) => {
+    const order = await page.evaluate(() => {
+      const h1 = document.querySelector(".hero-overlap-brand");
+      const hexWrap = document.querySelector(".hero-overlap-hex");
+      if (!h1 || !hexWrap) {
+        return { ok: false as const, reason: "missing hero overlap layers" };
+      }
+      const h1Z = Number.parseInt(getComputedStyle(h1).zIndex, 10);
+      const hexZ = Number.parseInt(getComputedStyle(hexWrap).zIndex, 10);
+      const splitGlyphs = Boolean(
+        document.querySelector(".hero-overlap-brand__suffix"),
+      );
+      return {
+        ok: true as const,
+        h1Z: Number.isNaN(h1Z) ? 0 : h1Z,
+        hexZ,
+        splitGlyphs,
+      };
+    });
+
+    expect(order.ok, order.ok ? "" : order.reason).toBe(true);
+    if (!order.ok) return;
+    expect(order.splitGlyphs).toBe(false);
+    expect(order.h1Z).toBeLessThan(order.hexZ);
   });
 
   test("hero fills mobile viewport without the next section peeking", async ({ page }) => {
@@ -96,13 +122,13 @@ test.describe("landing hero hex isolation", () => {
     const metrics = await page.evaluate(() => {
       const stack = document.querySelector(".hero-overlap-brand-stack");
       const section = document.querySelector('section[aria-label="BizOS introduction"]');
-      const suffix = document.querySelector(".hero-overlap-brand__suffix");
-      if (!stack || !section || !suffix) {
+      const h1 = document.querySelector(".hero-overlap-brand");
+      if (!stack || !section || !h1) {
         return { ok: false as const, reason: "missing hero brand parts" };
       }
-      const text = suffix.textContent ?? "";
+      const text = h1.textContent ?? "";
       const range = document.createRange();
-      const walker = document.createTreeWalker(suffix, NodeFilter.SHOW_TEXT);
+      const walker = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT);
       const node = walker.nextNode();
       if (!node || text.length < 1) {
         return { ok: false as const, reason: "missing suffix text node" };
