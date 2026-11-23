@@ -340,12 +340,13 @@ h4 {
 .how-step-hex-solo {
   display: flex;
   justify-content: center;
-  width: min(100%, 14rem);
+  width: min(100%, clamp(7.25rem, 36vw, 10rem));
   margin-inline: auto;
 }
 
 @media (min-width: 768px) {
   .how-step-hex-solo {
+    width: min(100%, 11.5rem);
     margin-inline: 0;
     justify-content: flex-end;
   }
@@ -367,12 +368,18 @@ h4 {
 .how-step-hex-solo__mark {
   display: block;
   width: 100%;
-  max-width: 14rem;
+  max-width: clamp(7.25rem, 36vw, 10rem);
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   animation: how-step-hex-solo-drift 9.5s ease-in-out infinite;
   animation-delay: -2.2s;
+}
+
+@media (min-width: 768px) {
+  .how-step-hex-solo__mark {
+    max-width: 11.5rem;
+  }
 }
 
 .how-step-cluster-stage {
@@ -426,9 +433,15 @@ h4 {
 
 .founding-team-cluster {
   position: relative;
-  width: min(100%, 21.5rem);
+  width: min(100%, clamp(13.5rem, 68vw, 16.5rem));
   aspect-ratio: 1.22 / 1;
   margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .founding-team-cluster {
+    width: min(100%, 18.5rem);
+  }
 }
 
 .founding-team-cluster__hex-wrap {
@@ -441,10 +454,16 @@ h4 {
 .founding-team-cluster__hex {
   display: block;
   width: 100%;
-  max-width: 12rem;
+  max-width: clamp(6.25rem, 30vw, 8.5rem);
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+}
+
+@media (min-width: 768px) {
+  .founding-team-cluster__hex {
+    max-width: 10.25rem;
+  }
 }
 
 .founding-team-cluster__bot {
