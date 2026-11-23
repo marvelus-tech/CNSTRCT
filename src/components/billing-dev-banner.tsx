@@ -1,6 +1,11 @@
+import { headers } from "next/headers";
+
 import { billingPublicState } from "@/lib/billing/policy";
 
-export function BillingDevBanner() {
+export async function BillingDevBanner() {
+  const headerList = await headers();
+  if (headerList.get("x-pathname") === "/") return null;
+
   const state = billingPublicState();
   if (!state.devBypassActive) return null;
 

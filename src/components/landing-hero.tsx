@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export function LandingHero() {
   return (
     <section
-      className="overflow-x-hidden px-4 pb-12 pt-6 sm:px-5 sm:pb-16 sm:pt-8 md:px-10 md:pt-16"
+      className="overflow-x-hidden px-4 pb-12 pt-8 sm:px-5 sm:pb-16 sm:pt-10 md:px-10 md:pt-[4.5rem]"
       aria-label="BizOS introduction"
     >
       <div className="rise mx-auto flex w-full max-w-3xl flex-col items-center text-center">
