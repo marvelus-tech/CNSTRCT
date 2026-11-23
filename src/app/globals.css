@@ -112,14 +112,14 @@ h4 {
 
 .founding-team-cluster {
   position: relative;
-  width: min(100%, 18rem);
+  width: min(100%, 19rem);
   aspect-ratio: 1.22 / 1;
   margin-inline: auto;
 }
 
 .founding-team-cluster__hex-wrap {
   position: absolute;
-  inset: 8% 22% 18%;
+  inset: 8% 20% 16%;
   display: grid;
   place-items: center;
 }
@@ -140,15 +140,15 @@ h4 {
 }
 
 .founding-team-cluster__bot--left {
-  left: 2%;
-  top: 34%;
-  transform: translateY(-50%);
+  left: 0%;
+  top: 54%;
+  transform: translateY(-35%);
 }
 
 .founding-team-cluster__bot--right {
-  right: 2%;
-  top: 34%;
-  transform: translateY(-50%);
+  right: 0%;
+  top: 54%;
+  transform: translateY(-35%);
 }
 
 .founding-team-cluster__bot--bottom {
@@ -165,6 +165,18 @@ h4 {
 
 .grok-bot-face__disc {
   fill: #000;
+}
+
+.grok-bot-face__disc--accent {
+  fill: var(--accent);
+}
+
+.grok-bot-face__disc--slate {
+  fill: #3d4f63;
+}
+
+.grok-bot-face__disc--ink {
+  fill: var(--foreground);
 }
 
 .grok-bot-face__eye {
