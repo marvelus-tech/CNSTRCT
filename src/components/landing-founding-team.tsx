@@ -33,17 +33,17 @@ export function LandingFoundingTeam() {
             />
           </div>
           <div className="rise">
-            <p className="text-sm font-medium text-accent">01</p>
-            <h3 className="landing-section-title mt-2 text-xl md:text-2xl">{stepOne.title}</h3>
-            <p className="landing-section-lead mt-2 max-w-lg">{stepOne.body}</p>
+            <p className="how-step-index">01</p>
+            <h3 className="how-step-title mt-2">{stepOne.title}</h3>
+            <p className="how-step-lead mt-2 max-w-lg">{stepOne.body}</p>
           </div>
         </li>
 
         <li className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
           <div className="rise md:col-start-1 md:row-start-1">
-            <p className="text-sm font-medium text-accent">02</p>
-            <h3 className="landing-section-title mt-2 text-xl md:text-2xl">{stepTwo.title}</h3>
-            <p className="landing-section-lead mt-2 max-w-lg">{stepTwo.body}</p>
+            <p className="how-step-index">02</p>
+            <h3 className="how-step-title mt-2">{stepTwo.title}</h3>
+            <p className="how-step-lead mt-2 max-w-lg">{stepTwo.body}</p>
           </div>
           <div className="rise how-step-cluster-stage md:col-start-2 md:row-start-1">
             <FoundingTeamCluster />

@@ -3,7 +3,7 @@
 import { BusinessHexMark } from "@/components/business-hex-mark";
 import { GrokBotFace } from "@/components/grok-bot-face";
 
-const BOT_SIZE = 62;
+const BOT_SIZE = 72;
 
 export function FoundingTeamCluster() {
   return (
@@ -20,7 +20,7 @@ export function FoundingTeamCluster() {
           seed={0}
           lookBias="right"
           size={BOT_SIZE}
-          discClassName="grok-bot-face__disc--accent"
+          discClassName="grok-bot-face__disc--orange"
         />
       </div>
       <div className="founding-team-cluster__bot founding-team-cluster__bot--right">
@@ -28,7 +28,7 @@ export function FoundingTeamCluster() {
           seed={1}
           lookBias="left"
           size={BOT_SIZE}
-          discClassName="grok-bot-face__disc--slate"
+          discClassName="grok-bot-face__disc--blue"
         />
       </div>
       <div className="founding-team-cluster__bot founding-team-cluster__bot--bottom">
@@ -36,7 +36,7 @@ export function FoundingTeamCluster() {
           seed={2}
           lookBias="up"
           size={BOT_SIZE}
-          discClassName="grok-bot-face__disc--ink"
+          discClassName="grok-bot-face__disc--green"
         />
       </div>
     </div>
