@@ -16,7 +16,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   starter: {
     id: "starter",
     label: "Starter",
-    priceUsd: 39,
+    priceUsd: 75,
     maxBusinesses: 1,
     tokenCredits: 400_000,
     computerHours: 4,
@@ -25,7 +25,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   pro: {
     id: "pro",
     label: "Pro",
-    priceUsd: 79,
+    priceUsd: 149,
     maxBusinesses: 3,
     tokenCredits: 1_200_000,
     computerHours: 12,
@@ -34,13 +34,20 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   scale: {
     id: "scale",
     label: "Scale",
-    priceUsd: 200,
+    priceUsd: 400,
     maxBusinesses: 10,
     tokenCredits: 4_000_000,
     computerHours: 40,
-    agentCount: 3,
+    agentCount: 5,
   },
 };
+
+/** Landing pricing bullets; sentence-case HUD copy per tier. */
+export function landingDigitalWorkersCopy(plan: PlanDefinition): string {
+  if (plan.id === "starter") return `${plan.agentCount} digital workers`;
+  if (plan.id === "pro") return "up to 3 digital workers per Biz";
+  return "up to 5 digital workers per Biz";
+}
 
 export function planFromId(id: string | null | undefined): PlanDefinition | null {
   if (id === "starter" || id === "pro" || id === "scale") return PLANS[id];

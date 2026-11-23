@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
-import { LANDING_PLAN_ORDER, PLANS, planFromId, type PlanId } from "@/lib/billing/plans";
+import { LANDING_PLAN_ORDER, landingDigitalWorkersCopy, PLANS, planFromId, type PlanId } from "@/lib/billing/plans";
 
 type BillingStatus = {
   configured: boolean;
@@ -73,11 +73,11 @@ function CheckoutInner() {
         <div className="mt-8 border border-border bg-card p-6" aria-label="Plan summary">
           <p className="text-4xl font-semibold tabular-nums">
             ${plan.priceUsd}
-            <span className="text-base font-normal text-muted"> USD/mo</span>
+            <span className="text-base font-normal text-muted">/mo</span>
           </p>
           <ul className="mt-4 space-y-2 text-sm text-muted">
             <li>{plan.maxBusinesses === 1 ? "1 business" : `Up to ${plan.maxBusinesses} businesses`}</li>
-            <li>{plan.agentCount} agents</li>
+            <li>{landingDigitalWorkersCopy(plan)}</li>
             <li>{(plan.tokenCredits / 1000).toLocaleString()}k included credits / month</li>
             <li>{plan.computerHours} computer hours / month</li>
           </ul>
