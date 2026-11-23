@@ -83,10 +83,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        <LandingFoundingTeam />
-        <LandingProofStrip />
-        <LandingConnectors />
-        <LandingPricing />
         <LandingSection variant="card">
           <h2 className="landing-section-title">How it works</h2>
           <ol className="mt-8 grid gap-8 md:grid-cols-3">
@@ -103,6 +99,10 @@ export default function HomePage() {
             ))}
           </ol>
         </LandingSection>
+        <LandingFoundingTeam />
+        <LandingProofStrip />
+        <LandingConnectors />
+        <LandingPricing />
         <LandingSection variant="plain">
           <div className="mx-auto max-w-3xl">
             <p className="landing-eyebrow">FAQ</p>
