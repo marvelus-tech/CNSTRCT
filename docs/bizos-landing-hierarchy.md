@@ -19,6 +19,8 @@
 | `.how-step-lead` | How-it-works step body copy |
 | `.hero-gradient-brand` | Gradient hero `h1` (“BizOS”) behind hex |
 | `.hero-overlap-stage` | Centered hero stage container |
+| `.hero-overlap-brand-core` | H1 + hex overlap context (`top: %` = cap height only) |
+| `.hero-overlap-hex-spacer` | In-flow reserve for hex silhouette below wordmark |
 | `.hero-overlap-brand` | Gradient word layer (`z-index: 0`) |
 | `.hero-overlap-hex` | Black hex overlap layer (`z-index: 10`) |
 | `.hero-overlap-copy-stack` | Lead + CTA below the hex footprint (separate layer from brand stack) |
@@ -27,7 +29,7 @@
 
 ## Hero (`LandingHero`)
 
-Single centered column (`max-w-3xl`): brand stack (gradient `h1` “BizOS” + partial black hex via `.hero-overlap-*`; `.hero-overlap-brand-stack` `padding-bottom` reserves full hex silhouette), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). No hero eyebrow.
+Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: gradient `h1` + partial hex; `.hero-overlap-hex-spacer` clears full hex bbox), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). No hero eyebrow.
 
 ## Layout wrapper
 

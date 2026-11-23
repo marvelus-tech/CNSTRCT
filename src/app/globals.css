@@ -145,12 +145,26 @@ h4 {
 }
 
 .hero-overlap-brand-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+}
+
+/* top: % on the hex anchors to cap height here only (not spacer). */
+.hero-overlap-brand-core {
   position: relative;
   display: inline-block;
   max-width: 100%;
-  /* Hex overlap z-index stays inside this context; padding clears full silhouette below h1. */
   isolation: isolate;
-  padding-bottom: clamp(6.5rem, 42vw, 11rem);
+}
+
+.hero-overlap-hex-spacer {
+  width: 1px;
+  flex: 0 0 auto;
+  /* Hex descent below h1 cap: hex height minus upper cap slice (~30%). */
+  height: clamp(6.5rem, 42vw, 11rem);
+  pointer-events: none;
 }
 
 .hero-overlap-brand {
@@ -183,8 +197,8 @@ h4 {
 }
 
 @media (min-width: 640px) {
-  .hero-overlap-brand-stack {
-    padding-bottom: clamp(7rem, 36vw, 12.5rem);
+  .hero-overlap-hex-spacer {
+    height: clamp(7rem, 36vw, 12.5rem);
   }
 
   .hero-overlap-hex {
@@ -197,8 +211,8 @@ h4 {
 }
 
 @media (min-width: 768px) {
-  .hero-overlap-brand-stack {
-    padding-bottom: clamp(7.5rem, 32vw, 14.5rem);
+  .hero-overlap-hex-spacer {
+    height: clamp(7.5rem, 32vw, 14.5rem);
   }
 
   .hero-overlap-hex {
