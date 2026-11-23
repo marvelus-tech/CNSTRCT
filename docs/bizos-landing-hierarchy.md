@@ -21,8 +21,7 @@
 | `.hero-overlap-stage` | Centered hero stage container |
 | `.hero-overlap-brand-core` | H1 + hex overlap context (`top: %` = cap height only) |
 | `.hero-overlap-hex-spacer` | In-flow reserve for hex silhouette below wordmark |
-| `.hero-overlap-brand__prefix` | Gradient “Biz” under hex (`z-index: 0`) |
-| `.hero-overlap-brand__suffix` | Gradient “OS” above hex (`z-index: 11`) |
+| `.hero-overlap-brand` | Gradient word layer (`z-index: 0`, full **BizOS** under hex) |
 | `.hero-overlap-hex` | Black hex overlap layer (`z-index: 10`) |
 | `.hero-overlap-copy-stack` | Lead + CTA below the hex footprint (separate layer from brand stack) |
 | `.landing-caption` | Hero crosshair slide labels |
@@ -30,7 +29,7 @@
 
 ## Hero (`LandingHero`)
 
-Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: gradient `h1` + partial hex; `.hero-overlap-hex-spacer` = computed descent; `overflow-y: clip` + `contain: layout` so hex never paints on copy while **S** is not cropped), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). E2E: `pnpm test:hero-e2e` asserts copy gap and **S** not clipped. No hero eyebrow.
+Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: gradient `h1` + partial hex; `.hero-overlap-hex-spacer` = computed descent; `overflow-x: visible` + `contain: layout` + `h1` end padding so **S** curve is not flattened), then copy stack (lead + **Start a BIZ**, `.hero-overlap-copy-stack`, no z-index). E2E: `pnpm test:hero-e2e` asserts copy gap, full wordmark under hex, and **S** not clipped. No hero eyebrow.
 
 ## Layout wrapper
 
@@ -41,7 +40,7 @@ Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: g
 | Surface | String |
 |---------|--------|
 | Nav CTA | Start a BIZ → `/triage` |
-| Hero H1 | Gradient **BizOS** (`h1` + `display:contents`; hex over **Biz** only) |
+| Hero H1 | Gradient **BizOS** in overlap stage (single `h1`, hex on top) |
 | Hero lead | Start a custom biz with AI working on your behalf from day one. |
 | Hero CTA | Start a BIZ |
 | Proof H2 | AI is default. New businesses are forming faster than ever. |
