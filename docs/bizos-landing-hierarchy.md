@@ -33,7 +33,13 @@ Single centered column (`max-w-3xl`): brand stack (single `h1` **BizOS** at `z-i
 
 ## Layout wrapper
 
-`LandingSection` (`src/components/landing-section.tsx`): `px-4 sm:px-5 md:px-10`, `py-14 md:py-16`, unified `bg-card` (same as hero / `--card` `#f5f5f7`, lightest grey — not `--background` `#e8e9ec`); no section `border-y` dividers. Variants `default` | `card` | `plain` remain for API compat and resolve to the same surface. Inner `max-w-6xl`. Plan cards and controls keep their own borders; FAQ uses spacing only (no `divide-y`). Landing footer: `SiteFooter` with `border-t-0 bg-card`.
+`LandingSection` (`src/components/landing-section.tsx`): horizontal `px-4 sm:px-5 md:px-10`; vertical padding from CSS tokens `--landing-section-pad-y` (5rem) and `--landing-section-pad-y-md` (6.5rem) via `.landing-section-shell`. First main block (`How it works`) may set `afterHero` for an extra `--landing-section-after-hero-extra` top inset below the hero viewport. Unified `bg-card` (same as hero / `--card` `#f5f5f7`, lightest grey — not `--background` `#e8e9ec`); no section `border-y` dividers. Variants `default` | `card` | `plain` remain for API compat and resolve to the same surface. Inner `max-w-6xl`. Plan cards and controls keep their own borders; FAQ uses spacing only (no `divide-y`). Landing footer: `SiteFooter` with `border-t-0 bg-card`.
+
+## How it works rhythm (`LandingFoundingTeam`)
+
+- **Mobile:** each step reads as index + title + lead, then that step’s visual (01 + solo hex, 02 + founding cluster). Step 1 DOM order is copy before hex.
+- **Desktop (`md+`):** two-column stagger; step 1 hex left / copy right (`md:col-start-*`); step 2 copy left / cluster right (unchanged).
+- **Regression:** `pnpm test:how-it-works-e2e` asserts vertical order at 390px.
 
 ## Copy strings (landing `/`)
 
@@ -49,7 +55,7 @@ Single centered column (`max-w-3xl`): brand stack (single `h1` **BizOS** at `z-i
 | Proof stat 2 | **28%** — Reporting AI revenue gains |
 | Proof stat 3 | **2.4×** — AI leaders' revenue growth vs. laggards |
 | Proof sources | McKinsey State of AI (2026), Deloitte State of AI in the Enterprise (2026), BCG Applied AI Index (2026), US Census Bureau Business Formation Statistics |
-| Steps section | **How it works** (`h2`); 01 Tell us who you are / 02 Get a business that fits / 03 Turn the key |
+| Steps section | **How it works** (`h2` Match, then start.); 01 Custom Business / 02 Start your business |
 | FAQ eyebrow | FAQ |
 | FAQ title | Questions people ask first |
 | FAQ chatbot Q | Why bots instead of a chatbot? |

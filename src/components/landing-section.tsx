@@ -5,6 +5,8 @@ type LandingSectionProps = {
   children: ReactNode;
   className?: string;
   variant?: "default" | "card" | "plain";
+  /** Extra top padding for the first main section below the hero. */
+  afterHero?: boolean;
   id?: string;
   "aria-label"?: string;
 };
@@ -20,6 +22,7 @@ export function LandingSection({
   children,
   className,
   variant = "default",
+  afterHero = false,
   id,
   "aria-label": ariaLabel,
 }: LandingSectionProps) {
@@ -28,7 +31,8 @@ export function LandingSection({
       id={id}
       aria-label={ariaLabel}
       className={cn(
-        "px-4 py-14 sm:px-5 md:px-10 md:py-16",
+        "landing-section-shell px-4 sm:px-5 md:px-10",
+        afterHero && "landing-section-shell--after-hero",
         variantClasses[variant],
         className,
       )}

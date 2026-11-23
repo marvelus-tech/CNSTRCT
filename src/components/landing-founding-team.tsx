@@ -17,7 +17,7 @@ export function LandingFoundingTeam() {
   const [stepOne, stepTwo] = STEPS;
 
   return (
-    <LandingSection variant="default" aria-label="How BizOS works">
+    <LandingSection variant="default" afterHero aria-label="How BizOS works">
       <div className="mx-auto max-w-3xl">
         <div className="rise">
           <p className="landing-eyebrow">How it works</p>
@@ -26,17 +26,17 @@ export function LandingFoundingTeam() {
 
         <ol className="mt-8 space-y-10 md:space-y-12">
           <li className="grid items-center gap-6 md:grid-cols-2 md:gap-5">
-            <div className="how-step-hex-solo rise">
+            <div className="rise md:col-start-2 md:row-start-1">
+              <p className="how-step-index">01</p>
+              <h3 className="how-step-title mt-2">{stepOne.title}</h3>
+              <p className="how-step-lead mt-2 max-w-lg">{stepOne.body}</p>
+            </div>
+            <div className="how-step-hex-solo rise md:col-start-1 md:row-start-1">
               <BusinessHexMark
                 className="landing-hub-hex-mark how-step-hex-solo__mark"
                 shapeClassName="bizos-hex-shape--black"
                 aria-hidden
               />
-            </div>
-            <div className="rise">
-              <p className="how-step-index">01</p>
-              <h3 className="how-step-title mt-2">{stepOne.title}</h3>
-              <p className="how-step-lead mt-2 max-w-lg">{stepOne.body}</p>
             </div>
           </li>
 
