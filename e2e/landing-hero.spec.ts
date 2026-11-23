@@ -62,7 +62,8 @@ test.describe("landing hero hex isolation", () => {
     const order = await page.evaluate(() => {
       const h1 = document.querySelector(".hero-overlap-brand");
       const hexWrap = document.querySelector(".hero-overlap-hex");
-      if (!h1 || !hexWrap) {
+      const hex = document.querySelector(".hero-overlap-hex__mark");
+      if (!h1 || !hexWrap || !hex) {
         return { ok: false as const, reason: "missing hero overlap layers" };
       }
       const h1Z = Number.parseInt(getComputedStyle(h1).zIndex, 10);
@@ -70,11 +71,30 @@ test.describe("landing hero hex isolation", () => {
       const splitGlyphs = Boolean(
         document.querySelector(".hero-overlap-brand__suffix"),
       );
+      const hb = h1.getBoundingClientRect();
+      const xb = hex.getBoundingClientRect();
+      const hexFollowsWordmark =
+        (h1.compareDocumentPosition(hexWrap) &
+          Node.DOCUMENT_POSITION_FOLLOWING) !==
+        0;
+      const text = h1.textContent ?? "";
+      const osStart = Math.max(0, text.indexOf("O"));
+      const osRange = document.createRange();
+      osRange.setStart(h1.firstChild!, osStart);
+      osRange.setEnd(h1.firstChild!, text.length);
+      const ob = osRange.getBoundingClientRect();
+      const hexOverlapsOs =
+        ob.bottom > xb.top + 4 &&
+        ob.left < xb.right &&
+        ob.right > xb.left &&
+        hb.bottom > xb.top + 4;
       return {
         ok: true as const,
         h1Z: Number.isNaN(h1Z) ? 0 : h1Z,
         hexZ,
         splitGlyphs,
+        hexFollowsWordmark,
+        hexOverlapsOs,
       };
     });
 
@@ -82,6 +102,8 @@ test.describe("landing hero hex isolation", () => {
     if (!order.ok) return;
     expect(order.splitGlyphs).toBe(false);
     expect(order.h1Z).toBeLessThan(order.hexZ);
+    expect(order.hexFollowsWordmark).toBe(true);
+    expect(order.hexOverlapsOs).toBe(true);
   });
 
   test("hero fills mobile viewport without the next section peeking", async ({ page }) => {
@@ -145,21 +167,21 @@ test.describe("landing hero hex isolation", () => {
       for (let i = 0; i < clientRects.length; i++) {
         maxRight = Math.max(maxRight, clientRects[i].right);
       }
-      const bleed = stack.scrollWidth - stack.clientWidth;
+      const h1Rect = h1.getBoundingClientRect();
       return {
         ok: true as const,
-        bleed,
         overflowX: stackStyle.overflowX,
         insetStackEnd: stackRect.right - maxRight,
         insetSectionEnd: sectionRect.right - maxRight,
+        insetH1End: h1Rect.right - maxRight,
       };
     });
 
     expect(metrics.ok, metrics.ok ? "" : metrics.reason).toBe(true);
     if (!metrics.ok) return;
-    expect(metrics.overflowX).toBe("visible");
-    /* Padding reserve on the core should keep S ink inside the stack box (visible overflow is intentional). */
-    expect(metrics.insetStackEnd).toBeGreaterThanOrEqual(1);
+    expect(metrics.overflowX).not.toBe("hidden");
+    expect(metrics.insetStackEnd).toBeGreaterThanOrEqual(2);
+    expect(metrics.insetH1End).toBeGreaterThanOrEqual(2);
     expect(metrics.insetSectionEnd).toBeGreaterThanOrEqual(8);
   });
 });
