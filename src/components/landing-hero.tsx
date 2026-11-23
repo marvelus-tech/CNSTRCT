@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export function LandingHero() {
   return (
     <section
-      className="overflow-x-hidden bg-background px-4 pb-12 pt-6 sm:px-5 sm:pb-16 sm:pt-8 md:px-10 md:pt-16"
+      className="overflow-x-hidden bg-background px-4 pb-12 pt-8 sm:px-5 sm:pb-16 sm:pt-10 md:px-10 md:pt-[4.5rem]"
       aria-label="BizOS introduction"
     >
       <div className="rise mx-auto flex w-full max-w-3xl flex-col items-center text-center">
@@ -26,8 +26,7 @@ export function LandingHero() {
         </div>
         <div className="hero-overlap-copy-stack w-full max-w-lg shrink-0">
           <p className="text-base font-normal leading-[1.55] text-muted sm:text-lg sm:leading-[1.6]">
-            BizOS matches a business that fits you, gives you a founding team, so you can start being
-            productive on day one.
+            Start a custom biz with AI working on your behalf from day one.
           </p>
           <div className="mt-8 flex justify-center">
             <Button size="lg" asChild>

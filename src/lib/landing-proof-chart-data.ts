@@ -28,10 +28,17 @@ export const LANDING_PROOF_CHART_YEAR_MAX = 2026;
 export const LANDING_PROOF_CHART_AI_MAX_PCT = 100;
 export const LANDING_PROOF_CHART_BFS_MAX_MILLIONS = 6;
 
+export const LANDING_PROOF_CHART_X_TICK_YEARS = [2017, 2020, 2023, 2026] as const;
+
 export const LANDING_PROOF_CHART_LEGEND = {
+  aiAdoption: "AI adoption",
+  businessApplications: "New business applications",
+} as const;
+
+export const LANDING_PROOF_CHART_LEGEND_DETAIL = {
   aiAdoption:
-    "AI adoption in organizations (% using AI in at least one business function)",
-  businessApplications: "US new business applications (millions)",
+    "Percent of organizations using AI in at least one business function",
+  businessApplications: "US new business applications, millions",
 } as const;
 
 export const LANDING_PROOF_CHART_ARIA_LABEL =
