@@ -136,6 +136,8 @@ h4 {
   justify-content: center;
   width: 100%;
   padding-top: 0.25rem;
+  /* Reserve space for hex below the wordmark (not on the stack, so top: % is cap-height only). */
+  padding-bottom: clamp(2.25rem, 10vw, 4.25rem);
   overflow: visible;
 }
 
@@ -143,8 +145,6 @@ h4 {
   position: relative;
   display: inline-block;
   max-width: 100%;
-  /* Reserve space for the hex below the word baseline. */
-  padding-bottom: clamp(2.25rem, 10vw, 4.25rem);
   isolation: isolate;
 }
 
@@ -159,8 +159,8 @@ h4 {
 .hero-overlap-hex {
   position: absolute;
   left: 50%;
-  /* ~28% of cap height overlaps the hex; upper strokes stay fully visible. */
-  top: 62%;
+  /* Hex top sits on lower ~28% of cap height (parent height = h1 only). */
+  top: 70%;
   z-index: 10;
   display: flex;
   justify-content: center;
@@ -178,12 +178,12 @@ h4 {
 }
 
 @media (min-width: 640px) {
-  .hero-overlap-brand-stack {
+  .hero-overlap-stage {
     padding-bottom: clamp(2.5rem, 9vw, 4.75rem);
   }
 
   .hero-overlap-hex {
-    top: 60%;
+    top: 68%;
   }
 
   .hero-overlap-hex__mark {
@@ -192,12 +192,12 @@ h4 {
 }
 
 @media (min-width: 768px) {
-  .hero-overlap-brand-stack {
+  .hero-overlap-stage {
     padding-bottom: clamp(2.75rem, 8vw, 5.25rem);
   }
 
   .hero-overlap-hex {
-    top: 58%;
+    top: 66%;
   }
 
   .hero-overlap-hex__mark {
