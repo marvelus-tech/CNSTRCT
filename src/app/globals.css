@@ -14,6 +14,15 @@
   --accent-soft: #fde8d6;
   --border: #d2d3d8;
   --danger: #9f1239;
+  --proof-chart-bfs-stroke: hsl(226 58% 48%);
+  --proof-chart-ai-swatch: linear-gradient(
+    98deg,
+    #b45309 0%,
+    #e85d04 22%,
+    #f9738a 48%,
+    #93a4f8 74%,
+    #5b67d6 100%
+  );
 }
 
 @theme inline {
