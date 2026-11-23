@@ -46,15 +46,49 @@ test.describe("landing hero hex isolation", () => {
 
   test("gradient BizOS still overlaps hex on the wordmark", async ({ page }) => {
     const overlap = await page.evaluate(() => {
-      const h1 = document.querySelector(".hero-overlap-brand");
+      const prefix = document.querySelector(".hero-overlap-brand__prefix");
       const hex = document.querySelector(".hero-overlap-hex__mark");
-      if (!h1 || !hex) return false;
-      const hb = h1.getBoundingClientRect();
+      if (!prefix || !hex) return false;
+      const hb = prefix.getBoundingClientRect();
       const xb = hex.getBoundingClientRect();
       const verticalOverlap = hb.bottom > xb.top + 4;
       const horizontalOverlap = hb.left < xb.right && hb.right > xb.left;
       return verticalOverlap && horizontalOverlap;
     });
     expect(overlap).toBe(true);
+  });
+
+  test("suffix OS (including S) is not covered by hex bbox", async ({ page }) => {
+    const clear = await page.evaluate(() => {
+      const suffix = document.querySelector(".hero-overlap-brand__suffix");
+      const hex = document.querySelector(".hero-overlap-hex__mark");
+      if (!suffix || !hex) {
+        return { ok: false as const, reason: "missing hero brand parts" };
+      }
+      const text = suffix.textContent ?? "";
+      const range = document.createRange();
+      const walker = document.createTreeWalker(suffix, NodeFilter.SHOW_TEXT);
+      const node = walker.nextNode();
+      if (!node || text.length < 1) {
+        return { ok: false as const, reason: "missing suffix text node" };
+      }
+      const sIdx = text.length - 1;
+      range.setStart(node, sIdx);
+      range.setEnd(node, sIdx + 1);
+      const sb = range.getBoundingClientRect();
+      const xb = hex.getBoundingClientRect();
+      const overlaps =
+        sb.left < xb.right &&
+        sb.right > xb.left &&
+        sb.top < xb.bottom &&
+        sb.bottom > xb.top;
+      const overlapX = Math.min(sb.right, xb.right) - Math.max(sb.left, xb.left);
+      return { ok: true as const, overlaps, overlapX };
+    });
+
+    expect(clear.ok, clear.ok ? "" : clear.reason).toBe(true);
+    if (!clear.ok) return;
+    expect(clear.overlaps).toBe(false);
+    expect(clear.overlapX).toBeLessThanOrEqual(0);
   });
 });

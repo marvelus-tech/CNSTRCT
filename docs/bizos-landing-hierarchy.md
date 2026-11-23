@@ -21,7 +21,8 @@
 | `.hero-overlap-stage` | Centered hero stage container |
 | `.hero-overlap-brand-core` | H1 + hex overlap context (`top: %` = cap height only) |
 | `.hero-overlap-hex-spacer` | In-flow reserve for hex silhouette below wordmark |
-| `.hero-overlap-brand` | Gradient word layer (`z-index: 0`) |
+| `.hero-overlap-brand__prefix` | Gradient “Biz” under hex (`z-index: 0`) |
+| `.hero-overlap-brand__suffix` | Gradient “OS” above hex (`z-index: 11`) |
 | `.hero-overlap-hex` | Black hex overlap layer (`z-index: 10`) |
 | `.hero-overlap-copy-stack` | Lead + CTA below the hex footprint (separate layer from brand stack) |
 | `.landing-caption` | Hero crosshair slide labels |
@@ -40,7 +41,7 @@ Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: g
 | Surface | String |
 |---------|--------|
 | Nav CTA | Start a BIZ → `/triage` |
-| Hero H1 | Gradient **BizOS** in overlap stage (single `h1`, hex on top) |
+| Hero H1 | Gradient **BizOS** (`h1` + `display:contents`; hex over **Biz** only) |
 | Hero lead | Start a custom biz with AI working on your behalf from day one. |
 | Hero CTA | Start a BIZ |
 | Proof H2 | AI is default. New businesses are forming faster than ever. |
