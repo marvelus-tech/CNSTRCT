@@ -55,7 +55,7 @@ export default function HomePage() {
             Log in
           </Link>
           <Link href="/triage" className="font-medium">
-            Find my business
+            Start a BIZ
           </Link>
         </nav>
       </header>
@@ -74,7 +74,7 @@ export default function HomePage() {
               </p>
               <div className="mt-8">
                 <Button size="lg" asChild>
-                  <Link href="/triage">Find my business</Link>
+                  <Link href="/triage">Start a BIZ</Link>
                 </Button>
               </div>
             </div>
@@ -83,22 +83,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        <LandingSection variant="card">
-          <h2 className="landing-section-title">How it works</h2>
-          <ol className="mt-8 grid gap-8 md:grid-cols-3">
-            {[
-              ["Tell us who you are", "Short triage. Skills, time, goal."],
-              ["Get a business that fits", "Matched ideas, not a generic list."],
-              ["Turn the key", "Your bots go live. You approve what ships."],
-            ].map(([title, body], index) => (
-              <li key={title}>
-                <p className="text-sm font-medium text-accent">0{index + 1}</p>
-                <h3 className="how-step-title mt-2">{title}</h3>
-                <p className="how-step-lead mt-2">{body}</p>
-              </li>
-            ))}
-          </ol>
-        </LandingSection>
         <LandingFoundingTeam />
         <LandingProofStrip />
         <LandingConnectors />

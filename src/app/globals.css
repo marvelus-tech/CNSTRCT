@@ -115,21 +115,220 @@ h4 {
   fill: #000;
 }
 
-.founding-team-hex-stage {
-  display: grid;
-  width: 100%;
-  max-width: 15rem;
+.how-step-index {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.how-step-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+@media (min-width: 768px) {
+  .how-step-title {
+    font-size: 1.6875rem;
+  }
+}
+
+.how-step-lead {
+  font-size: 0.96875rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .how-step-lead {
+    font-size: 1.11rem;
+  }
+}
+
+.how-step-hex-solo {
+  display: flex;
+  justify-content: center;
+  width: min(100%, 14rem);
   margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .how-step-hex-solo {
+    margin-inline: 0;
+    justify-content: flex-start;
+  }
+}
+
+@keyframes how-step-hex-solo-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  35% {
+    transform: translate(5px, -4px) rotate(0.5deg);
+  }
+  70% {
+    transform: translate(-4px, 5px) rotate(-0.4deg);
+  }
+}
+
+.how-step-hex-solo__mark {
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  aspect-ratio: 0.92285 / 1;
+  -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+  animation: how-step-hex-solo-drift 9.5s ease-in-out infinite;
+  animation-delay: -2.2s;
+}
+
+.how-step-cluster-stage {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .how-step-cluster-stage {
+    justify-self: end;
+  }
+}
+
+@keyframes founding-team-bot-drift-left {
+  0%,
+  100% {
+    transform: translateY(-35%) translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-35%) translate(6px, -5px) rotate(0.7deg);
+  }
+  66% {
+    transform: translateY(-35%) translate(-5px, 6px) rotate(-0.6deg);
+  }
+}
+
+@keyframes founding-team-bot-drift-right {
+  0%,
+  100% {
+    transform: translateY(-35%) translate(0, 0) rotate(0deg);
+  }
+  40% {
+    transform: translateY(-35%) translate(-7px, 4px) rotate(-0.8deg);
+  }
+  75% {
+    transform: translateY(-35%) translate(5px, -6px) rotate(0.5deg);
+  }
+}
+
+@keyframes founding-team-bot-drift-bottom {
+  0%,
+  100% {
+    transform: translateX(-50%) translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translateX(-50%) translate(4px, -7px) rotate(0.6deg);
+  }
+  25% {
+    transform: translateX(-50%) translate(-6px, 5px) rotate(-0.5deg);
+  }
+}
+
+.founding-team-cluster {
+  position: relative;
+  width: min(100%, 21.5rem);
+  aspect-ratio: 1.22 / 1;
+  margin-inline: auto;
+}
+
+.founding-team-cluster__hex-wrap {
+  position: absolute;
+  inset: 8% 20% 16%;
+  display: grid;
   place-items: center;
 }
 
-.founding-team-hex-stage__mark {
+.founding-team-cluster__hex {
   display: block;
   width: 100%;
   max-width: 12rem;
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+}
+
+.founding-team-cluster__bot {
+  position: absolute;
+  z-index: 1;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
+}
+
+.founding-team-cluster__bot--left {
+  left: -2%;
+  top: 54%;
+  animation: founding-team-bot-drift-left 6.4s ease-in-out infinite;
+}
+
+.founding-team-cluster__bot--right {
+  right: -2%;
+  top: 54%;
+  animation: founding-team-bot-drift-right 7.9s ease-in-out infinite;
+  animation-delay: -2.8s;
+}
+
+.founding-team-cluster__bot--bottom {
+  left: 50%;
+  bottom: 0%;
+  animation: founding-team-bot-drift-bottom 5.7s ease-in-out infinite;
+  animation-delay: -4.1s;
+}
+
+.grok-bot-face {
+  display: block;
+  flex-shrink: 0;
+  transition: transform 180ms ease;
+}
+
+.grok-bot-face__disc {
+  fill: #000;
+}
+
+.grok-bot-face__disc--orange {
+  fill: var(--accent);
+}
+
+.grok-bot-face__disc--blue {
+  fill: #2563eb;
+}
+
+.grok-bot-face__disc--green {
+  fill: #16a34a;
+}
+
+.grok-bot-face__eye {
+  fill: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grok-bot-face {
+    transition: none;
+  }
+
+  .how-step-hex-solo__mark,
+  .founding-team-cluster__bot--left,
+  .founding-team-cluster__bot--right,
+  .founding-team-cluster__bot--bottom {
+    animation: none;
+  }
+
+  .founding-team-cluster__bot--left,
+  .founding-team-cluster__bot--right {
+    transform: translateY(-35%);
+  }
+
+  .founding-team-cluster__bot--bottom {
+    transform: translateX(-50%);
+  }
 }
 
 .hero-artifact__face {
@@ -713,6 +912,13 @@ h4 {
   width: 100%;
   margin-inline: auto;
   aspect-ratio: 400 / 220;
+}
+
+@media (min-width: 768px) {
+  /* Cap layout width so the orbit cluster stays centered with horizontal margin. */
+  .connectors-orbit-arena {
+    max-width: 36rem;
+  }
 }
 
 .connectors-orbit-scale-wrap {

@@ -1,56 +1,55 @@
 import { BusinessHexMark } from "@/components/business-hex-mark";
+import { FoundingTeamCluster } from "@/components/founding-team-cluster";
 import { LandingSection } from "@/components/landing-section";
 
-const FOUNDING_TEAM_BULLETS = [
+const STEPS = [
   {
-    emphasis: "Knows what's next",
-    rest: "when you don't.",
+    title: "Take the questionnaire",
+    body: "Our matching engine pairs you with a business built for your interests and situation.",
   },
   {
-    emphasis: "Works in their own digital world",
-    rest: "(screen, files, tools like any hire).",
-  },
-  {
-    emphasis: "You approve",
-    rest: "before anything sensitive ships.",
+    title: "Start your business",
+    body: "Your founding team starts working automatically. You approve what ships.",
   },
 ] as const;
 
 export function LandingFoundingTeam() {
+  const [stepOne, stepTwo] = STEPS;
+
   return (
-    <LandingSection variant="default" aria-label="Founding team on your desk">
-      <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
-        <div className="rise">
-          <p className="landing-eyebrow">Founding team</p>
-          <h2 className="landing-section-title mt-2">They start before you ask.</h2>
-          <p className="landing-section-lead mt-4 max-w-lg">
-            BizOS gives you a go-to team that picks the next task, runs it on their own desk, and
-            keeps moving while you focus on decisions.
-          </p>
-          <ul className="landing-section-lead mt-6 max-w-lg space-y-3">
-            {FOUNDING_TEAM_BULLETS.map((item) => (
-              <li key={item.emphasis} className="flex gap-2">
-                <span className="text-foreground" aria-hidden>
-                  ·
-                </span>
-                <span>
-                  <strong className="font-medium text-foreground">{item.emphasis}</strong>{" "}
-                  {item.rest}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="rise w-full md:justify-self-end">
-          <div className="founding-team-hex-stage">
+    <LandingSection variant="default" aria-label="How BizOS works">
+      <div className="rise">
+        <p className="landing-eyebrow">How it works</p>
+        <h2 className="landing-section-title mt-2">Match, then start.</h2>
+      </div>
+
+      <ol className="mt-8 space-y-10 md:space-y-14">
+        <li className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+          <div className="how-step-hex-solo rise">
             <BusinessHexMark
-              className="founding-team-hex-stage__mark"
+              className="how-step-hex-solo__mark"
               shapeClassName="bizos-hex-shape--black"
               aria-hidden
             />
           </div>
-        </div>
-      </div>
+          <div className="rise">
+            <p className="how-step-index">01</p>
+            <h3 className="how-step-title mt-2">{stepOne.title}</h3>
+            <p className="how-step-lead mt-2 max-w-lg">{stepOne.body}</p>
+          </div>
+        </li>
+
+        <li className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+          <div className="rise md:col-start-1 md:row-start-1">
+            <p className="how-step-index">02</p>
+            <h3 className="how-step-title mt-2">{stepTwo.title}</h3>
+            <p className="how-step-lead mt-2 max-w-lg">{stepTwo.body}</p>
+          </div>
+          <div className="rise how-step-cluster-stage md:col-start-2 md:row-start-1">
+            <FoundingTeamCluster />
+          </div>
+        </li>
+      </ol>
     </LandingSection>
   );
 }
