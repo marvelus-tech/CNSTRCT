@@ -83,22 +83,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        <LandingSection variant="card">
-          <h2 className="landing-section-title">How it works</h2>
-          <ol className="mt-8 grid gap-8 md:grid-cols-3">
-            {[
-              ["Tell us who you are", "Short triage. Skills, time, goal."],
-              ["Get a business that fits", "Matched ideas, not a generic list."],
-              ["Turn the key", "Your bots go live. You approve what ships."],
-            ].map(([title, body], index) => (
-              <li key={title}>
-                <p className="text-sm font-medium text-accent">0{index + 1}</p>
-                <h3 className="landing-section-title mt-2 text-xl md:text-2xl">{title}</h3>
-                <p className="landing-section-lead mt-2">{body}</p>
-              </li>
-            ))}
-          </ol>
-        </LandingSection>
         <LandingFoundingTeam />
         <LandingProofStrip />
         <LandingConnectors />
