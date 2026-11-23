@@ -893,6 +893,13 @@ h4 {
   aspect-ratio: 400 / 220;
 }
 
+@media (min-width: 768px) {
+  /* Cap layout width so the orbit cluster stays centered with horizontal margin. */
+  .connectors-orbit-arena {
+    max-width: 36rem;
+  }
+}
+
 .connectors-orbit-scale-wrap {
   position: absolute;
   left: 50%;
