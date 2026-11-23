@@ -3,7 +3,8 @@
 import { BusinessHexMark } from "@/components/business-hex-mark";
 import { GrokBotFace } from "@/components/grok-bot-face";
 
-const BOT_SIZE = 86;
+/** Proportional to cluster stage; was 86 when container was 21.5rem. */
+const BOT_SIZE = 70;
 
 export function FoundingTeamCluster() {
   return (
