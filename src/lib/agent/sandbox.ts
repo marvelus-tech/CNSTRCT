@@ -4,7 +4,7 @@ import path from "node:path";
 import { sandboxBaseDir } from "../db/paths";
 import { searchDetailers, searchTradies } from "./directory";
 import { orgo } from "./orgo";
-import { getAgent, getComputer, upsertComputer } from "../store";
+import { getAgent, getBusiness, getComputer, upsertComputer } from "../store";
 
 /**
  * Computer backend.
@@ -49,7 +49,7 @@ export function ensureWorkspace(agentId: string) {
 }
 
 export function configuredProvider(): SandboxProvider {
-  if (process.env.ORGO_API_KEY && process.env.ORGO_WORKSPACE_ID) return "orgo";
+  if (process.env.ORGO_API_KEY) return "orgo";
   if (dockerAvailable()) return "docker";
   return "local";
 }
@@ -231,7 +231,9 @@ export async function execInSandbox(agentId: string, command: string, city = "th
   const root = ensureWorkspace(agentId);
   const trimmed = command.trim();
   appendTerminal(agentId, `$ ${trimmed}`);
-  const orgoId = (await getAgent(agentId))?.orgoComputerId ?? null;
+  const agent = await getAgent(agentId);
+  const business = agent ? await getBusiness(agent.businessId) : null;
+  const orgoId = business?.orgoComputerId ?? null;
   if (trimmed.startsWith("cnstrct-search")) {
     const output = /detailers/i.test(trimmed) ? searchDetailers(city) : searchTradies(city);
     appendTerminal(agentId, output);
@@ -259,7 +261,7 @@ export async function execInSandbox(agentId: string, command: string, city = "th
       const result = await orgo.bash(orgoId, commandLine(plan.argv));
       const output = result.output || "(no output)";
       appendTerminal(agentId, output);
-      await upsertComputer(agentId, "orgo", "connected", "Orgo Small computer. App secrets are not on this VM.");
+      await upsertComputer(agentId, "orgo", "connected", "Orgo desk computer. App secrets are not on this VM.");
       return { exitCode: result.exit_code ?? 0, output, provider: "orgo" as const };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Orgo failed";

@@ -71,17 +71,20 @@ export async function loadDesk(userId: string, businessId?: string) {
       agentId: agent.id,
       name: agent.name,
       role: agent.role,
-      state: agent.orgoComputerId
-        ? ("connected" as const)
-        : agent.role === "orchestrator"
+      state:
+        agent.role === "orchestrator"
           ? ("not_configured" as const)
-          : computerState(null, orgoKey),
-      orgoComputerId: agent.orgoComputerId,
-      size: agent.role === "orchestrator" ? ("none" as const) : ("Small" as const),
+          : business?.orgoComputerId
+            ? ("connected" as const)
+            : computerState(null, orgoKey),
+      orgoComputerId: agent.role === "orchestrator" ? null : business?.orgoComputerId ?? null,
+      size: agent.role === "orchestrator" ? ("none" as const) : business?.orgoComputerId ? ("Medium" as const) : ("Small" as const),
       localNote:
         agent.role === "orchestrator"
-          ? `${agent.name} does not get an Orgo computer.`
-          : agent.computer.note,
+          ? `${agent.name} does not get an Orgo computer. Specialists share the business desk VM.`
+          : business?.orgoComputerId
+            ? agent.computer.note
+            : agent.computer.note,
       terminal: agent.computer.terminal,
       files: agent.computer.files,
       computerSeconds: agent.computerSeconds,

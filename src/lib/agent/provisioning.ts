@@ -1,4 +1,5 @@
 import { composioUserId, orgoConfigured, tregCustomerTag } from "./adapters";
+import { provisionOrgoForBusiness } from "./provision-orgo";
 import { redactProvisioningError } from "./redact";
 import {
   claimProvisioningJob,
@@ -125,7 +126,8 @@ type StubOutcome =
   | { kind: "succeeded" }
   | { kind: "skipped"; reason: string }
   | { kind: "retry"; reason: string }
-  | { kind: "pending_external"; reason: string };
+  | { kind: "pending_external"; reason: string }
+  | { kind: "failed"; reason: string };
 
 async function runProviderStub(provider: ProvisioningProvider, business: Business): Promise<StubOutcome> {
   if (provider === "composio") {
@@ -138,7 +140,10 @@ async function runProviderStub(provider: ProvisioningProvider, business: Busines
     if (!orgoConfigured()) {
       return { kind: "skipped", reason: "ORGO_API_KEY is not set." };
     }
-    return { kind: "pending_external", reason: "Orgo provisioning is not wired in this release." };
+    const result = await provisionOrgoForBusiness(business.id);
+    if (result.kind === "succeeded") return { kind: "succeeded" };
+    if (result.kind === "retry") return { kind: "retry", reason: result.reason };
+    return { kind: "failed", reason: result.reason };
   }
   if (provider === "treg") {
     if (!process.env.TREG_TOKEN || !process.env.TREG_ORG_ID) {
@@ -151,6 +156,21 @@ async function runProviderStub(provider: ProvisioningProvider, business: Busines
 
 async function applyProviderOutcome(job: ProvisioningJob, business: Business, outcome: StubOutcome, now: number) {
   const attempts = job.attempts + 1;
+  if (outcome.kind === "failed") {
+    const terminal = attempts >= MAX_ATTEMPTS;
+    await updateProvisioningJobResult(job.id, {
+      status: "failed",
+      nextAttemptAt: terminal ? job.nextAttemptAt : now + RETRY_MS,
+      leasedUntil: null,
+      lastError: redactProvisioningError(outcome.reason),
+      attempts,
+    });
+    if (terminal) {
+      await setBusinessProvisionFields(business.id, { provisionError: redactProvisioningError(outcome.reason) });
+    }
+    await refreshBusinessProvisionStatus(business.id);
+    return;
+  }
   if (outcome.kind === "succeeded" || outcome.kind === "skipped") {
     await updateProvisioningJobResult(job.id, {
       status: outcome.kind === "succeeded" ? "succeeded" : "skipped",

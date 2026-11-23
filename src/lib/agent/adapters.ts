@@ -7,6 +7,7 @@ import type { AgentRole } from "../types";
  */
 
 export const ORGO_SMALL = { cpu: 0.5, ram: 4, diskGb: 20, label: "Small" } as const;
+export const ORGO_DESK = { cpu: 2, ram: 8, diskGb: 40, label: "Medium" } as const;
 
 /** Gmail send is not wired in this MVP. The model list and the session list stay empty so they match. */
 export const GMAIL_MODEL_TOOLS = [] as const;
@@ -64,11 +65,10 @@ export function computerState(computerId: string | null, keySet: boolean): Compu
   return "not_connected";
 }
 
-/** Desk label uses specialist computer ids only. One id is not "the desk is connected". */
-export function orgoDeskLabel(computerIds: Array<string | null>, keySet: boolean) {
-  const connected = computerIds.filter((id) => Boolean(id)).length;
-  if (connected === 0) return `Orgo ${computerState(null, keySet).replaceAll("_", " ")}`;
-  return `Orgo ${connected} of ${computerIds.length} connected`;
+/** One Linux desk VM per business; specialists share it. */
+export function orgoDeskLabel(businessComputerId: string | null | undefined, keySet: boolean) {
+  if (businessComputerId) return "Orgo desk connected";
+  return `Orgo ${computerState(null, keySet).replaceAll("_", " ")}`;
 }
 
 export function sessionForRole(input: {
