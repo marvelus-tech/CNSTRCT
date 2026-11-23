@@ -80,8 +80,8 @@ const AI_STROKE_GRADIENT_STOPS = [
   { offset: "100%", color: "#5b67d6" },
 ] as const;
 
-const CHART_STROKE_AI = 2.35;
-const CHART_STROKE_BFS = 2.25;
+const CHART_STROKE_AI = 4.7;
+const CHART_STROKE_BFS = 4.5;
 
 const GRID_PCTS = [0, 50, 100] as const;
 const BFS_TICKS_M = [0, 3, 6] as const;
@@ -145,7 +145,7 @@ export function LandingProofTrendChart() {
       <div className="landing-section-lead mb-8 flex flex-col gap-2 text-left text-xs sm:text-sm md:flex-row md:flex-wrap md:items-center md:gap-x-8 md:gap-y-1">
         <span className="inline-flex items-center gap-2">
           <span
-            className="h-0.5 w-6 shrink-0 rounded-full"
+            className="h-1 w-6 shrink-0 rounded-full"
             style={{ background: "var(--proof-chart-ai-swatch)" }}
             aria-hidden
           />
@@ -154,7 +154,7 @@ export function LandingProofTrendChart() {
         </span>
         <span className="inline-flex items-center gap-2">
           <span
-            className="h-0.5 w-6 shrink-0 rounded-full"
+            className="h-1 w-6 shrink-0 rounded-full"
             style={{ backgroundColor: "var(--proof-chart-bfs-stroke)" }}
             aria-hidden
           />
