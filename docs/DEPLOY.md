@@ -1,19 +1,12 @@
 # Deploy BizOS on Vercel
 
-BizOS (repo **CNSTRCT**) is a Next.js app with API routes. Production state is Neon (Vercel Postgres) via `@neondatabase/serverless`. Local dev and `pnpm test` use SQLite (`node:sqlite`) on disk. It runs in **demo mode** with no API keys. Production: [https://bizos-mu.vercel.app](https://bizos-mu.vercel.app).
+BizOS (repo **CNSTRCT**) is a Next.js app with API routes. Production state is Neon (Vercel Postgres) via `@neondatabase/serverless`. Local dev and `pnpm test` use SQLite (`node:sqlite`) on disk. It runs in **demo mode** with no API keys. Production: [https://cnstrct-mu.vercel.app](https://cnstrct-mu.vercel.app).
 
-## Canonical production hostname (bizos-mu)
+## Do not use `bizos-mu.vercel.app`
 
-Treat **https://bizos-mu.vercel.app** as the canonical marketing and app URL in docs, `NEXT_PUBLIC_SITE_URL`, and the GitHub repository **Website** field (repo → About → Website). The Vercel project name should be **bizos-mu** when possible so the default `*.vercel.app` hostname matches.
+**https://bizos-mu.vercel.app** is already assigned to a **different** Vercel project (another team's Spanish restaurant SaaS). It is **not** this repository. Do not set `NEXT_PUBLIC_SITE_URL`, docs links, or GitHub **Website** to that hostname.
 
-If an older deployment still answers only at **https://cnstrct-mu.vercel.app**, add **bizos-mu.vercel.app** as an alias on the same project (no secrets):
-
-1. Open [vercel.com](https://vercel.com) → the BizOS project → **Settings** → **Domains**.
-2. Click **Add** and enter `bizos-mu.vercel.app` (or your custom domain). Confirm.
-3. Set **Production** env var `NEXT_PUBLIC_SITE_URL` to `https://bizos-mu.vercel.app` (no trailing slash) and redeploy.
-4. Update the GitHub repo homepage and any external links to **bizos-mu**. You can leave **cnstrct-mu** as a secondary domain or remove it after traffic moves.
-
-Both hostnames may serve the same build during transition; canonical metadata should always use **bizos-mu**.
+**Canonical production URL:** **https://cnstrct-mu.vercel.app** (Vercel project **cnstrct-mu**). For public branding, attach a **custom domain** on that project (Settings → Domains) instead of chasing a taken `*.vercel.app` name.
 
 ## Why `https://cnstrct.vercel.app` is not CNSTRCT
 
@@ -23,7 +16,7 @@ This repo does not ship `middleware.ts` or auth gates on `/` or `/triage`. After
 
 **Fix options:**
 
-1. **Recommended:** Use the linked project **bizos-mu** with production URL `https://bizos-mu.vercel.app`.
+1. **Recommended:** Use the linked project **cnstrct-mu** with production URL `https://cnstrct-mu.vercel.app`.
 2. **Reuse the name:** In the Vercel team that owns `cnstrct.vercel.app`, delete or rename the old project, then attach `cnstrct.vercel.app` to the CNSTRCT deployment (Project → Settings → Domains).
 
 ## One-time import (marvelus-tech)
@@ -32,7 +25,7 @@ You only need to do this once per Vercel team. After that, every push to `main` 
 
 1. Sign in at [vercel.com](https://vercel.com) with the **marvelus-tech** GitHub account (or a team that should own the app).
 2. **Add New… → Project → Import** `marvelus-tech/CNSTRCT`.
-3. **Project name:** `bizos-mu` (production URL `https://bizos-mu.vercel.app`). Renaming an existing `cnstrct-mu` project in **Settings → General** also updates the default `*.vercel.app` hostname when that name is free.
+3. **Project name:** `cnstrct-mu` (production URL `https://cnstrct-mu.vercel.app`).
 4. **Framework:** Next.js (auto-detected). **Root directory:** repository root.
 5. **Production branch:** `main`.
 6. **Build settings:** `vercel.json` in the repo already sets:
@@ -44,7 +37,7 @@ You only need to do this once per Vercel team. After that, every push to `main` 
    | --- | --- |
    | `DATABASE_URL` or `POSTGRES_URL` | Neon connection string from the Vercel Postgres / Neon integration. Required. Do not commit it. |
    | `CRON_SECRET` | Random string. Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` to `/api/cron/provisioning`. |
-   | `NEXT_PUBLIC_SITE_URL` | `https://bizos-mu.vercel.app` (no trailing slash) |
+   | `NEXT_PUBLIC_SITE_URL` | `https://cnstrct-mu.vercel.app` (no trailing slash) |
 
    Optional server-only names (empty in demo mode): `ORGO_API_KEY`, `TREG_TOKEN`, `TREG_ORG_ID`, `COMPOSIO_API_KEY`, `COMPOSIO_WEBHOOK_SECRET`. No `NEXT_PUBLIC_` copies.
 
@@ -99,4 +92,4 @@ Epoch columns are `BIGINT`. Postgres `INTEGER` is 32-bit and cannot store `Date.
 
 ## Updating marvelus-tech.github.io
 
-After the first production deploy, set public links to **https://bizos-mu.vercel.app**.
+After the first production deploy, set public links to **https://cnstrct-mu.vercel.app**.
