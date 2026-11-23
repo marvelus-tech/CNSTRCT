@@ -1,6 +1,6 @@
 # Production smoke checklist (BizOS)
 
-**Canonical app URL:** https://cnstrct-mu.vercel.app
+**Canonical app URL:** https://bizos-mu.vercel.app
 
 Run this after a production deploy (or against local `pnpm start` with production env vars).
 
