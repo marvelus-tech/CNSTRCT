@@ -9,11 +9,11 @@ type LandingSectionProps = {
   "aria-label"?: string;
 };
 
-/** Landing sections share the hero surface (`--background`); variants keep API compat only. */
+/** Landing sections share the hero surface (`--card`, lightest grey); variants keep API compat only. */
 const variantClasses: Record<NonNullable<LandingSectionProps["variant"]>, string> = {
-  default: "bg-background",
-  card: "bg-background",
-  plain: "bg-background",
+  default: "bg-card",
+  card: "bg-card",
+  plain: "bg-card",
 };
 
 export function LandingSection({

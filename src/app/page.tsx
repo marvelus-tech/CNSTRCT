@@ -45,7 +45,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-card">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="flex items-center justify-between px-4 py-4 sm:px-5 md:px-10">
         <Wordmark />
@@ -79,7 +79,7 @@ export default function HomePage() {
           </div>
         </LandingSection>
       </main>
-      <SiteFooter className="border-t-0" />
+      <SiteFooter className="border-t-0 bg-card" />
     </div>
   );
 }

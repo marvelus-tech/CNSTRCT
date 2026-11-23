@@ -1166,7 +1166,7 @@ h4 {
   place-items: center;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--card);
+  background: var(--background);
   box-shadow: 0 2px 8px -2px rgba(40, 57, 75, 0.28);
 }
 
