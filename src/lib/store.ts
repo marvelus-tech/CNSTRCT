@@ -214,6 +214,10 @@ function mapBusiness(row: Record<string, unknown>): Business {
     orgoComputerId: row.orgo_computer_id == null ? null : String(row.orgo_computer_id),
     composioUserId: row.composio_user_id == null ? null : String(row.composio_user_id),
     tregCustomerTag: row.treg_customer_tag == null ? null : String(row.treg_customer_tag),
+    tregBudgetStatus:
+      row.treg_budget_status == null
+        ? "unset"
+        : (String(row.treg_budget_status) as import("./types").TregBudgetStatus),
     provisionStatus: (row.provision_status == null ? "pending" : String(row.provision_status)) as ProvisionStatus,
     provisionError: row.provision_error == null ? null : String(row.provision_error),
     createIdempotencyKey: row.create_idempotency_key == null ? null : String(row.create_idempotency_key),
@@ -346,6 +350,10 @@ export async function updateProvisioningJobResult(
 
 export async function setBusinessWorkspace(id: string, workspaceId: string) {
   await (await db()).prepare("UPDATE businesses SET orgo_workspace_id = ? WHERE id = ?").run(workspaceId, id);
+}
+
+export async function setBusinessTregBudgetStatus(id: string, status: import("./types").TregBudgetStatus) {
+  await (await db()).prepare("UPDATE businesses SET treg_budget_status = ? WHERE id = ?").run(status, id);
 }
 
 export async function setBusinessOrgoIds(

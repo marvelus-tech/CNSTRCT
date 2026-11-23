@@ -60,7 +60,7 @@ pnpm start
 
 ## Durable database
 
-Production state (users, sessions, profiles, businesses, agents, routines, messages, approvals, policies, leads, tasks, audit, connections, billing, provisioning jobs) is Neon. Production does not open SQLite. The first request applies pending versions in `schema_migrations` (`001_baseline`, then `002_provisioning` for the async provider outbox). A failed boot does not record the version, so the next boot retries. `CREATE TABLE IF NOT EXISTS` and one-time `ALTER TABLE` steps make that retry safe.
+Production state (users, sessions, profiles, businesses, agents, routines, messages, approvals, policies, leads, tasks, audit, connections, billing, provisioning jobs) is Neon. Production does not open SQLite. The first request applies pending versions in `schema_migrations` (`001_baseline`, `002_provisioning` for the async provider outbox, then `003_treg_budget` for per-business Treg cap state). A failed boot does not record the version, so the next boot retries. `CREATE TABLE IF NOT EXISTS` and one-time `ALTER TABLE` steps make that retry safe.
 
 Business creation enqueues Orgo, Treg, and Composio jobs in the same transaction as the business row. External calls run from `/api/cron/provisioning` (schedule in `vercel.json`), not from `POST /api/business`.
 

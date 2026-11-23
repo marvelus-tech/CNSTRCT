@@ -26,6 +26,8 @@ export interface Profile {
 
 export type ProvisionStatus = "pending" | "provisioning" | "ready" | "partial" | "failed";
 
+export type TregBudgetStatus = "unset" | "set" | "failed";
+
 export type ProvisioningProvider = "orgo" | "treg" | "composio";
 
 export type ProvisioningJobStatus = "pending" | "running" | "succeeded" | "failed" | "skipped";
@@ -43,6 +45,7 @@ export interface Business {
   orgoComputerId?: string | null;
   composioUserId?: string | null;
   tregCustomerTag?: string | null;
+  tregBudgetStatus?: TregBudgetStatus;
   provisionStatus: ProvisionStatus;
   provisionError?: string | null;
   createIdempotencyKey?: string | null;
