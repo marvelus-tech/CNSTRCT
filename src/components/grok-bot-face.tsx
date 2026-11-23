@@ -11,6 +11,7 @@ type GrokBotFaceProps = {
   seed: 0 | 1 | 2;
   lookBias: LookBias;
   className?: string;
+  discClassName?: string;
 };
 
 const EXPRESSION_MODES: ExpressionMode[] = ["normal", "wide", "squint", "focus", "tilt"];
@@ -44,7 +45,13 @@ function eyeMetrics(mode: ExpressionMode): { height: number; gap: number } {
   }
 }
 
-export function GrokBotFace({ size = 56, seed, lookBias, className }: GrokBotFaceProps) {
+export function GrokBotFace({
+  size = 56,
+  seed,
+  lookBias,
+  className,
+  discClassName,
+}: GrokBotFaceProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const inViewRef = useRef(true);
   const timersRef = useRef<number[]>([]);
@@ -176,7 +183,7 @@ export function GrokBotFace({ size = 56, seed, lookBias, className }: GrokBotFac
         aria-hidden
         focusable="false"
       >
-        <circle cx="50" cy="50" r="50" className="grok-bot-face__disc" />
+        <circle cx="50" cy="50" r="50" className={cn("grok-bot-face__disc", discClassName)} />
         <g
           className="grok-bot-face__eyes"
           transform={`translate(${gaze.x} ${gaze.y})`}
