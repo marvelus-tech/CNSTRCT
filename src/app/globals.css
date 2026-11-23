@@ -111,7 +111,7 @@ h4 {
   fill: #000;
 }
 
-/* Centered hero: gradient display word tucked behind the black hex (light bg). */
+/* Centered hero: gradient wordmark with black hex overlapping only the lower third (depth). */
 .hero-gradient-brand {
   font-size: clamp(3.25rem, 13.5vw, 7.25rem);
   font-weight: 600;
@@ -132,18 +132,24 @@ h4 {
 }
 
 .hero-overlap-stage {
-  position: relative;
-  display: grid;
+  display: flex;
+  justify-content: center;
   width: 100%;
-  min-height: 13.5rem;
-  place-items: center;
   padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
   overflow: visible;
 }
 
+.hero-overlap-brand-stack {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  /* Reserve space for the hex below the word baseline. */
+  padding-bottom: clamp(2.25rem, 10vw, 4.25rem);
+  isolation: isolate;
+}
+
 .hero-overlap-brand {
-  grid-area: 1 / 1;
+  position: relative;
   z-index: 0;
   margin: 0;
   pointer-events: none;
@@ -151,43 +157,51 @@ h4 {
 }
 
 .hero-overlap-hex {
-  grid-area: 1 / 1;
+  position: absolute;
+  left: 50%;
+  /* ~28% of cap height overlaps the hex; upper strokes stay fully visible. */
+  top: 62%;
   z-index: 10;
   display: flex;
   justify-content: center;
-  /* Pull hex down so ~35% of the gradient word sits behind the hex top. */
-  margin-top: 2.625rem;
+  margin: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
 }
 
 .hero-overlap-hex__mark {
   display: block;
-  width: min(50vw, 11.25rem);
+  width: min(38vw, 9.25rem);
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
 }
 
 @media (min-width: 640px) {
+  .hero-overlap-brand-stack {
+    padding-bottom: clamp(2.5rem, 9vw, 4.75rem);
+  }
+
   .hero-overlap-hex {
-    margin-top: 3rem;
+    top: 60%;
   }
 
   .hero-overlap-hex__mark {
-    width: min(44vw, 15.5rem);
+    width: min(34vw, 11.5rem);
   }
 }
 
 @media (min-width: 768px) {
-  .hero-overlap-stage {
-    min-height: 17.5rem;
+  .hero-overlap-brand-stack {
+    padding-bottom: clamp(2.75rem, 8vw, 5.25rem);
   }
 
   .hero-overlap-hex {
-    margin-top: 3.75rem;
+    top: 58%;
   }
 
   .hero-overlap-hex__mark {
-    width: min(38vw, 19.25rem);
+    width: min(30vw, 14.25rem);
   }
 }
 

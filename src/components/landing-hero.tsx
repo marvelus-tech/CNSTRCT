@@ -10,13 +10,15 @@ export function LandingHero() {
     >
       <div className="rise mx-auto flex max-w-3xl flex-col items-center text-center">
         <div className="hero-overlap-stage">
-          <h1 className="hero-overlap-brand hero-gradient-brand">BizOS</h1>
-          <div className="hero-overlap-hex" aria-hidden="true">
-            <BusinessHexMark
-              className="hero-overlap-hex__mark"
-              shapeClassName="hero-brandmark__shape"
-              aria-hidden
-            />
+          <div className="hero-overlap-brand-stack">
+            <h1 className="hero-overlap-brand hero-gradient-brand">BizOS</h1>
+            <div className="hero-overlap-hex" aria-hidden="true">
+              <BusinessHexMark
+                className="hero-overlap-hex__mark"
+                shapeClassName="hero-brandmark__shape"
+                aria-hidden
+              />
+            </div>
           </div>
         </div>
         <div className="mt-2 w-full max-w-lg sm:mt-4">
