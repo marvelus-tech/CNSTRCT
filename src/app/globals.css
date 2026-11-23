@@ -110,21 +110,71 @@ h4 {
   fill: #000;
 }
 
-.founding-team-hex-stage {
-  display: grid;
-  width: 100%;
-  max-width: 15rem;
+.founding-team-cluster {
+  position: relative;
+  width: min(100%, 18rem);
+  aspect-ratio: 1.22 / 1;
   margin-inline: auto;
+}
+
+.founding-team-cluster__hex-wrap {
+  position: absolute;
+  inset: 8% 22% 18%;
+  display: grid;
   place-items: center;
 }
 
-.founding-team-hex-stage__mark {
+.founding-team-cluster__hex {
   display: block;
   width: 100%;
   max-width: 12rem;
   aspect-ratio: 0.92285 / 1;
   -webkit-clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
   clip-path: polygon(50% -2%, 102% 22%, 102% 78%, 50% 102%, -2% 78%, -2% 22%);
+}
+
+.founding-team-cluster__bot {
+  position: absolute;
+  z-index: 1;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
+}
+
+.founding-team-cluster__bot--left {
+  left: 2%;
+  top: 34%;
+  transform: translateY(-50%);
+}
+
+.founding-team-cluster__bot--right {
+  right: 2%;
+  top: 34%;
+  transform: translateY(-50%);
+}
+
+.founding-team-cluster__bot--bottom {
+  left: 50%;
+  bottom: 2%;
+  transform: translateX(-50%);
+}
+
+.grok-bot-face {
+  display: block;
+  flex-shrink: 0;
+  transition: transform 180ms ease;
+}
+
+.grok-bot-face__disc {
+  fill: #000;
+}
+
+.grok-bot-face__eye {
+  fill: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grok-bot-face {
+    transition: none;
+  }
 }
 
 .hero-artifact__face {
