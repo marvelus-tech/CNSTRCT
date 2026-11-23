@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${interTight.variable} h-full`}>
-      <body className="min-h-full antialiased">
+      <body className="min-h-full bg-background text-foreground antialiased">
         <HostedDemoBanner />
         <BillingDevBanner />
         {children}
