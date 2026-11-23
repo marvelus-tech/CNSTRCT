@@ -41,7 +41,7 @@ Single centered column (`max-w-3xl`): brand stack (`.hero-overlap-brand-core`: g
 |---------|--------|
 | Nav CTA | Start a BIZ → `/triage` |
 | Hero H1 | Gradient **BizOS** in overlap stage (single `h1`, hex on top) |
-| Hero lead | BizOS matches a business that fits you, gives you a founding team, so you can start being productive on day one. |
+| Hero lead | Start a custom biz with AI working on your behalf from day one. |
 | Hero CTA | Start a BIZ |
 | Proof H2 | The world is no longer guessing. |
 | Proof subhead | AI is now the default in business. New companies are forming at record pace. The winners are the ones that start with AI already working for them. |
