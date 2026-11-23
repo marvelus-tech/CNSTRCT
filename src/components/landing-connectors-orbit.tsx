@@ -71,8 +71,10 @@ export function LandingConnectorsOrbit() {
 
     const syncScale = () => {
       const width = arena.clientWidth;
-      const targetFill = 0.87;
-      const maxScale = 2.65;
+      const isDesktop = width >= 768;
+      // Mobile: fill most of the row; desktop: leave side breathing room via lower fill + CSS max-width.
+      const targetFill = isDesktop ? 0.68 : 0.87;
+      const maxScale = isDesktop ? 1.38 : 2.65;
       const minScale = 0.55;
       let scale = width > 0 ? (width * targetFill) / ORBIT_OUTER_DIAMETER : 1;
       scale = Math.min(maxScale, Math.max(minScale, scale));
