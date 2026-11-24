@@ -43,7 +43,7 @@ type ChartLayout = {
 
 function getChartLayout(compact: boolean): ChartLayout {
   const margin = compact
-    ? { top: 28, right: 165, bottom: 36, left: 36 }
+    ? { top: 28, right: 165, bottom: 36, left: 28 }
     : { top: 28, right: 130, bottom: 36, left: 28 };
   const plotW = VIEW_W - margin.left - margin.right;
   const plotH = VIEW_H - margin.top - margin.bottom;
@@ -59,13 +59,13 @@ function getChartLayout(compact: boolean): ChartLayout {
     bfsValueY: compact ? 118 : 124,
     bfsSubY: compact ? 134 : 140,
     valueFontClass: compact
-      ? "fill-foreground text-[15px] font-semibold tabular-nums"
-      : "fill-foreground text-[13px] font-semibold tabular-nums sm:text-[14px]",
+      ? "fill-foreground text-[17px] font-semibold tabular-nums"
+      : "fill-foreground text-[14px] font-semibold tabular-nums sm:text-[15px]",
     subFontClass: compact
-      ? "fill-muted-foreground text-[12px]"
-      : "fill-muted-foreground text-[11px]",
+      ? "fill-muted-foreground text-[13px]"
+      : "fill-muted-foreground text-[12px]",
     figureClassName: compact
-      ? "proof-chart-figure mx-auto w-full max-w-[min(100%,17.5rem)] sm:max-w-lg"
+      ? "proof-chart-figure w-full sm:max-w-lg"
       : "proof-chart-figure mx-auto w-full max-w-md sm:max-w-lg",
   };
 }
