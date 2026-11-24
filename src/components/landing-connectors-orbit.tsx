@@ -1,10 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { BusinessHexMark } from "@/components/business-hex-mark";
 import {
   depthFromTheta,
+  ORBIT_HUB_Z_INDEX,
   ORBIT_OUTER_DIAMETER,
   ORBIT_PERIOD_MS,
   ORBIT_PHASE_OFFSET,
@@ -43,6 +50,38 @@ function motionAtTheta(theta: number): NodeMotion {
 function trainMotionsAtLead(leadTheta: number): NodeMotion[] {
   return LANDING_CONNECTORS.map((_, index) =>
     motionAtTheta(orbitThetaForIndex(leadTheta, index, LANDING_CONNECTOR_COUNT)),
+  );
+}
+
+function OrbitNode({
+  connector,
+  motion,
+}: {
+  connector: (typeof LANDING_CONNECTORS)[number];
+  motion: NodeMotion;
+}) {
+  return (
+    <div
+      className="connectors-orbit-node"
+      style={{
+        transform: motion.transform,
+        zIndex: motion.zIndex,
+        opacity: motion.opacity,
+      }}
+      aria-hidden="true"
+      title={connector.name}
+    >
+      <div className="connectors-orbit-disc">
+        <Image
+          src={`/integrations/${connector.id}.svg`}
+          alt=""
+          width={22}
+          height={22}
+          className="connectors-orbit-logo"
+          unoptimized
+        />
+      </div>
+    </div>
   );
 }
 
@@ -157,42 +196,41 @@ export function LandingConnectorsOrbit() {
             </div>
           </div>
 
-          <div className="connectors-orbit-screen-layer">
+          <div
+            className="connectors-orbit-screen-layer"
+            style={
+              {
+                "--orbit-hub-z-index": ORBIT_HUB_Z_INDEX,
+              } as CSSProperties
+            }
+          >
             {LANDING_CONNECTORS.map((connector, index) => {
               const motion = nodes[index];
+              if (motion.zIndex > ORBIT_HUB_Z_INDEX) return null;
               return (
-                <div
-                  key={connector.id}
-                  className="connectors-orbit-node"
-                  style={{
-                    transform: motion.transform,
-                    zIndex: motion.zIndex,
-                    opacity: motion.opacity,
-                  }}
-                  aria-hidden="true"
-                  title={connector.name}
-                >
-                  <div className="connectors-orbit-disc">
-                    <Image
-                      src={`/integrations/${connector.id}.svg`}
-                      alt=""
-                      width={22}
-                      height={22}
-                      className="connectors-orbit-logo"
-                      unoptimized
-                    />
-                  </div>
-                </div>
+                <OrbitNode key={connector.id} connector={connector} motion={motion} />
               );
             })}
 
-            <div className="connectors-orbit-planet" aria-hidden="true">
+            <div
+              className="connectors-orbit-planet"
+              style={{ zIndex: ORBIT_HUB_Z_INDEX }}
+              aria-hidden="true"
+            >
               <BusinessHexMark
                 className="landing-hub-hex-mark connectors-orbit-planet-hex"
                 shapeClassName="bizos-hex-shape--black"
                 aria-hidden
               />
             </div>
+
+            {LANDING_CONNECTORS.map((connector, index) => {
+              const motion = nodes[index];
+              if (motion.zIndex <= ORBIT_HUB_Z_INDEX) return null;
+              return (
+                <OrbitNode key={connector.id} connector={connector} motion={motion} />
+              );
+            })}
           </div>
         </div>
       </div>
