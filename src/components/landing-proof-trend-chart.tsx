@@ -18,41 +18,6 @@ import {
 
 const VIEW_W = 800;
 const VIEW_H = 320;
-const MARGIN = { top: 28, right: 108, bottom: 36, left: 28 };
-const PLOT_W = VIEW_W - MARGIN.left - MARGIN.right;
-const PLOT_H = VIEW_H - MARGIN.top - MARGIN.bottom;
-
-const ENDPOINT_LABEL_DX = 10;
-const AI_LABEL_DY_VALUE = -18;
-const AI_LABEL_DY_SUB = -4;
-const BFS_LABEL_DY_VALUE = 14;
-const BFS_LABEL_DY_SUB = 28;
-
-function xForYear(year: number): number {
-  const span = LANDING_PROOF_CHART_YEAR_MAX - LANDING_PROOF_CHART_YEAR_MIN;
-  const t = (year - LANDING_PROOF_CHART_YEAR_MIN) / span;
-  return MARGIN.left + t * PLOT_W;
-}
-
-function yForPct(pct: number): number {
-  const t = pct / LANDING_PROOF_CHART_AI_MAX_PCT;
-  return MARGIN.top + (1 - t) * PLOT_H;
-}
-
-function yForMillions(millions: number): number {
-  const t = millions / LANDING_PROOF_CHART_BFS_MAX_MILLIONS;
-  return MARGIN.top + (1 - t) * PLOT_H;
-}
-
-/** Straight segments between annual data points (polyline). */
-function seriesToPath(points: ProofChartPoint[], yScale: (v: number) => number): string {
-  return points
-    .map((p, i) => {
-      const cmd = i === 0 ? "M" : "L";
-      return `${cmd} ${xForYear(p.year).toFixed(2)} ${yScale(p.value).toFixed(2)}`;
-    })
-    .join(" ");
-}
 
 const AI_STROKE_GRADIENT_STOPS = [
   { offset: "0%", color: "#b45309" },
@@ -62,12 +27,108 @@ const AI_STROKE_GRADIENT_STOPS = [
   { offset: "100%", color: "#16a34a" },
 ] as const;
 
+type ChartLayout = {
+  margin: { top: number; right: number; bottom: number; left: number };
+  plotW: number;
+  plotH: number;
+  labelX: number;
+  aiValueY: number;
+  aiSubY: number;
+  bfsValueY: number;
+  bfsSubY: number;
+  valueFontClass: string;
+  subFontClass: string;
+  figureClassName: string;
+};
+
+function getChartLayout(compact: boolean): ChartLayout {
+  const margin = compact
+    ? { top: 28, right: 165, bottom: 36, left: 36 }
+    : { top: 28, right: 130, bottom: 36, left: 28 };
+  const plotW = VIEW_W - margin.left - margin.right;
+  const plotH = VIEW_H - margin.top - margin.bottom;
+  const labelX = VIEW_W - margin.right + 12;
+
+  return {
+    margin,
+    plotW,
+    plotH,
+    labelX,
+    aiValueY: compact ? 52 : 58,
+    aiSubY: compact ? 68 : 74,
+    bfsValueY: compact ? 118 : 124,
+    bfsSubY: compact ? 134 : 140,
+    valueFontClass: compact
+      ? "fill-foreground text-[15px] font-semibold tabular-nums"
+      : "fill-foreground text-[13px] font-semibold tabular-nums sm:text-[14px]",
+    subFontClass: compact
+      ? "fill-muted-foreground text-[12px]"
+      : "fill-muted-foreground text-[11px]",
+    figureClassName: compact
+      ? "proof-chart-figure mx-auto w-full max-w-[min(100%,17.5rem)] sm:max-w-lg"
+      : "proof-chart-figure mx-auto w-full max-w-md sm:max-w-lg",
+  };
+}
+
+function createScales(layout: ChartLayout) {
+  const { margin, plotW, plotH } = layout;
+  const xForYear = (year: number) => {
+    const span = LANDING_PROOF_CHART_YEAR_MAX - LANDING_PROOF_CHART_YEAR_MIN;
+    const t = (year - LANDING_PROOF_CHART_YEAR_MIN) / span;
+    return margin.left + t * plotW;
+  };
+  const yForPct = (pct: number) => {
+    const t = pct / LANDING_PROOF_CHART_AI_MAX_PCT;
+    return margin.top + (1 - t) * plotH;
+  };
+  const yForMillions = (millions: number) => {
+    const t = millions / LANDING_PROOF_CHART_BFS_MAX_MILLIONS;
+    return margin.top + (1 - t) * plotH;
+  };
+  return { xForYear, yForPct, yForMillions };
+}
+
+/** Straight segments between annual data points (polyline). */
+function seriesToPath(
+  points: ProofChartPoint[],
+  yScale: (v: number) => number,
+  xForYear: (year: number) => number,
+): string {
+  return points
+    .map((p, i) => {
+      const cmd = i === 0 ? "M" : "L";
+      return `${cmd} ${xForYear(p.year).toFixed(2)} ${yScale(p.value).toFixed(2)}`;
+    })
+    .join(" ");
+}
+
+function useCompactViewport(): boolean {
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const apply = () => setCompact(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  return compact;
+}
+
 export function LandingProofTrendChart() {
   const gradientId = useId().replace(/:/g, "");
   const aiPathRef = useRef<SVGPathElement>(null);
   const bfsPathRef = useRef<SVGPathElement>(null);
   const [reducedMotion, setReducedMotion] = useState(true);
   const [pathsReady, setPathsReady] = useState(false);
+  const compact = useCompactViewport();
+
+  const layout = useMemo(() => getChartLayout(compact), [compact]);
+  const { margin, xForYear, yForPct, yForMillions } = useMemo(() => {
+    const scales = createScales(layout);
+    return { margin: layout.margin, ...scales };
+  }, [layout]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -98,15 +159,15 @@ export function LandingProofTrendChart() {
         el.style.strokeDashoffset = "0";
       }
     });
-  }, [reducedMotion]);
+  }, [reducedMotion, layout]);
 
   const aiPath = useMemo(
-    () => seriesToPath([...LANDING_PROOF_AI_ADOPTION_SERIES], yForPct),
-    [],
+    () => seriesToPath([...LANDING_PROOF_AI_ADOPTION_SERIES], yForPct, xForYear),
+    [xForYear, yForPct],
   );
   const bfsPath = useMemo(
-    () => seriesToPath([...LANDING_PROOF_BFS_SERIES], yForMillions),
-    [],
+    () => seriesToPath([...LANDING_PROOF_BFS_SERIES], yForMillions, xForYear),
+    [xForYear, yForMillions],
   );
 
   const endYear = LANDING_PROOF_CHART_YEAR_MAX;
@@ -118,7 +179,7 @@ export function LandingProofTrendChart() {
   const baselineY = yForPct(0);
 
   return (
-    <figure className="proof-chart-figure mx-auto w-full max-w-md sm:max-w-lg">
+    <figure className={layout.figureClassName}>
       <div className="sr-only">
         {LANDING_PROOF_CHART_LEGEND.aiAdoption}: {LANDING_PROOF_CHART_LEGEND_DETAIL.aiAdoption}.{" "}
         {LANDING_PROOF_CHART_LEGEND.businessApplications}:{" "}
@@ -135,9 +196,9 @@ export function LandingProofTrendChart() {
           <linearGradient
             id={`proof-ai-stroke-${gradientId}`}
             gradientUnits="userSpaceOnUse"
-            x1={MARGIN.left}
+            x1={margin.left}
             y1={0}
-            x2={VIEW_W - MARGIN.right}
+            x2={VIEW_W - margin.right}
             y2={0}
           >
             {AI_STROKE_GRADIENT_STOPS.map((stop) => (
@@ -147,9 +208,9 @@ export function LandingProofTrendChart() {
         </defs>
 
         <line
-          x1={MARGIN.left}
+          x1={margin.left}
           y1={baselineY}
-          x2={VIEW_W - MARGIN.right}
+          x2={VIEW_W - margin.right}
           y2={baselineY}
           stroke="currentColor"
           strokeOpacity={0.08}
@@ -192,36 +253,36 @@ export function LandingProofTrendChart() {
         <circle cx={aiEndX} cy={aiEndY} r={4} fill="#16a34a" />
         <circle cx={aiEndX} cy={bfsEndY} r={4} fill="var(--proof-chart-bfs-stroke)" />
 
-        <g aria-hidden>
+        <g aria-hidden className="proof-chart-endpoint-labels">
           <text
-            x={aiEndX + ENDPOINT_LABEL_DX}
-            y={aiEndY + AI_LABEL_DY_VALUE}
+            x={layout.labelX}
+            y={layout.aiValueY}
             textAnchor="start"
-            className="fill-foreground text-[13px] font-semibold tabular-nums sm:text-[14px]"
+            className={layout.valueFontClass}
           >
             {LANDING_PROOF_CHART_ENDPOINTS.aiAdoptionPct}%
           </text>
           <text
-            x={aiEndX + ENDPOINT_LABEL_DX}
-            y={aiEndY + AI_LABEL_DY_SUB}
+            x={layout.labelX}
+            y={layout.aiSubY}
             textAnchor="start"
-            className="fill-muted-foreground text-[11px]"
+            className={layout.subFontClass}
           >
             AI adoption (2026)
           </text>
           <text
-            x={aiEndX + ENDPOINT_LABEL_DX}
-            y={bfsEndY + BFS_LABEL_DY_VALUE}
+            x={layout.labelX}
+            y={layout.bfsValueY}
             textAnchor="start"
-            className="fill-foreground text-[13px] font-semibold tabular-nums sm:text-[14px]"
+            className={layout.valueFontClass}
           >
             {LANDING_PROOF_CHART_ENDPOINTS.businessApplicationsMillions}M
           </text>
           <text
-            x={aiEndX + ENDPOINT_LABEL_DX}
-            y={bfsEndY + BFS_LABEL_DY_SUB}
+            x={layout.labelX}
+            y={layout.bfsSubY}
             textAnchor="start"
-            className="fill-muted-foreground text-[11px]"
+            className={layout.subFontClass}
           >
             New applications, US (2026)
           </text>

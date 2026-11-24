@@ -26,4 +26,28 @@ test.describe("landing proof chart", () => {
     );
     await expect(belowChartKpiRow).toHaveCount(0);
   });
+
+  test("endpoint value labels have vertical separation on mobile", async ({ page }) => {
+    const chartSvg = page.locator("figure.proof-chart-figure svg");
+    await expect(chartSvg).toBeVisible();
+
+    const gapPx = await chartSvg.evaluate((svg) => {
+      const valueNodes = [...svg.querySelectorAll("text")].filter((node) => {
+        const text = node.textContent?.trim() ?? "";
+        return text === "89%" || text === "5.7M";
+      });
+      if (valueNodes.length !== 2) return -1;
+
+      const byText = new Map(
+        valueNodes.map((node) => [node.textContent?.trim() ?? "", node.getBBox()]),
+      );
+      const aiBox = byText.get("89%");
+      const bfsBox = byText.get("5.7M");
+      if (!aiBox || !bfsBox) return -1;
+
+      return bfsBox.y - (aiBox.y + aiBox.height);
+    });
+
+    expect(gapPx).toBeGreaterThanOrEqual(24);
+  });
 });
