@@ -74,10 +74,46 @@ for (const viewport of TABLET_VIEWPORTS) {
       expect(metrics.width).toBeGreaterThan(48);
       expect(metrics.height).toBeGreaterThan(48);
       expect(metrics.opacity).toBeGreaterThan(0);
-      expect(Number.parseInt(metrics.planetZ, 10)).toBeGreaterThanOrEqual(30);
+      expect(Number.parseInt(metrics.planetZ, 10)).toBe(10);
       expect(metrics.fill).toMatch(/rgb\(0,\s*0,\s*0\)|#000000|#000/i);
       expect(metrics.coversArenaCenter, `planet hex should span orbit center at ${viewport.label}px`).toBe(
         true,
+      );
+    });
+
+    test("connectors orbit moons pass behind and in front of hub by z-index", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+
+      const heading = page.getByRole("heading", { name: /All your favorite tools/i });
+      await heading.scrollIntoViewIfNeeded();
+
+      const layering = await page.evaluate(() => {
+        const planet = document.querySelector(".connectors-orbit-planet");
+        const nodes = [...document.querySelectorAll(".connectors-orbit-node")];
+        if (!planet || nodes.length === 0) {
+          return { ok: false as const, reason: "missing planet or nodes" };
+        }
+
+        const planetZ = Number.parseInt(getComputedStyle(planet).zIndex, 10);
+        const nodeZ = nodes.map((node) => Number.parseInt(getComputedStyle(node).zIndex, 10));
+
+        return {
+          ok: true as const,
+          planetZ,
+          minNodeZ: Math.min(...nodeZ),
+          maxNodeZ: Math.max(...nodeZ),
+        };
+      });
+
+      expect(layering.ok, layering.ok ? "" : layering.reason).toBe(true);
+      if (!layering.ok) return;
+
+      expect(layering.planetZ).toBe(10);
+      expect(layering.minNodeZ, `far-side node z-index at ${viewport.label}px`).toBeLessThan(
+        layering.planetZ,
+      );
+      expect(layering.maxNodeZ, `near-side node z-index at ${viewport.label}px`).toBeGreaterThan(
+        layering.planetZ,
       );
     });
   });
