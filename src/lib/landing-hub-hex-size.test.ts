@@ -1,23 +1,26 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-/** Mirrors :root --landing-hub-hex-size in globals.css */
+/** Mirrors breakpoint --landing-hub-hex-size in globals.css */
 export function landingHubHexRenderedPx(viewportWidthPx: number): number {
-  const contentWidth = viewportWidthPx - 32; // landing section px-4
-  const raw = (84 * contentWidth * 0.87) / 352;
-  const minPx = 4.125 * 16;
-  const maxPx = 5.875 * 16;
-  return Math.min(maxPx, Math.max(minPx, raw));
+  if (viewportWidthPx >= 1024) return 5.875 * 16;
+  if (viewportWidthPx >= 768) return 5.25 * 16;
+  if (viewportWidthPx >= 640) return 4.625 * 16;
+  return 4.125 * 16;
 }
 
 describe("landing-hub-hex-size", () => {
   it("matches connectors orbit hub footprint near 390px viewport", () => {
     const size = landingHubHexRenderedPx(390);
-    assert.ok(size >= 73 && size <= 75, `expected ~74px, got ${size}`);
+    assert.ok(size >= 65 && size <= 67, `expected ~66px (4.125rem), got ${size}`);
   });
 
-  it("clamps at min and max", () => {
-    assert.equal(landingHubHexRenderedPx(200), 4.125 * 16);
-    assert.equal(landingHubHexRenderedPx(2000), 5.875 * 16);
+  it("steps up at sm, md, and lg breakpoints", () => {
+    assert.equal(landingHubHexRenderedPx(639), 4.125 * 16);
+    assert.equal(landingHubHexRenderedPx(640), 4.625 * 16);
+    assert.equal(landingHubHexRenderedPx(744), 4.625 * 16);
+    assert.equal(landingHubHexRenderedPx(768), 5.25 * 16);
+    assert.equal(landingHubHexRenderedPx(820), 5.25 * 16);
+    assert.equal(landingHubHexRenderedPx(1024), 5.875 * 16);
   });
 });

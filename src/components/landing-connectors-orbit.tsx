@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BusinessHexMark } from "@/components/business-hex-mark";
 import {
   depthFromTheta,
@@ -65,7 +65,7 @@ export function LandingConnectorsOrbit() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const arena = arenaRef.current;
     if (!arena) return;
 
@@ -189,7 +189,7 @@ export function LandingConnectorsOrbit() {
             <div className="connectors-orbit-planet" aria-hidden="true">
               <BusinessHexMark
                 className="landing-hub-hex-mark connectors-orbit-planet-hex"
-                shapeClassName="connectors-orbit-planet-hex__shape"
+                shapeClassName="bizos-hex-shape--black"
                 aria-hidden
               />
             </div>

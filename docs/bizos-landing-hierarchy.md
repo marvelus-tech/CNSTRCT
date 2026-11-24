@@ -39,7 +39,8 @@ Single centered column (`max-w-3xl`): brand stack (single `h1` **BizOS** at `z-i
 
 - **Mobile:** each step reads as index + title + lead, then that step’s visual (01 + solo hex, 02 + founding cluster). Step 1 DOM order is copy before hex.
 - **Desktop (`md+`):** two-column stagger; step 1 hex left / copy right (`md:col-start-*`); step 2 copy left / cluster right (unchanged).
-- **Regression:** `pnpm test:how-it-works-e2e` asserts vertical order at 390px.
+- **Hub hex token:** `--landing-hub-hex-size` (4.125rem → 5.875rem at `sm` / `md` / `lg`) sizes the step 01 solo mark, founding cluster hub, and connectors planet footprint. Tablet QA: 744×1133, 820×1180.
+- **Regression:** `pnpm test:how-it-works-e2e` asserts vertical order at 390px; `pnpm test:landing-hub-hex-e2e` asserts solo + connectors hub width and visibility at 744px and 820px.
 
 ## Copy strings (landing `/`)
 

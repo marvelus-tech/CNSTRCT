@@ -25,13 +25,13 @@ export function LandingFoundingTeam() {
         </div>
 
         <ol className="mt-8 space-y-10 md:space-y-12">
-          <li className="grid items-center gap-6 md:grid-cols-2 md:gap-5">
-            <div className="rise md:col-start-2 md:row-start-1">
+          <li className="grid items-center gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-5">
+            <div className="rise min-w-0 md:col-start-2 md:row-start-1">
               <p className="how-step-index">01</p>
               <h3 className="how-step-title mt-2">{stepOne.title}</h3>
               <p className="how-step-lead mt-2 max-w-lg">{stepOne.body}</p>
             </div>
-            <div className="how-step-hex-solo rise md:col-start-1 md:row-start-1">
+            <div className="how-step-hex-solo rise min-w-0 md:col-start-1 md:row-start-1">
               <BusinessHexMark
                 className="landing-hub-hex-mark how-step-hex-solo__mark"
                 shapeClassName="bizos-hex-shape--black"
@@ -40,13 +40,13 @@ export function LandingFoundingTeam() {
             </div>
           </li>
 
-          <li className="grid items-center gap-6 md:grid-cols-2 md:gap-5">
-            <div className="rise md:col-start-1 md:row-start-1">
+          <li className="grid items-center gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-5">
+            <div className="rise min-w-0 md:col-start-1 md:row-start-1">
               <p className="how-step-index">02</p>
               <h3 className="how-step-title mt-2">{stepTwo.title}</h3>
               <p className="how-step-lead mt-2 max-w-lg">{stepTwo.body}</p>
             </div>
-            <div className="rise how-step-cluster-stage md:col-start-2 md:row-start-1">
+            <div className="rise how-step-cluster-stage min-w-0 md:col-start-2 md:row-start-1">
               <FoundingTeamCluster />
             </div>
           </li>
