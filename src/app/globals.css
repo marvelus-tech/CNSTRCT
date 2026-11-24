@@ -30,14 +30,10 @@
   --landing-site-header-height: calc(2rem + 1.25rem + env(safe-area-inset-top, 0px));
   --landing-hero-min-height: calc(100svh - var(--landing-site-header-height));
   /*
-   * On-screen hub hex width — same footprint as connectors-orbit-planet-hex after scale-wrap.
-   * Design asset is 84px at scale 1; mobile fill is 0.87 over 352px orbit diameter.
+   * On-screen hub hex width (plain length for calc() in orbit planet compensation).
+   * Breakpoints align with connectors orbit fill; cap 5.875rem shared by solo, cluster, planet.
    */
-  --landing-hub-hex-size: clamp(
-    4.125rem,
-    calc(84px * (100vw - 2rem) * 0.87 / 352),
-    5.875rem
-  );
+  --landing-hub-hex-size: 4.125rem;
   /* Vertical rhythm between landing main sections (mobile / md+). */
   --landing-section-pad-y: 5rem;
   --landing-section-pad-y-md: 6.5rem;
@@ -48,6 +44,7 @@
 .landing-hub-hex-mark {
   display: block;
   width: var(--landing-hub-hex-size);
+  max-width: 100%;
   height: auto;
   flex-shrink: 0;
 }
@@ -68,6 +65,19 @@
   :root {
     --proof-chart-stroke-ai: 5.5;
     --proof-chart-stroke-bfs: 5.5;
+    --landing-hub-hex-size: 4.625rem;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --landing-hub-hex-size: 5.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --landing-hub-hex-size: 5.875rem;
   }
 }
 
@@ -386,8 +396,10 @@ h4 {
 
 .how-step-hex-solo {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   justify-content: center;
-  width: var(--landing-hub-hex-size);
+  width: min(var(--landing-hub-hex-size), 100%);
   margin-inline: auto;
 }
 
@@ -467,22 +479,21 @@ h4 {
 
 .founding-team-cluster {
   position: relative;
-  width: min(100%, clamp(9.5rem, 48vw, 12rem));
+  width: min(100%, max(9.5rem, calc(var(--landing-hub-hex-size) * 2.45)));
   aspect-ratio: 1.22 / 1;
   margin-inline: auto;
-}
-
-@media (min-width: 768px) {
-  .founding-team-cluster {
-    width: min(100%, 14.5rem);
-  }
 }
 
 .founding-team-cluster__hex-wrap {
   position: absolute;
   inset: 8% 20% 16%;
   display: grid;
+  min-width: 0;
   place-items: center;
+}
+
+.founding-team-cluster__hex {
+  max-width: 100%;
 }
 
 .founding-team-cluster__bot {
@@ -1140,6 +1151,7 @@ h4 {
   width: 100%;
   margin-inline: auto;
   aspect-ratio: 400 / 220;
+  --orbit-scale: 1;
 }
 
 @media (min-width: 768px) {
@@ -1201,7 +1213,7 @@ h4 {
   position: absolute;
   left: 50%;
   top: 50%;
-  z-index: 10;
+  z-index: 30;
   translate: -50% -50%;
   pointer-events: none;
   /* Design-space px only — scale-wrap multiplies --orbit-scale. */
@@ -1210,10 +1222,8 @@ h4 {
 
 .connectors-orbit-planet-hex {
   width: calc(var(--landing-hub-hex-size) / var(--orbit-scale, 1));
-}
-
-.connectors-orbit-planet-hex__shape {
-  fill: #000;
+  min-width: calc(3rem / var(--orbit-scale, 1));
+  max-width: calc(5.875rem / var(--orbit-scale, 1));
 }
 
 .connectors-orbit-node {
