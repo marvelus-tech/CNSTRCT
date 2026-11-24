@@ -26,6 +26,7 @@
   );
   --proof-chart-stroke-ai: 4.75;
   --proof-chart-stroke-bfs: 4.75;
+  --proof-strip-visual-max: 20rem;
   /* Landing chrome: header row (py-4 + text-sm line) — used for hero first-screen height. */
   --landing-site-header-height: calc(2rem + 1.25rem + env(safe-area-inset-top, 0px));
   --landing-hero-min-height: calc(100svh - var(--landing-site-header-height));
@@ -83,6 +84,19 @@
 
 .proof-chart-figure {
   width: 100%;
+}
+
+.proof-strip-visual {
+  margin-inline: auto;
+  width: 100%;
+  max-width: min(100%, var(--proof-strip-visual-max));
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .proof-strip-visual {
+    max-width: none;
+  }
 }
 
 @theme inline {

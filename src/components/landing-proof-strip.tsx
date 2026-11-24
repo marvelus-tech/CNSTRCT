@@ -16,28 +16,26 @@ export function LandingProofStrip() {
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="landing-section-title text-pretty">{LANDING_PROOF_TITLE}</h2>
 
-        <div className="mt-10 w-full text-left max-md:px-3 sm:mt-12">
+        <div className="proof-strip-visual mt-10 sm:mt-12">
           <LandingProofTrendChart />
-        </div>
 
-        <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 text-left md:mt-14 md:grid-cols-3 md:gap-12">
-          {LANDING_PROOF_STATS.map((stat, index) => (
-            <li
-              key={stat.value + stat.label.slice(0, 24)}
-              className={`flex flex-col gap-3 py-2 md:py-4${
-                index === 2
-                  ? " col-span-2 mx-auto w-full max-w-[14rem] md:col-span-1 md:max-w-none"
-                  : ""
-              }`}
-            >
-              <p className="text-3xl font-semibold tabular-nums tracking-tight text-foreground md:text-4xl">
-                {stat.value}
-              </p>
-              <span className="h-px w-8 bg-accent/40" aria-hidden />
-              <p className="landing-section-lead text-sm leading-snug">{stat.label}</p>
-            </li>
-          ))}
-        </ul>
+          <ul className="proof-strip-visual-stats mt-8 grid grid-cols-3 items-start gap-x-2 gap-y-6 text-left sm:gap-x-5 md:mt-14 md:gap-12">
+            {LANDING_PROOF_STATS.map((stat) => (
+              <li
+                key={stat.value + stat.label.slice(0, 24)}
+                className="flex min-w-0 flex-col gap-2 py-2 md:gap-3 md:py-4"
+              >
+                <p className="text-2xl font-semibold tabular-nums tracking-tight text-foreground md:text-4xl">
+                  {stat.value}
+                </p>
+                <span className="h-px w-6 bg-accent/40 md:w-8" aria-hidden />
+                <p className="landing-section-lead text-xs leading-tight md:text-sm md:leading-snug">
+                  {stat.label}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <p className="landing-fine-print mt-10 text-xs sm:text-[0.6875rem]">
           Sources:{" "}

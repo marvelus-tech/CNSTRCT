@@ -50,4 +50,32 @@ test.describe("landing proof chart", () => {
 
     expect(gapPx).toBeGreaterThanOrEqual(24);
   });
+
+  test("stats share one visual column with three equal columns on mobile", async ({ page }) => {
+    const section = page.locator(
+      'section[aria-label="Enterprise AI adoption and business formation trends"]',
+    );
+    const visual = section.locator(".proof-strip-visual");
+    await expect(visual).toBeVisible();
+
+    const statItems = visual.locator(".proof-strip-visual-stats > li");
+    await expect(statItems).toHaveCount(3);
+
+    for (const item of await statItems.all()) {
+      const className = (await item.getAttribute("class")) ?? "";
+      expect(className).not.toMatch(/col-span-2/);
+    }
+
+    const figure = visual.locator("figure.proof-chart-figure");
+    const firstStat = statItems.first();
+    const [figureBox, statBox] = await Promise.all([
+      figure.boundingBox(),
+      firstStat.boundingBox(),
+    ]);
+    expect(figureBox).not.toBeNull();
+    expect(statBox).not.toBeNull();
+    if (figureBox && statBox) {
+      expect(Math.abs(figureBox.x - statBox.x)).toBeLessThanOrEqual(4);
+    }
+  });
 });
