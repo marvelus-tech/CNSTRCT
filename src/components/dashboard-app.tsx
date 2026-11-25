@@ -269,6 +269,31 @@ export function DashboardApp({ businessId }: { businessId: string }) {
               ))}
             </ul>
             <p className="mt-3 text-xs text-muted">Gmail send is not available in this MVP. An approved draft stays in the local outbox and is not sent.</p>
+            {desk.connections.composioConfigured &&
+            desk.connections.apps.some((item) => item.toolkit === "gmail" && item.state === "not_connected") ? (
+              <Button
+                type="button"
+                size="sm"
+                className="mt-3 w-full sm:w-auto"
+                disabled={busy}
+                onClick={() =>
+                  void (async () => {
+                    setBusy(true);
+                    const res = await fetch(`/api/businesses/${businessId}/connections`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ toolkit: "gmail" }),
+                    });
+                    const json = (await res.json()) as { redirectUrl?: string; error?: string };
+                    setBusy(false);
+                    if (json.redirectUrl) window.location.href = json.redirectUrl;
+                    else if (json.error) setError(json.error);
+                  })()
+                }
+              >
+                Connect Gmail
+              </Button>
+            ) : null}
             <ul className="mt-3 space-y-2 text-xs text-muted">
               {desk.connections.scopes.map((scope) => (
                 <li key={scope.role}>
