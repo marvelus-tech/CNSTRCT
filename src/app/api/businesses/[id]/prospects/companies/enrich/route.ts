@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { requireBusinessOwner } from "@/lib/agent/treg-prospect-auth";
+import { requireTregProspect } from "@/lib/agent/treg-prospect-auth";
 import { prospectConfigured, runProspectCall } from "@/lib/agent/treg-prospect";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const gate = await requireBusinessOwner(id);
+  const gate = await requireTregProspect(id);
   if ("error" in gate) return gate.error;
   if (!prospectConfigured()) {
     return NextResponse.json({ error: "Treg is not configured on this deployment." }, { status: 503 });
