@@ -30,6 +30,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
   }
 
   useEffect(() => {
+    void fetch(`/api/businesses/${encodeURIComponent(businessId)}/desk/wake`, { method: "POST" });
     void reload();
     const timer = setInterval(() => void reload(), 4000);
     return () => clearInterval(timer);
