@@ -13,6 +13,12 @@ interface VentureSummary {
   interestsSnippet: string;
 }
 
+interface ProvisionJobChip {
+  provider: string;
+  status: string;
+  label: string;
+}
+
 interface BusinessRow {
   id: string;
   name: string;
@@ -20,11 +26,36 @@ interface BusinessRow {
   templateTitle: string;
   sitePath: string;
   createdAt: number;
+  provisionStatus?: string;
+  provisionLabel?: string;
+  provisionJobs?: ProvisionJobChip[];
   ventureSummary?: VentureSummary | null;
   ventureProfile?: Profile | null;
   teamLabel?: string;
   connectionLabel?: string;
   computerLabel?: string;
+}
+
+function ProvisionChips({ business }: { business: BusinessRow }) {
+  const jobs = business.provisionJobs ?? [];
+  if (!business.provisionLabel && jobs.length === 0) return null;
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {business.provisionLabel ? (
+        <span className="inline-flex min-h-9 items-center rounded-none border border-border bg-background px-2.5 py-1 text-xs font-medium">
+          {business.provisionLabel}
+        </span>
+      ) : null}
+      {jobs.map((job) => (
+        <span
+          key={job.provider}
+          className="inline-flex min-h-9 max-w-full items-center rounded-none border border-border/80 px-2.5 py-1 text-[11px] text-muted"
+        >
+          {job.label}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 const START_NEW_HREF = "/triage?intent=new";
@@ -108,6 +139,7 @@ function BusinessesPanel({
             {business.ventureSummary?.interestsSnippet ? (
               <p className="mt-2 line-clamp-2 text-xs text-muted">{business.ventureSummary.interestsSnippet}</p>
             ) : null}
+            <ProvisionChips business={business} />
             {business.teamLabel ? <p className="mt-3 text-sm">{business.teamLabel}</p> : null}
             {business.connectionLabel || business.computerLabel ? (
               <p className="mt-1 text-xs text-muted">

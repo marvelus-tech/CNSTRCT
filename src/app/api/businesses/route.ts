@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { mapSeq } from "@/lib/seq";
 
 import { composioConfigured, connectionState, orgoConfigured, orgoDeskLabel } from "@/lib/agent/adapters";
+import { provisionStatusLabel, provisioningJobLabel } from "@/lib/agent/provision-labels";
 import { ensureTeamShape } from "@/lib/agent/provision";
+import { getProvisioningJobsForBusiness } from "@/lib/store";
 import { currentUser } from "@/lib/session";
 import { listBusinessesForUser, listConnections } from "@/lib/store";
 import { TEMPLATES } from "@/lib/templates";
@@ -46,8 +48,17 @@ export async function GET() {
       storedStatus: gmail?.status,
     });
     const orgoLabel = orgoDeskLabel(business.orgoComputerId, orgoConfigured());
+    const jobs = await getProvisioningJobsForBusiness(business.id);
+    const jobChips = jobs.map((job) => ({
+      provider: job.provider,
+      status: job.status,
+      label: provisioningJobLabel(job.provider, job.status),
+    }));
     return {
       id: business.id,
+      provisionStatus: business.provisionStatus,
+      provisionLabel: provisionStatusLabel(business.provisionStatus),
+      provisionJobs: jobChips,
       name: business.name,
       city: business.city,
       templateId: business.templateId,
