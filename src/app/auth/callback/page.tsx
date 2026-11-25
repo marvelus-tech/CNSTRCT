@@ -25,7 +25,8 @@ function CallbackInner() {
       setNote(json.error || "That link could not be verified.");
       return;
     }
-    router.push("/triage");
+    const next = params.get("next") || "/command-center";
+    router.push(next.startsWith("/") ? next : "/command-center");
   }
 
   return (
