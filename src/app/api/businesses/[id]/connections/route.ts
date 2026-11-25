@@ -2,10 +2,11 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
+import { composioConfigured } from "@/lib/agent/adapters";
 import { startBusinessConnection } from "@/lib/agent/connections";
 import { loadDesk } from "@/lib/desk";
 import { currentUser } from "@/lib/session";
-import { getBusiness } from "@/lib/store";
+import { getBusiness, getProvisioningJobsForBusiness } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const business = await getBusiness(id);
   if (!business || business.userId !== user.id) {
     return NextResponse.json({ error: "Business not found." }, { status: 404 });
+  }
+  if (!composioConfigured()) {
+    return NextResponse.json({ error: "Composio is not configured on this host." }, { status: 503 });
+  }
+  const jobs = await getProvisioningJobsForBusiness(id);
+  const composioJob = jobs.find((job) => job.provider === "composio");
+  if (!composioJob || (composioJob.status !== "succeeded" && composioJob.status !== "skipped")) {
+    return NextResponse.json(
+      { error: "Wait for the Composio provisioning job to finish before connecting apps.", code: "composio_not_ready" },
+      { status: 503 },
+    );
   }
   let toolkit = "gmail";
   try {
