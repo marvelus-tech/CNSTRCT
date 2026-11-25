@@ -38,13 +38,17 @@ The MIT notice and the list of changes are in `THIRD_PARTY_NOTICES.md`.
 
 Nothing in those three gated tools opens a network socket. Approve writes `outbox/*.json` with `network: false`.
 
-## The computer
+## The computer and agent runtime
 
-`configuredProvider()` picks Orgo when both Orgo env vars are set, otherwise Docker if `docker version` succeeds, otherwise a folder under `data/sandboxes/<agentId>`.
+The Grok-style **turn loop** (`src/lib/agent/loop.ts`, tools, approvals, routines) runs entirely on the **BizOS server** (Next.js). Orgo is the **specialist shell only**: a shared Linux desk VM per business where `shell` and related computer tools execute when a job has provisioned `orgo_computer_id`.
 
-The local sandbox allows a short command list (`ls`, `cat`, `mkdir`, `echo`, and similar) plus `cnstrct-search`, which reads a built-in tradie directory. `find` is not allowed. Chaining, newlines, pipes, redirects, curl, interpreters, execution flags (`-exec`, `-ok`, `-delete`, `-fprint`), and paths outside the folder are rejected. Always-allow skips the card only. The same check runs before local spawn and before Orgo bash. The dashboard computer view shows each agent's terminal log, files, and computer hours. It is not a fake screenshot of a desktop the process never had. Start over deletes each recorded Orgo computer first. If that call fails, the business and the computer ids stay so the owner can retry.
+`configuredProvider()` picks Orgo when `ORGO_API_KEY` is set, otherwise Docker if `docker version` succeeds, otherwise a folder under `data/sandboxes/<agentId>` per agent for local demo.
 
-Orgo, when `ORGO_API_KEY` is set, creates one workspace per business and one Small computer per specialist. Quinn has no machine. Bash calls `GET /computers/{id}` and resumes unless the status is running. If bash fails, the computer row stays on Orgo.
+The local sandbox allows a short command list (`ls`, `cat`, `mkdir`, `echo`, and similar) plus `cnstrct-search`, which reads a built-in tradie directory. `find` is not allowed. Chaining, newlines, pipes, redirects, curl, interpreters, execution flags (`-exec`, `-ok`, `-delete`, `-fprint`), and paths outside the folder are rejected. Always-allow skips the card only. The same check runs before local spawn and before Orgo bash. The dashboard computer view shows each agent's terminal log, files, and computer hours. It is not a fake screenshot of a desktop the process never had.
+
+When `ORGO_API_KEY` is set, provisioning creates **one Orgo workspace per business** and **one shared desk computer** (`orgo_computer_id` on the business row). Specialists bash into that VM; the orchestrator does not get a separate machine. Bash calls resume/start on that desk idempotently before commands. Quinn has no machine. Start over deletes the business desk on Orgo when possible; ids stay on failure so the owner can retry.
+
+See [product-flow.md](./product-flow.md) for the owner journey (account → command center → workspace → public site).
 
 ## Routines
 
@@ -60,16 +64,7 @@ Local and test state is SQLite in `data/cnstrct.db` (or `CNSTRCT_DATA_DIR`). Pro
 
 ## Product flow
 
-1. `/` explains the product. **Start** opens public `/triage`. **Log in** opens `/login?next=/command-center` and lands on the command center with no triage sync.
-2. Middleware requires `cnstrct_sid` only for `/constructing`, `/command-center`, and `/workspace/*`. Triage and opportunities are public.
-3. `/command-center` is the signed-in hub: business list, **Start new business** → `/triage?intent=new` (clears the draft for a fresh venture), then opportunities and construct.
-4. `/triage` asks eight questions and saves answers in client `localStorage` (`cnstrct.triage.v1`). `intent=new` clears any prior draft on mount.
-5. `/opportunities` prefers a complete local draft and calls `POST /api/opportunities/preview` (session optional). Home services and mobile detailing are live templates.
-6. Picking a live path checks session. Without a cookie, the browser goes to `/login?next=/constructing?template=…`. After sign-in, `syncTriageFromClient` runs `PUT /api/profile` once (only when `next` is construct), then `/constructing` syncs again and calls `POST /api/business`. Each construct stores a `profile_json` snapshot on the business row.
-7. `/command-center` uses the black left-rail `AppShell`, lists businesses (`GET /api/businesses` with `ventureSummary` from `profile_json`), and links to `/workspace/[businessId]` and `/b/[slug]`. The profile panel shows the latest venture snapshot, not a single global questionnaire.
-8. `/workspace/[businessId]` is the per-business Grok-style shell: chat, approval card, computer, routines, leads, and usage meters (50,000 tokens and 2 hours, hardcoded). `/api/desk?businessId=` scopes data loading.
-9. `/dashboard` redirects to the latest workspace or the command center when empty.
-10. `/b/[slug]` is the public site: hero, how it works, lead form, about, contact, link back to the owner workspace.
+The numbered owner journey (landing, triage, command center, workspace, public `/b/[slug]`) lives in [product-flow.md](./product-flow.md) so this file stays focused on runtime architecture.
 
 ## Adding a business type
 
@@ -97,6 +92,6 @@ Detailing and estate clearance are the two coming-soon cards. Tutoring is the th
 | --- | --- | --- |
 | Triage, cards, site, leads | Live, stored in the database | Same |
 | Agent chat and routines | Owner chats with Quinn. Specialists take tasks. Routines stay planned | xAI if `XAI_API_KEY` is set, else OpenAI |
-| Computer | Status not configured. Local folder is labeled as a sandbox | Orgo Small for each specialist, only after create returns an id. Quinn has none |
+| Computer | Status not configured. Local folder is labeled as a sandbox | One shared Orgo desk VM per business after provisioning; Quinn has none |
 | Email, match intro, shell | Approval card, then a local outbox or local command | Gmail send is not available. The outbox stays local and is not marked sent |
 | Auth | Demo session cookie | Supabase magic link when both public vars are set |
