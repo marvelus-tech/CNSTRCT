@@ -122,7 +122,7 @@ function BusinessesPanel({
   }
 
   return (
-    <ul className="grid gap-4 md:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {(businesses ?? []).map((business) => {
         const highlight = business.id === highlightId;
         return (
@@ -335,6 +335,7 @@ function CommandCenterInner() {
 
   return (
     <AppShell active={section} onNavigate={setSection} title={titles[section]}>
+      <div className="pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
       {section === "businesses" ? (
         <>
           <div className="mb-6 flex w-full flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -361,6 +362,12 @@ function CommandCenterInner() {
         <ProfilePanel ventureProfile={latestVentureProfile} loading={bizLoading} hasBusinesses={(businesses?.length ?? 0) > 0} />
       ) : null}
       {section === "settings" ? <SettingsPanel /> : null}
+      </div>
+      {section === "businesses" ? (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] backdrop-blur md:hidden">
+          <StartNewBusinessButton size="lg" />
+        </div>
+      ) : null}
     </AppShell>
   );
 }
