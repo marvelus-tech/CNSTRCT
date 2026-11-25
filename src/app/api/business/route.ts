@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { constructionAccess } from "@/lib/billing/access";
 import { openDesk } from "@/lib/agent/provision";
-import { provisionSummary } from "@/lib/agent/provisioning";
+import { kickProvisioningAfterBusinessCreate, provisionSummary } from "@/lib/agent/provisioning";
 import { currentUser } from "@/lib/session";
 import { getBusinessByCreateIdempotencyKey, getProfile, listAgents } from "@/lib/store";
 import { TEMPLATES } from "@/lib/templates";
@@ -55,6 +55,7 @@ export async function POST(request: Request) {
   }
 
   const desk = await openDesk(user.id, profile, templateId, idempotencyKey || null);
+  kickProvisioningAfterBusinessCreate();
   const provision = await provisionSummary(desk.business.id);
   return NextResponse.json({
     businessId: desk.business.id,
