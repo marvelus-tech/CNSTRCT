@@ -1,6 +1,6 @@
-export function supabaseConfigured() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-}
+import { supabaseConfigured as supabaseConfiguredFromAdapters } from "./agent/adapters";
+
+export const supabaseConfigured = supabaseConfiguredFromAdapters;
 
 function config() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
