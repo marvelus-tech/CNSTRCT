@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
-import { sendMagicLink } from "@/lib/supabase";
+
+import { issueMagicLink } from "@/lib/auth-magic";
 
 export const runtime = "nodejs";
 
+/** @deprecated Prefer POST /api/auth/magic-link */
 export async function POST(request: Request) {
   const body = (await request.json()) as { email?: string };
-  const email = body.email?.trim() ?? "";
-  if (!email.includes("@")) return NextResponse.json({ error: "Enter an email address." }, { status: 400 });
-  const origin = new URL(request.url).origin;
-  const result = await sendMagicLink(email, origin);
-  if (!result.ok && result.reason === "unconfigured") {
-    return NextResponse.json(
-      { error: "Magic links need NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY. Continue with the demo session." },
-      { status: 400 },
-    );
-  }
-  if (!result.ok) return NextResponse.json({ error: "The email provider rejected that request." }, { status: 502 });
+  const email = body.email ?? "";
+  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || new URL(request.url).origin;
+  const rateKey = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const result = await issueMagicLink(email, origin, rateKey);
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json({ ok: true });
 }

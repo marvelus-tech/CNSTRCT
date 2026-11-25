@@ -34,27 +34,72 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : undefined;
 }
 
-export async function createUser(input: { email: string; name: string }): Promise<User> {
-  const user: User = { id: newId("user"), email: input.email, name: input.name, createdAt: Date.now() };
-  await (await db()).prepare("INSERT INTO users (id, email, name, created_at) VALUES (?, ?, ?, ?)").run(
-    user.id,
-    user.email,
-    user.name,
-    user.createdAt,
-  );
+function rowToUser(row: Record<string, unknown>): User {
+  return {
+    id: String(row.id),
+    email: String(row.email),
+    name: String(row.name),
+    createdAt: Number(row.created_at),
+    authSubject: row.auth_subject == null || row.auth_subject === "" ? null : String(row.auth_subject),
+  };
+}
+
+export async function createUser(input: {
+  email: string;
+  name: string;
+  authSubject?: string | null;
+}): Promise<User> {
+  const user: User = {
+    id: newId("user"),
+    email: input.email,
+    name: input.name,
+    createdAt: Date.now(),
+    authSubject: input.authSubject ?? null,
+  };
+  await (await db())
+    .prepare("INSERT INTO users (id, email, name, created_at, auth_subject) VALUES (?, ?, ?, ?, ?)")
+    .run(user.id, user.email, user.name, user.createdAt, user.authSubject);
   return user;
+}
+
+export async function setUserAuthSubject(userId: string, authSubject: string) {
+  await (await db()).prepare("UPDATE users SET auth_subject = ? WHERE id = ?").run(authSubject, userId);
+}
+
+export async function getUserByAuthSubject(authSubject: string): Promise<User | null> {
+  const row = asRecord(await (await db()).prepare("SELECT * FROM users WHERE auth_subject = ?").get(authSubject));
+  if (!row) return null;
+  return rowToUser(row);
+}
+
+/** Stable user row for Supabase magic link (subject wins over email). */
+export async function upsertUserForAuth(input: {
+  email: string;
+  name: string;
+  authSubject?: string | null;
+}): Promise<User> {
+  if (input.authSubject) {
+    const bySubject = await getUserByAuthSubject(input.authSubject);
+    if (bySubject) return bySubject;
+  }
+  const byEmail = await getUserByEmail(input.email);
+  if (byEmail) {
+    if (input.authSubject && !byEmail.authSubject) await setUserAuthSubject(byEmail.id, input.authSubject);
+    return byEmail;
+  }
+  return await createUser(input);
 }
 
 export async function getUser(id: string): Promise<User | null> {
   const row = asRecord(await (await db()).prepare("SELECT * FROM users WHERE id = ?").get(id));
   if (!row) return null;
-  return { id: String(row.id), email: String(row.email), name: String(row.name), createdAt: Number(row.created_at) };
+  return rowToUser(row);
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
   const row = asRecord(await (await db()).prepare("SELECT * FROM users WHERE email = ?").get(email));
   if (!row) return null;
-  return { id: String(row.id), email: String(row.email), name: String(row.name), createdAt: Number(row.created_at) };
+  return rowToUser(row);
 }
 
 export async function createSession(userId: string) {
@@ -72,7 +117,7 @@ export async function userForSession(sessionId: string): Promise<User | null> {
       .get(sessionId),
   );
   if (!row) return null;
-  return { id: String(row.id), email: String(row.email), name: String(row.name), createdAt: Number(row.created_at) };
+  return rowToUser(row);
 }
 
 export async function saveProfile(profile: Profile) {

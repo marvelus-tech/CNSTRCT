@@ -44,8 +44,9 @@ export async function verifyMagicLink(tokenHash: string, type: string) {
     body: JSON.stringify({ type, token_hash: tokenHash }),
   });
   if (!response.ok) return { ok: false as const, reason: "provider" as const };
-  const json = (await response.json()) as { user?: { email?: string } };
+  const json = (await response.json()) as { user?: { email?: string; id?: string } };
   const email = json.user?.email;
+  const authSubject = json.user?.id;
   if (!email) return { ok: false as const, reason: "provider" as const };
-  return { ok: true as const, email };
+  return { ok: true as const, email, authSubject: authSubject ?? null };
 }
