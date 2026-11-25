@@ -22,6 +22,7 @@ import {
 } from "../store";
 import type { Agent, Business, Profile } from "../types";
 import { composioUserId, tregCustomerTag } from "./adapters";
+import { orgoThemeForTemplate } from "./orgo-themes";
 import { PROVISIONING_PROVIDERS } from "./provisioning";
 import { blueprintFor, validateBlueprint, type BusinessBlueprint, type BlueprintContext } from "./blueprint";
 import { ensureWorkspace } from "./sandbox";
@@ -82,6 +83,8 @@ export async function provisionBlueprint(
       provisionStatus: "pending",
       provisionError: null,
       createIdempotencyKey: createIdempotencyKey ?? null,
+      orgoThemeKey: orgoThemeForTemplate(blueprint.templateId).themeKey,
+      orgoThemeAppliedAt: null,
     } satisfies Omit<BusinessRow, "createdAt">,
     PROVISIONING_PROVIDERS,
   );

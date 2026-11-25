@@ -263,6 +263,13 @@ ALTER TABLE users ADD COLUMN auth_subject TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS users_auth_subject ON users (auth_subject) WHERE auth_subject IS NOT NULL;
 `,
   },
+  {
+    version: "006_orgo_theme",
+    sql: `
+ALTER TABLE businesses ADD COLUMN orgo_theme_key TEXT;
+ALTER TABLE businesses ADD COLUMN orgo_theme_applied_at BIGINT;
+`,
+  },
 ] as const;
 
 export const SCHEMA_MIGRATIONS_SQL = `
