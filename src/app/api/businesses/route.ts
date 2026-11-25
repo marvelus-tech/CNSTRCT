@@ -71,6 +71,8 @@ export async function GET() {
       teamLabel: team.map((agent) => agent.name).join(", "),
       connectionLabel: `Gmail ${gmailState.replaceAll("_", " ")}`,
       computerLabel: orgoLabel,
+      orgoThemeKey: business.orgoThemeKey ?? null,
+      orgoThemeApplied: Boolean(business.orgoThemeAppliedAt),
     };
   });
 
