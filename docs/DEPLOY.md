@@ -77,6 +77,22 @@ Business creation enqueues Orgo, Treg, and Composio jobs in the same transaction
 
 The checked-in cron runs once daily (`0 6 * * *` UTC) so deployments pass on **Vercel Hobby**, which rejects expressions that would run more than once per day. Owners can still drain the outbox immediately via `POST /api/businesses/{id}/provision` (retry). On **Pro**, change `vercel.json` to `*/5 * * * *` for a five-minute worker cadence, or call the cron route from an external scheduler with the same `CRON_SECRET`.
 
+### Worker cadence strategy (Hobby vs Pro)
+
+**Current choice: stay on Hobby** with the daily Vercel cron as a safety net, plus faster paths:
+
+| Trigger | When it runs |
+| --- | --- |
+| `POST /api/business` | Fire-and-forget `runProvisioningWorkerPass()` right after create (P09). |
+| `POST /api/businesses/{id}/provision` | Owner retry from the constructing page or workspace. |
+| Vercel Cron `0 6 * * *` | Daily backup sweep in `vercel.json`. |
+
+**Optional external cron (recommended on Hobby for production Orgo/Treg/Composio):** Configure [cron-job.org](https://cron-job.org) or similar to `GET https://cnstrct-mu.vercel.app/api/cron/provisioning` every **5 to 15 minutes** with header `Authorization: Bearer <CRON_SECRET>`. This does not change `vercel.json`, so Hobby deploy rules stay satisfied.
+
+**If the project moves to Vercel Pro:** Replace the schedule in `vercel.json` with `*/5 * * * *`, redeploy, and remove or slow the external cron to avoid duplicate work. Worker responses are JSON only (job counts); provisioning metrics are not stored beyond audit rows.
+
+**Do not** set a Hobby cron to `*/5 * * * *`. Vercel will reject the deployment.
+
 Epoch columns are `BIGINT`. Postgres `INTEGER` is 32-bit and cannot store `Date.now()`.
 
 ### Cutover
