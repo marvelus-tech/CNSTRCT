@@ -77,6 +77,13 @@ export async function retryProvisioning(businessId: string) {
   return bumped;
 }
 
+/** Fire-and-forget worker pass after business create (same process; may hit serverless time limits). */
+export function kickProvisioningAfterBusinessCreate() {
+  void runProvisioningWorkerPass().catch((error) => {
+    console.error("[provision] post-create kick failed", error instanceof Error ? error.message : "unknown");
+  });
+}
+
 export async function runProvisioningWorkerPass(now = Date.now()) {
   const due = await listDueProvisioningJobs(now);
   const claimed: ProvisioningJob[] = [];
