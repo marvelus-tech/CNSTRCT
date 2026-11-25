@@ -31,15 +31,20 @@ You only need to do this once per Vercel team. After that, every push to `main` 
 6. **Build settings:** `vercel.json` in the repo already sets:
    - Install: `pnpm install`
    - Build: `pnpm build`
-7. **Environment variables** (Production; leave LLM/Orgo/Supabase empty for demo mode):
+7. **Environment variables** (Production; leave LLM/Orgo/Supabase empty for demo mode). Full provisioning matrix: see the Agent Store doc **provisioning-infrastructure-state** (BizOS Project). Auth and worker names:
 
    | Name | Value |
    | --- | --- |
    | `DATABASE_URL` or `POSTGRES_URL` | Neon connection string from the Vercel Postgres / Neon integration. Required. Do not commit it. |
    | `CRON_SECRET` | Random string. Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` to `/api/cron/provisioning`. |
    | `NEXT_PUBLIC_SITE_URL` | `https://cnstrct-mu.vercel.app` (no trailing slash) |
+   | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL when using magic-link auth (public). |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public). |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Optional server-only Supabase admin (future admin tasks; magic link uses anon + REST today). |
 
-   Optional server-only names (empty in demo mode): `ORGO_API_KEY`, `TREG_TOKEN`, `TREG_ORG_ID`, `COMPOSIO_API_KEY`, `COMPOSIO_WEBHOOK_SECRET`. No `NEXT_PUBLIC_` copies.
+   Optional server-only names (empty in demo mode): `ORGO_API_KEY`, `TREG_TOKEN`, `TREG_ORG_ID`, `COMPOSIO_API_KEY`, `COMPOSIO_WEBHOOK_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM` (product mail, post P06). No `NEXT_PUBLIC_` copies of provider secrets.
+
+   Owner journey reference: [docs/product-flow.md](./product-flow.md).
 
    Do **not** set `CNSTRCT_DATA_DIR=/tmp/cnstrct-data`. `vercel.json` no longer does. On Vercel the app refuses to boot SQLite. If that variable is still in the project dashboard from an older deploy, delete it. Sandbox scratch files use `/tmp/cnstrct-sandboxes` and are not application state.
 
