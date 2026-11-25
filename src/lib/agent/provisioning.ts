@@ -2,6 +2,7 @@ import { composioUserId, orgoConfigured, tregCustomerTag } from "./adapters";
 import { provisionComposioForBusiness } from "./provision-composio";
 import { provisionOrgoForBusiness } from "./provision-orgo";
 import { provisionTregForBusiness } from "./provision-treg";
+import { maybeNotifyDeskReady } from "../email";
 import { redactProvisioningError } from "./redact";
 import {
   claimProvisioningJob,
@@ -210,6 +211,8 @@ async function applyProviderOutcome(job: ProvisioningJob, business: Business, ou
 }
 
 export async function refreshBusinessProvisionStatus(businessId: string) {
+  const existing = await getBusiness(businessId);
+  const previousStatus = existing?.provisionStatus;
   const jobs = await getProvisioningJobsForBusiness(businessId);
   const status = aggregateProvisionStatus(jobs);
   const failedJob = jobs.find((job) => job.status === "failed" && job.lastError);
@@ -217,6 +220,7 @@ export async function refreshBusinessProvisionStatus(businessId: string) {
     provisionStatus: status,
     provisionError: failedJob?.lastError ?? null,
   });
+  await maybeNotifyDeskReady(businessId, { previousStatus, newStatus: status });
 }
 
 export function aggregateProvisionStatus(jobs: ProvisioningJob[]): import("../types").ProvisionStatus {

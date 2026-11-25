@@ -942,6 +942,13 @@ export async function setTaskStatus(id: string, status: TaskStatus, report?: str
     .run(status, report, Date.now(), id);
 }
 
+export async function hasAuditKind(businessId: string, kind: string): Promise<boolean> {
+  const row = asRecord(
+    await (await db()).prepare("SELECT 1 AS present FROM audit_events WHERE business_id = ? AND kind = ? LIMIT 1").get(businessId, kind),
+  );
+  return Boolean(row);
+}
+
 export async function recordAudit(input: {
   businessId: string;
   userId: string;
