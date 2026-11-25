@@ -123,8 +123,8 @@ export function DashboardApp({ businessId }: { businessId: string }) {
   const specialists = desk.agents.filter((item) => item.role !== "orchestrator");
 
   return (
-    <div className="min-h-full bg-background">
-      <header className="border-b border-border px-4 py-3 md:px-8">
+    <div className="min-h-full bg-background pb-[env(safe-area-inset-bottom,0px)]">
+      <header className="border-b border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:px-8 md:pb-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Wordmark />
           <div className="text-right">
@@ -154,9 +154,16 @@ export function DashboardApp({ businessId }: { businessId: string }) {
           ))}
         </div>
       </header>
-      <div className="flex gap-2 px-4 pt-3 md:hidden md:px-8">
+      <div className="flex gap-2 px-4 pt-3 md:hidden md:px-8" role="tablist" aria-label="Workspace sections">
         {(["chat", "team", "desk"] as const).map((item) => (
-          <button key={item} type="button" className={`rounded-none px-3 py-1 text-sm ${tab === item ? "bg-foreground text-white" : "bg-card"}`} onClick={() => setTab(item)}>
+          <button
+            key={item}
+            type="button"
+            role="tab"
+            aria-selected={tab === item}
+            className={`min-h-11 min-w-[4.5rem] flex-1 rounded-none px-3 py-2 text-sm capitalize ${tab === item ? "bg-foreground text-white" : "bg-card"}`}
+            onClick={() => setTab(item)}
+          >
             {item}
           </button>
         ))}
