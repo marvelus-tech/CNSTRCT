@@ -50,6 +50,8 @@ export interface Business {
   provisionStatus: ProvisionStatus;
   provisionError?: string | null;
   createIdempotencyKey?: string | null;
+  orgoThemeKey?: string | null;
+  orgoThemeAppliedAt?: number | null;
 }
 
 export interface ProvisioningJob {

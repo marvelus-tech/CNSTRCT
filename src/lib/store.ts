@@ -198,8 +198,8 @@ export async function insertBusinessWithProvisioningJobs(
       sql: `INSERT INTO businesses (
         id, user_id, template_id, name, slug, city, created_at, profile_json,
         orgo_workspace_id, orgo_computer_id, composio_user_id, treg_customer_tag,
-        provision_status, provision_error, create_idempotency_key
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        provision_status, provision_error, create_idempotency_key, orgo_theme_key, orgo_theme_applied_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       params: [
         business.id,
         business.userId,
@@ -216,6 +216,8 @@ export async function insertBusinessWithProvisioningJobs(
         business.provisionStatus,
         business.provisionError ?? null,
         business.createIdempotencyKey ?? null,
+        business.orgoThemeKey ?? null,
+        business.orgoThemeAppliedAt ?? null,
       ],
     },
     ...providers.map((provider) => ({
@@ -236,8 +238,8 @@ export async function insertBusiness(input: Omit<Business, "id" | "createdAt" | 
       `INSERT INTO businesses (
         id, user_id, template_id, name, slug, city, created_at, profile_json,
         orgo_workspace_id, orgo_computer_id, composio_user_id, treg_customer_tag,
-        provision_status, provision_error, create_idempotency_key
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        provision_status, provision_error, create_idempotency_key, orgo_theme_key, orgo_theme_applied_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       business.id,
@@ -255,6 +257,8 @@ export async function insertBusiness(input: Omit<Business, "id" | "createdAt" | 
       business.provisionStatus ?? "pending",
       business.provisionError ?? null,
       business.createIdempotencyKey ?? null,
+      business.orgoThemeKey ?? null,
+      business.orgoThemeAppliedAt ?? null,
     );
   return business;
 }
@@ -280,7 +284,16 @@ function mapBusiness(row: Record<string, unknown>): Business {
     provisionStatus: (row.provision_status == null ? "pending" : String(row.provision_status)) as ProvisionStatus,
     provisionError: row.provision_error == null ? null : String(row.provision_error),
     createIdempotencyKey: row.create_idempotency_key == null ? null : String(row.create_idempotency_key),
+    orgoThemeKey: row.orgo_theme_key == null ? null : String(row.orgo_theme_key),
+    orgoThemeAppliedAt: row.orgo_theme_applied_at == null ? null : Number(row.orgo_theme_applied_at),
   };
+}
+
+export async function markOrgoThemeApplied(businessId: string, themeKey: string) {
+  const now = Date.now();
+  await (await db())
+    .prepare("UPDATE businesses SET orgo_theme_key = ?, orgo_theme_applied_at = ? WHERE id = ?")
+    .run(themeKey, now, businessId);
 }
 
 function mapProvisioningJob(row: Record<string, unknown>): ProvisioningJob {

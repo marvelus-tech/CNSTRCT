@@ -82,13 +82,13 @@ test("fresh sqlite migration seeds once and keeps a millisecond timestamp", asyn
   const seeded = await first.prepare("SELECT slug FROM businesses WHERE slug = ?").get("harbor-tradie-desk");
   assert.ok(seeded);
   const versions = await first.query("SELECT version FROM schema_migrations");
-  assert.equal(versions.length, 5);
+  assert.equal(versions.length, 6);
   first.close();
 
   const second = await openSqliteFile(file);
   const businesses = await second.query("SELECT id FROM businesses");
   assert.equal(businesses.length, 1);
-  assert.equal((await second.query("SELECT version FROM schema_migrations")).length, 5);
+  assert.equal((await second.query("SELECT version FROM schema_migrations")).length, 6);
   second.close();
 });
 
