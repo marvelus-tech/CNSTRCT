@@ -108,6 +108,17 @@ export async function createSession(userId: string) {
   return id;
 }
 
+export async function deleteSessionsForUserExcept(userId: string, keepSessionId: string) {
+  await (await db())
+    .prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?")
+    .run(userId, keepSessionId);
+}
+
+/** Future: list active sessions for account settings. */
+export async function listSessionsForUser(userId: string) {
+  return await (await db()).prepare("SELECT id, created_at FROM sessions WHERE user_id = ?").all(userId);
+}
+
 export async function userForSession(sessionId: string): Promise<User | null> {
   const row = asRecord(
     await (await db())

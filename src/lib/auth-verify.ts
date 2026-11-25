@@ -2,7 +2,7 @@ import type { NextResponse } from "next/server";
 
 import { AUTH_FLAG_COOKIE } from "./auth-constants";
 import { writeSessionCookie } from "./session";
-import { createSession, upsertUserForAuth } from "./store";
+import { createSession, deleteSessionsForUserExcept, upsertUserForAuth } from "./store";
 import { verifyMagicLink } from "./supabase";
 
 export async function completeMagicLinkAuth(
@@ -24,6 +24,7 @@ export async function completeMagicLinkAuth(
     authSubject: result.authSubject,
   });
   const sessionId = await createSession(user.id);
+  await deleteSessionsForUserExcept(user.id, sessionId);
   const response = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, name: user.name } });
   writeSessionCookie(response, sessionId);
   response.cookies.set(AUTH_FLAG_COOKIE, "1", {

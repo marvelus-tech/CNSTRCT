@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
+import { authMode } from "./auth-mode";
 import { AUTH_FLAG_COOKIE, SESSION_COOKIE } from "./auth-constants";
 import { newId } from "./ids";
-import { createSession, createUser, userForSession } from "./store";
+import { createSession, createUser, deleteSessionsForUserExcept, userForSession } from "./store";
 import type { User } from "./types";
 
 export { AUTH_FLAG_COOKIE, SESSION_COOKIE } from "./auth-constants";
@@ -15,6 +16,9 @@ export async function currentUser(): Promise<User | null> {
 }
 
 export async function ensureDemoUser(): Promise<User> {
+  if (authMode() === "supabase" && process.env.VERCEL === "1") {
+    throw new Error("Demo users are disabled when Supabase auth is configured on Vercel.");
+  }
   const existing = await currentUser();
   if (existing) return existing;
   const stamp = newId("demo");
@@ -54,8 +58,12 @@ export async function ensureDemoSession(): Promise<{ user: User; sessionId: stri
   return { user, sessionId };
 }
 
-export async function startSession(user: User) {
+/** Issue a fresh session and optionally retire other devices (magic link login). */
+export async function startSession(user: User, options?: { rotateOthers?: boolean }) {
   const sid = await createSession(user.id);
+  if (options?.rotateOthers) {
+    await deleteSessionsForUserExcept(user.id, sid);
+  }
   const jar = await cookies();
   jar.set(SESSION_COOKIE, sid, {
     httpOnly: true,
