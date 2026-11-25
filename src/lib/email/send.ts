@@ -15,6 +15,13 @@ export type SendTransactionalResult =
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Test-only override for Resend HTTP (avoids mocking global fetch in parallel tests). */
+export const resendTestState: { fetch: typeof fetch | undefined } = { fetch: undefined };
+
+function resendFetch(input: RequestInfo | URL, init?: RequestInit) {
+  return (resendTestState.fetch ?? fetch)(input, init);
+}
+
 export async function sendTransactional(input: SendTransactionalInput): Promise<SendTransactionalResult> {
   if (!emailConfigured()) {
     return { ok: false, reason: "not_configured" };
@@ -29,7 +36,7 @@ export async function sendTransactional(input: SendTransactionalInput): Promise<
     return { ok: false, reason: "not_configured" };
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await resendFetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
