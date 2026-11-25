@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: { default: HOME_TITLE, template: "%s" },
   description: HOME_DESCRIPTION,
   applicationName: "BizOS",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "BizOS" },
+  themeColor: "#09090b",
   openGraph: {
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
