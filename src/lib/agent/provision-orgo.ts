@@ -1,3 +1,8 @@
+/**
+ * Orgo workspace + shared desk provisioning.
+ * Template/theme mapping: docs/orgo-themes.md
+ */
+import { applyOrgoThemeForBusiness, orgoTemplateForCreate } from "./orgo-theme-apply";
 import { ORGO_COMPUTER_NOTE } from "./provision";
 import {
   findDesktopByName,
@@ -69,15 +74,17 @@ async function ensureWorkspaceId(business: Business): Promise<string> {
   }
 }
 
-async function ensureComputerId(workspaceId: string, businessId: string, workspaces: OrgoWorkspace[]): Promise<string> {
+async function ensureComputerId(workspaceId: string, business: Business, workspaces: OrgoWorkspace[]): Promise<string> {
   const existingDesk = findDesktopByName(workspaces, workspaceId, ORGO_DESK_COMPUTER.name);
   if (existingDesk?.id) return existingDesk.id;
-  const idempotencyKey = orgoComputerIdempotencyKey(businessId);
+  const idempotencyKey = orgoComputerIdempotencyKey(business.id);
+  const template = orgoTemplateForCreate(business.templateId);
   try {
     const created = await orgo.createComputer({
       workspaceId,
       name: ORGO_DESK_COMPUTER.name,
       idempotencyKey,
+      template,
     });
     return created.id;
   } catch (error) {
@@ -88,6 +95,13 @@ async function ensureComputerId(workspaceId: string, businessId: string, workspa
     }
     throw error;
   }
+}
+
+async function finalizeTheme(business: Business, computerId: string): Promise<OrgoProvisionOutcome | null> {
+  const applied = await applyOrgoThemeForBusiness(business, computerId);
+  if (applied.ok) return null;
+  if (applied.retry) return { kind: "retry", reason: applied.reason };
+  return { kind: "failed", reason: applied.reason };
 }
 
 async function verifyComputer(computerId: string) {
@@ -105,6 +119,8 @@ export async function provisionOrgoForBusiness(businessId: string): Promise<Orgo
   if (business.orgoWorkspaceId && business.orgoComputerId) {
     try {
       await verifyComputer(business.orgoComputerId);
+      const themeBlock = await finalizeTheme(business, business.orgoComputerId);
+      if (themeBlock) return themeBlock;
       return {
         kind: "succeeded",
         workspaceId: business.orgoWorkspaceId,
@@ -125,9 +141,13 @@ export async function provisionOrgoForBusiness(businessId: string): Promise<Orgo
     const workspaceId = await ensureWorkspaceId(business);
     await setBusinessOrgoIds(businessId, { orgoWorkspaceId: workspaceId });
     const workspaces = await refreshWorkspaces();
-    const computerId = await ensureComputerId(workspaceId, businessId, workspaces);
+    const fresh = await getBusiness(businessId);
+    if (!fresh) return { kind: "failed", reason: "Business row missing." };
+    const computerId = await ensureComputerId(workspaceId, fresh, workspaces);
     await setBusinessOrgoIds(businessId, { orgoComputerId: computerId });
     await syncSpecialistComputerRows(businessId);
+    const themeBlock = await finalizeTheme(fresh, computerId);
+    if (themeBlock) return themeBlock;
     return { kind: "succeeded", workspaceId, computerId };
   } catch (error) {
     if (error instanceof OrgoError) {

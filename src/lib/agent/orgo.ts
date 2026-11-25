@@ -114,18 +114,29 @@ export const orgo = {
     cpu?: number;
     ram?: number;
     diskGb?: number;
+    /** Orgo template ref when published; see docs/orgo-themes.md */
+    template?: string;
   }) {
     const size = {
       cpu: input.cpu ?? ORGO_DESK_COMPUTER.cpu,
       ram: input.ram ?? ORGO_DESK_COMPUTER.ram,
       disk_size_gb: input.diskGb ?? ORGO_DESK_COMPUTER.diskGb,
     };
-    return call<{ id: string; status: string }>("POST", "/computers", {
-      workspace_id: input.workspaceId,
-      name: input.name,
-      os: "linux",
-      ...size,
-    }, { "Idempotency-Key": input.idempotencyKey });
+    return call<{ id: string; status: string }>(
+      "POST",
+      "/computers",
+      {
+        workspace_id: input.workspaceId,
+        name: input.name,
+        os: "linux",
+        ...size,
+        ...(input.template ? { template: input.template } : {}),
+      },
+      { "Idempotency-Key": input.idempotencyKey },
+    );
+  },
+  screenshot(computerId: string) {
+    return call<{ image?: string; url?: string }>("GET", `/computers/${computerId}/screenshot`);
   },
   getComputer(id: string) {
     return call<{ id: string; status?: string; name?: string; project_id?: string }>("GET", `/computers/${id}`);
