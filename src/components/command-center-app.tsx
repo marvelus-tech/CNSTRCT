@@ -255,9 +255,14 @@ function SettingsPanel() {
           <Button variant="outline" disabled={signingOut} onClick={() => void signOut()}>
             {signingOut ? "Signing out…" : "Sign out"}
           </Button>
-          <Link href="/" className="text-sm text-muted underline">
-            Back to marketing home
-          </Link>
+          <div className="flex flex-col gap-2">
+            <Link href="/product-flow" className="text-sm text-muted underline">
+              How BizOS works
+            </Link>
+            <Link href="/" className="text-sm text-muted underline">
+              Back to marketing home
+            </Link>
+          </div>
         </div>
       }
     />

@@ -18,6 +18,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
 
   async function reload() {
     const response = await fetch(`/api/desk?businessId=${encodeURIComponent(businessId)}`);
@@ -33,6 +34,11 @@ export function DashboardApp({ businessId }: { businessId: string }) {
     void fetch(`/api/businesses/${encodeURIComponent(businessId)}/desk/wake`, { method: "POST" });
     void reload();
     const timer = setInterval(() => void reload(), 4000);
+  try {
+      if (!localStorage.getItem("cnstrct.workspace.intro.v1")) setShowIntro(true);
+    } catch {
+      /* storage unavailable */
+    }
     return () => clearInterval(timer);
   }, [businessId]);
 
@@ -134,6 +140,26 @@ export function DashboardApp({ businessId }: { businessId: string }) {
             </Link>
           </div>
         </div>
+        {showIntro ? (
+          <div className="mt-3 rounded-none border border-border bg-card p-3 text-sm leading-6 text-muted">
+            <p className="font-medium text-foreground">You chat on BizOS. Specialists use the shared Orgo desk.</p>
+            <p className="mt-1">Composio connects Gmail on the server only. No guest API keys on the VM.</p>
+            <button
+              type="button"
+              className="mt-2 text-xs underline"
+              onClick={() => {
+                try {
+                  localStorage.setItem("cnstrct.workspace.intro.v1", "1");
+                } catch {
+                  /* ignore */
+                }
+                setShowIntro(false);
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted">
           <Badge>{desk.modelMode === "mock" ? "Mock model" : desk.modelMode === "xai" ? "Grok" : "OpenAI"}</Badge>
           <span>
