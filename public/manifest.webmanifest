@@ -1,0 +1,17 @@
+{
+  "name": "BizOS",
+  "short_name": "BizOS",
+  "description": "Launch and run agent desks for local businesses.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f4f5",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
