@@ -208,11 +208,9 @@ function ConstructingInner() {
             <Button variant="outline" disabled={retrying} onClick={() => void handleRetry()}>
               {retrying ? "Retrying…" : "Retry provisioning"}
             </Button>
-            {provisionStatus === "ready" ? null : (
-              <Link href={`/command-center?new=${businessId}`} className="text-sm text-muted underline">
-                Open command center anyway
-              </Link>
-            )}
+            <Link href={`/command-center?new=${businessId}`} className="text-sm text-muted underline">
+              Open command center anyway
+            </Link>
           </div>
         ) : null}
         {error ? (
