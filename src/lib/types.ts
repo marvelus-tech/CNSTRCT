@@ -9,6 +9,7 @@ export interface User {
   email: string;
   name: string;
   createdAt: number;
+  authSubject?: string | null;
 }
 
 export interface Profile {

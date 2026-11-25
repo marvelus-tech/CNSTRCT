@@ -256,6 +256,13 @@ CREATE TABLE IF NOT EXISTS composio_sessions (
 );
 `,
   },
+  {
+    version: "005_auth_subject",
+    sql: `
+ALTER TABLE users ADD COLUMN auth_subject TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS users_auth_subject ON users (auth_subject) WHERE auth_subject IS NOT NULL;
+`,
+  },
 ] as const;
 
 export const SCHEMA_MIGRATIONS_SQL = `
