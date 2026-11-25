@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
 import { syncTriageFromClient } from "@/lib/triage-sync";
 
@@ -23,12 +24,33 @@ const STEPS_BY_TEMPLATE: Record<string, readonly string[]> = {
 
 const MIN_MS = 5000;
 const IDEMPOTENCY_STORAGE = "cnstrct.construct.idempotency.v1";
+const POLL_MS = 2500;
+
+type ProvisionSummary = {
+  provisionStatus?: string;
+  jobs?: { provider: string; status: string }[];
+};
 
 function constructIdempotencyKey(template: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return `construct:${template}:${crypto.randomUUID()}`;
   }
   return `construct:${template}:${Date.now()}`;
+}
+
+function provisionStatusCopy(status: string | undefined) {
+  switch (status) {
+    case "ready":
+      return "Your desk is ready.";
+    case "failed":
+      return "Provisioning needs a retry.";
+    case "partial":
+      return "Some providers need attention.";
+    case "provisioning":
+      return "Connecting Orgo, Treg, and Composio.";
+    default:
+      return "Setting up your desk.";
+  }
 }
 
 function ConstructingInner() {
@@ -39,6 +61,60 @@ function ConstructingInner() {
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
   const [paywallCode, setPaywallCode] = useState("");
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [provisionStatus, setProvisionStatus] = useState<string | undefined>();
+  const [retrying, setRetrying] = useState(false);
+
+  const pollProvision = useCallback(async (id: string) => {
+    const response = await fetch(`/api/businesses/${id}/provision`);
+    if (!response.ok) return null;
+    return (await response.json()) as ProvisionSummary;
+  }, []);
+
+  useEffect(() => {
+    if (!businessId) return undefined;
+    let cancelled = false;
+
+    const tick = async () => {
+      const summary = await pollProvision(businessId);
+      if (cancelled || !summary) return;
+      setProvisionStatus(summary.provisionStatus);
+      if (summary.provisionStatus === "ready") {
+        try {
+          sessionStorage.removeItem(IDEMPOTENCY_STORAGE);
+        } catch {
+          // ignore
+        }
+        router.replace(`/command-center?new=${businessId}`);
+        return;
+      }
+      if (summary.provisionStatus === "failed" || summary.provisionStatus === "partial") {
+        return;
+      }
+    };
+
+    void tick();
+    const interval = window.setInterval(() => void tick(), POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [businessId, pollProvision, router]);
+
+  async function handleRetry() {
+    if (!businessId) return;
+    setRetrying(true);
+    setError("");
+    try {
+      await fetch(`/api/businesses/${businessId}/provision`, { method: "POST" });
+      const summary = await pollProvision(businessId);
+      setProvisionStatus(summary?.provisionStatus);
+    } catch {
+      setError("Retry failed. Try again in a moment.");
+    } finally {
+      setRetrying(false);
+    }
+  }
 
   useEffect(() => {
     const started = Date.now();
@@ -87,12 +163,8 @@ function ConstructingInner() {
         return;
       }
       setStep(steps.length - 1);
-      try {
-        sessionStorage.removeItem(IDEMPOTENCY_STORAGE);
-      } catch {
-        // ignore
-      }
-      router.replace(`/command-center?new=${json.businessId}`);
+      setBusinessId(json.businessId);
+      setProvisionStatus("pending");
     }
 
     void provision();
@@ -100,7 +172,10 @@ function ConstructingInner() {
       cancelled = true;
       window.clearInterval(advance);
     };
-  }, [router, template, steps.length]);
+  }, [template, steps.length]);
+
+  const showRetry =
+    businessId && (provisionStatus === "failed" || provisionStatus === "partial" || provisionStatus === "provisioning");
 
   return (
     <div className="min-h-full bg-background">
@@ -110,7 +185,9 @@ function ConstructingInner() {
       <main className="mx-auto max-w-lg px-5 pb-16 pt-16 text-center">
         <p className="text-sm font-medium text-accent">Constructing</p>
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight">Your business is taking shape</h1>
-        <p className="mt-3 text-sm text-muted">This usually takes a few seconds. Then you land in your command center.</p>
+        <p className="mt-3 text-sm text-muted">
+          {businessId ? provisionStatusCopy(provisionStatus) : "This usually takes a few seconds. Then you land in your command center."}
+        </p>
         <ul className="mt-12 space-y-4 text-left text-sm">
           {steps.map((label, index) => {
             const done = index < step;
@@ -126,6 +203,18 @@ function ConstructingInner() {
             );
           })}
         </ul>
+        {showRetry ? (
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <Button variant="outline" disabled={retrying} onClick={() => void handleRetry()}>
+              {retrying ? "Retrying…" : "Retry provisioning"}
+            </Button>
+            {provisionStatus === "ready" ? null : (
+              <Link href={`/command-center?new=${businessId}`} className="text-sm text-muted underline">
+                Open command center anyway
+              </Link>
+            )}
+          </div>
+        ) : null}
         {error ? (
           <p className="mt-8 text-sm text-danger">
             {error}{" "}
