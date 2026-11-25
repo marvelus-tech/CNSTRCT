@@ -191,17 +191,42 @@ function ProfilePanel({
 }
 
 function SettingsPanel() {
+  const [authLabel, setAuthLabel] = useState("Loading…");
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      const response = await fetch("/api/auth/status");
+      const json = (await response.json()) as { authMode?: string; user?: { email: string } | null };
+      if (json.authMode === "supabase") {
+        setAuthLabel(json.user?.email ? `Supabase magic link (${json.user.email})` : "Supabase magic link");
+      } else {
+        setAuthLabel("Demo session cookie");
+      }
+    })();
+  }, []);
+
+  async function signOut() {
+    setSigningOut(true);
+    await fetch("/api/auth/sign-out", { method: "POST" });
+    window.location.href = "/login";
+  }
+
   return (
     <SummaryPanel
       title="Settings"
       rows={[
-        ["Environment", "Demo mode, sqlite on this host"],
-        ["Auth", "Demo session or Supabase magic link when configured"],
+        ["Auth", authLabel],
       ]}
       footer={
-        <Link href="/" className="text-sm text-muted underline">
-          Back to marketing home
-        </Link>
+        <div className="flex flex-col gap-4">
+          <Button variant="outline" disabled={signingOut} onClick={() => void signOut()}>
+            {signingOut ? "Signing out…" : "Sign out"}
+          </Button>
+          <Link href="/" className="text-sm text-muted underline">
+            Back to marketing home
+          </Link>
+        </div>
       }
     />
   );
