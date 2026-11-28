@@ -3,6 +3,50 @@ import { sendMagicLink } from "./supabase";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const DEFAULT_SEND_FAILURE =
+  "We could not send an email to that address. Try a different email or contact support if this continues.";
+
+/** Map Supabase/provider OTP errors to plain language for the login UI. */
+export function friendlyMagicLinkProviderError(detail?: string): string {
+  const tryText = (text: string) => {
+    const lower = text.toLowerCase();
+    if (lower.includes("rate limit") || lower.includes("too many")) {
+      return "Too many attempts. Wait a minute and try again.";
+    }
+    if (lower.includes("signup") && lower.includes("disabled")) {
+      return "Sign-in is not open for new addresses on this site yet. Contact support if you need access.";
+    }
+    if (lower.includes("invalid") && lower.includes("email")) {
+      return "Enter a valid email address.";
+    }
+    if (lower.includes("email address is invalid") || lower.includes("unable to validate email")) {
+      return "Enter a valid email address.";
+    }
+    return null;
+  };
+
+  if (!detail?.trim()) return DEFAULT_SEND_FAILURE;
+
+  const direct = tryText(detail);
+  if (direct) return direct;
+
+  try {
+    const parsed = JSON.parse(detail) as {
+      msg?: string;
+      message?: string;
+      error_description?: string;
+      error?: string;
+    };
+    const combined = [parsed.msg, parsed.message, parsed.error_description, parsed.error].filter(Boolean).join(" ");
+    const fromJson = tryText(combined);
+    if (fromJson) return fromJson;
+  } catch {
+    // plain text body from provider
+  }
+
+  return DEFAULT_SEND_FAILURE;
+}
+
 export async function issueMagicLink(email: string, origin: string, rateKey: string) {
   const normalized = email.trim().toLowerCase();
   if (!EMAIL_RE.test(normalized)) {
@@ -20,7 +64,10 @@ export async function issueMagicLink(email: string, origin: string, rateKey: str
     };
   }
   if (!result.ok) {
-    return { ok: false as const, status: 502, error: "The email provider rejected that request." };
+    const error =
+      result.reason === "provider" ? friendlyMagicLinkProviderError(result.detail) : DEFAULT_SEND_FAILURE;
+    const rateLimited = error === "Too many attempts. Wait a minute and try again.";
+    return { ok: false as const, status: rateLimited ? 429 : 502, error };
   }
   return { ok: true as const };
 }
