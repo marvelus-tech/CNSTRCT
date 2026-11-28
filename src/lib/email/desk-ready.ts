@@ -64,7 +64,7 @@ export async function maybeNotifyDeskReady(
     userId: user.id,
     actor: "system",
     kind: DESK_READY_AUDIT_KIND,
-    summary: "Desk ready email sent.",
+    summary: "Workspace ready email sent.",
     refId: "desk-ready-v1",
   });
 

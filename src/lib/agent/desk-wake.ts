@@ -45,7 +45,7 @@ export async function wakeBusinessDesk(businessId: string): Promise<DeskWakeResu
       return { ok: true, status: started.status ?? "starting", action: "wake" };
     }
   } catch (error) {
-    const message = redactProvisioningError(error instanceof Error ? error.message : "Desk wake failed.");
+    const message = redactProvisioningError(error instanceof Error ? error.message : "Workspace wake failed.");
     return { ok: false, error: message };
   }
 }

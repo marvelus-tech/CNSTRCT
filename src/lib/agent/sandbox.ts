@@ -261,7 +261,7 @@ export async function execInSandbox(agentId: string, command: string, city = "th
       const result = await orgo.bash(orgoId, commandLine(plan.argv));
       const output = result.output || "(no output)";
       appendTerminal(agentId, output);
-      await upsertComputer(agentId, "orgo", "connected", "Orgo desk computer. App secrets are not on this VM.");
+      await upsertComputer(agentId, "orgo", "connected", "Shared Orgo workspace computer. App secrets are not on this VM.");
       return { exitCode: result.exit_code ?? 0, output, provider: "orgo" as const };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Orgo failed";

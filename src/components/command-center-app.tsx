@@ -115,7 +115,7 @@ function BusinessesPanel({
         <p className="hud-readout text-[11px] uppercase tracking-[0.2em] text-muted">No businesses yet</p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight">Your command center is ready</h2>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Start a new business when you want a fresh question set, matched paths, and a live desk.
+          Start a new business when you want a fresh question set, matched paths, and a live workspace.
         </p>
       </div>
     );
@@ -186,8 +186,8 @@ function ProfilePanel({
         <div className="max-w-xl rounded-none border border-border bg-card p-8">
           <p className="text-sm text-muted">
             {hasBusinesses
-              ? "Older desks may not have a saved venture snapshot yet."
-              : "No venture answers on file. Start a new business to capture triage for your first desk."}
+              ? "Older businesses may not have a saved venture snapshot yet."
+              : "No venture answers on file. Start a new business to capture triage for your first workspace."}
           </p>
           <div className="mt-4">
             <StartNewBusinessButton />

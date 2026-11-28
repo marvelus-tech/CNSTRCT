@@ -30,7 +30,7 @@ import { ensureWorkspace } from "./sandbox";
 export const LOCAL_COMPUTER_NOTE =
   "Orgo is not connected. This folder is a local sandbox, not an Orgo computer.";
 export const ORGO_COMPUTER_NOTE =
-  "Orgo desk computer (2 vCPU, 8 GB RAM, 40 GB disk). One Linux VM per business. App secrets are not on this VM.";
+  "Shared Orgo workspace computer (2 vCPU, 8 GB RAM, 40 GB disk). One Linux VM per business. App secrets are not on this VM.";
 
 function slugify(input: string) {
   const base = input
@@ -62,7 +62,7 @@ export async function provisionBlueprint(
   const check = validateBlueprint(blueprint);
   if (!check.ok) throw new Error(check.reason);
   const city = cityOf(profile.location);
-  const businessNameText = name ?? `${city} Desk`;
+  const businessNameText = name ?? `${city} Business`;
   const ctx: BlueprintContext = { city, businessName: businessNameText };
   const businessId = newId("biz");
   const composioId = composioUserId(businessId);
@@ -216,7 +216,7 @@ export async function ensureTeamShape(businessId: string): Promise<Agent[]> {
       agentId: created.id,
       actor: "orchestrator",
       kind: "team.backfilled",
-      summary: `Added ${created.name} so this existing desk has an owner-facing orchestrator.`,
+      summary: `Added ${created.name} so this existing workspace has an owner-facing orchestrator.`,
     });
     agents = await listAgents(businessId);
   }

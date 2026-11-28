@@ -15,7 +15,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if ("error" in gate) return gate.error;
   const computerId = gate.business.orgoComputerId;
   if (!computerId) {
-    return NextResponse.json({ error: "No Orgo desk for this business." }, { status: 404 });
+    return NextResponse.json({ error: "No Orgo workspace computer for this business." }, { status: 404 });
   }
   const now = Date.now();
   const hit = cache.get(computerId);
@@ -28,7 +28,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ ...shot, cached: false });
   } catch (error) {
     const message =
-      error instanceof OrgoError ? redactProvisioningError(error.message) : "Could not load desk preview.";
+      error instanceof OrgoError ? redactProvisioningError(error.message) : "Could not load workspace preview.";
     const status = error instanceof OrgoError && error.status < 500 ? error.status : 502;
     return NextResponse.json({ error: message }, { status });
   }

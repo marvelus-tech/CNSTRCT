@@ -8,7 +8,7 @@ export function LandingPricing() {
     <LandingSection aria-label="BizOS pricing">
       <h2 className="landing-section-title">Funding your Biz</h2>
       <p className="landing-section-lead mt-2 max-w-2xl">
-        Questionnaire free. You pay when BizOS spins up your bots and desk.
+        Questionnaire free. You pay when BizOS spins up your bots and workspace.
       </p>
       <ul className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {LANDING_PLAN_ORDER.map((id) => {

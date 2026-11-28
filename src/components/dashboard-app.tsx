@@ -142,7 +142,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
         </div>
         {showIntro ? (
           <div className="mt-3 rounded-none border border-border bg-card p-3 text-sm leading-6 text-muted">
-            <p className="font-medium text-foreground">You chat on BizOS. Specialists use the shared Orgo desk.</p>
+            <p className="font-medium text-foreground">You chat on BizOS. Specialists use the shared workspace computer.</p>
             <p className="mt-1">Composio connects Gmail on the server only. No guest API keys on the VM.</p>
             <button
               type="button"
@@ -170,7 +170,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
           </Link>
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <Meter label={`${tokenUsed.toLocaleString()} tokens across the desk`} value={tokenPct} />
+          <Meter label={`${tokenUsed.toLocaleString()} tokens across the workspace`} value={tokenPct} />
           {specialists.map((item) => (
             <Meter
               key={item.id}
@@ -190,7 +190,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
             className={`min-h-11 min-w-[4.5rem] flex-1 rounded-none px-3 py-2 text-sm capitalize ${tab === item ? "bg-foreground text-white" : "bg-card"}`}
             onClick={() => setTab(item)}
           >
-            {item}
+            {item === "desk" ? "Business" : item}
           </button>
         ))}
       </div>
@@ -223,7 +223,7 @@ export function DashboardApp({ businessId }: { businessId: string }) {
               void send();
             }}
           >
-            <p className="mb-2 text-xs text-muted">You talk to {agent.name} only. A new message closes every open approval and delegated task on this desk.</p>
+            <p className="mb-2 text-xs text-muted">You talk to {agent.name} only. A new message closes every open approval and delegated task in this workspace.</p>
             <div className="flex gap-2">
               <Textarea value={text} onChange={(event) => setText(event.target.value)} placeholder={`Message ${agent.name}`} className="min-h-12" />
               <Button type="submit" disabled={busy}>

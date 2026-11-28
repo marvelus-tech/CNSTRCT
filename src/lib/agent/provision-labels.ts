@@ -9,10 +9,10 @@ export function provisionStatusLabel(status: ProvisionStatus): string {
     case "partial":
       return "Needs retry";
     case "provisioning":
-      return "Desk connecting";
+      return "Setting up workspace";
     case "pending":
     default:
-      return "Desk connecting";
+      return "Setting up workspace";
   }
 }
 

@@ -10,12 +10,12 @@ const MAP: Record<string, OrgoThemeEntry> = {
   "home-services": {
     themeKey: "home-services",
     orgoTemplateRef: null,
-    label: "Home services desk",
+    label: "Home services workspace",
   },
   "mobile-detailing": {
     themeKey: "mobile-detailing",
     orgoTemplateRef: null,
-    label: "Mobile detailing desk",
+    label: "Mobile detailing workspace",
   },
   "estate-clearance": {
     themeKey: "estate-clearance",

@@ -5,7 +5,7 @@ import { provisionStatusLabel, provisioningJobLabel } from "./provision-labels";
 
 test("provisionStatusLabel maps owner-facing copy", () => {
   assert.equal(provisionStatusLabel("ready"), "Ready");
-  assert.equal(provisionStatusLabel("pending"), "Desk connecting");
+  assert.equal(provisionStatusLabel("pending"), "Setting up workspace");
   assert.equal(provisionStatusLabel("failed"), "Needs retry");
 });
 
