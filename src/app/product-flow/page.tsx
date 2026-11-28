@@ -19,7 +19,7 @@ export default function ProductFlowPage() {
           <strong className="text-foreground">Command center.</strong> List ventures, start a new business, and see provisioning status for Orgo, Treg, and Composio.
         </li>
         <li>
-          <strong className="text-foreground">Workspace.</strong> Chat with your orchestrator and specialists on BizOS. Shell commands run on the shared Orgo desk VM.
+          <strong className="text-foreground">Workspace.</strong> Chat with your orchestrator and specialists on BizOS. Shell commands run on the shared Orgo workspace VM.
         </li>
         <li>
           <strong className="text-foreground">Public site.</strong> Customers visit <code className="text-foreground">/b/your-slug</code> for leads and contact.

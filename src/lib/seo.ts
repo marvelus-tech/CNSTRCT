@@ -1,9 +1,9 @@
 export const SITE_NAME = "BizOS";
 
-export const HOME_TITLE = "BizOS | Your founding team ships on your desk today";
+export const HOME_TITLE = "BizOS | Your founding team ships from your workspace";
 
 export const HOME_DESCRIPTION =
-  "BizOS finds a business that fits you, then starts your founding bots on your desk. Less guesswork, less friction. You approve every draft before it ships.";
+  "BizOS finds a business that fits you, then starts your founding bots in your workspace. Less guesswork, less friction. You approve every draft before it ships.";
 
 export const TRIAGE_TITLE = "BizOS onboarding | Your skills, cash, space, and city";
 

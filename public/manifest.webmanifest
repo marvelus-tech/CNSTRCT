@@ -1,7 +1,7 @@
 {
   "name": "BizOS",
   "short_name": "BizOS",
-  "description": "Launch and run agent desks for local businesses.",
+  "description": "Launch and run AI workspaces for local businesses.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f4f4f5",

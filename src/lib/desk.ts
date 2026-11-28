@@ -81,7 +81,7 @@ export async function loadDesk(userId: string, businessId?: string) {
       size: agent.role === "orchestrator" ? ("none" as const) : business?.orgoComputerId ? ("Medium" as const) : ("Small" as const),
       localNote:
         agent.role === "orchestrator"
-          ? `${agent.name} does not get an Orgo computer. Specialists share the business desk VM.`
+          ? `${agent.name} does not get an Orgo computer. Specialists share the business workspace VM.`
           : business?.orgoComputerId
             ? agent.computer.note
             : agent.computer.note,

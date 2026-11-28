@@ -41,7 +41,7 @@ function constructIdempotencyKey(template: string) {
 function provisionStatusCopy(status: string | undefined) {
   switch (status) {
     case "ready":
-      return "Your desk is ready.";
+      return "Your workspace is ready.";
     case "failed":
       return "Provisioning needs a retry.";
     case "partial":
@@ -49,7 +49,7 @@ function provisionStatusCopy(status: string | undefined) {
     case "provisioning":
       return "Connecting Orgo, Treg, and Composio.";
     default:
-      return "Setting up your desk.";
+      return "Setting up your workspace.";
   }
 }
 

@@ -73,7 +73,7 @@ export async function cleanupOrgoBusiness(businessId: string): Promise<
         const detail = redact(error instanceof Error ? error.message : "Orgo workspace cleanup failed");
         return {
           ok: false,
-          error: `Desk computer removed, but the workspace could not be deleted. This business was kept so you can retry. ${detail}`,
+          error: `Workspace computer removed, but the Orgo workspace could not be deleted. This business was kept so you can retry. ${detail}`,
           computerIds: [],
         };
       }

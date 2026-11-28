@@ -234,7 +234,7 @@ async function processCalls(agentId: string, state: PendingState, trigger: Trigg
         await appendRow(agentId, "tool-result", {
           tool: call.name,
           callId: call.callId,
-          output: `No ${outcome.handoff.role} on this desk.`,
+          output: `No ${outcome.handoff.role} on this workspace.`,
           status: "error",
           summary: "Missing specialist",
           args,

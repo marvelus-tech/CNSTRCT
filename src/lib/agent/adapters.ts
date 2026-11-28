@@ -75,7 +75,7 @@ export function computerState(computerId: string | null, keySet: boolean): Compu
 
 /** One Linux desk VM per business; specialists share it. */
 export function orgoDeskLabel(businessComputerId: string | null | undefined, keySet: boolean) {
-  if (businessComputerId) return "Orgo desk connected";
+  if (businessComputerId) return "Orgo workspace connected";
   return `Orgo ${computerState(null, keySet).replaceAll("_", " ")}`;
 }
 
