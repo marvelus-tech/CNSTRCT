@@ -68,9 +68,13 @@ export function OpportunityBoard() {
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState("");
   const [opening, setOpening] = useState(false);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     void (async () => {
+      const sessionRes = await fetch("/api/session");
+      setSignedIn(sessionRes.ok);
+
       const draft = loadTriageDraft();
       if (draft && isTriageDraftComplete(draft)) {
         const response = await fetch("/api/opportunities/preview", {
@@ -88,7 +92,6 @@ export function OpportunityBoard() {
         return;
       }
 
-      const sessionRes = await fetch("/api/session");
       if (sessionRes.ok) {
         const response = await fetch("/api/opportunities");
         if (response.ok) {
@@ -206,9 +209,18 @@ export function OpportunityBoard() {
                   </div>
                   <div className="mt-6 flex items-end justify-between gap-3">
                     {isLive ? (
-                      <Button onClick={() => void openLive(card.id)} disabled={opening}>
-                        {opening ? "Starting up…" : "Start this business"}
-                      </Button>
+                      <div className="flex flex-col gap-1.5">
+                        {signedIn === false ? (
+                          <p className="text-xs text-muted">Sign in to start this path. We will bring you back here after.</p>
+                        ) : null}
+                        <Button onClick={() => void openLive(card.id)} disabled={opening}>
+                          {opening
+                            ? "Starting up…"
+                            : signedIn === false
+                              ? "Sign in to start"
+                              : "Start this business"}
+                        </Button>
+                      </div>
                     ) : (
                       <p className="text-xs uppercase tracking-wide text-muted">Not selectable yet</p>
                     )}

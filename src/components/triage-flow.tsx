@@ -155,7 +155,12 @@ export function TriageFlow({ magicLinkEnabled = false }: { magicLinkEnabled?: bo
                 onClick={() => setStep((current) => current - 1)}
               />
             </span>
-            <Button type="button" className="min-w-0 shrink" onClick={() => void next()} disabled={saving}>
+            <Button
+              type="button"
+              className="min-w-0 shrink"
+              onClick={() => void next()}
+              disabled={saving || !valueOk()}
+            >
               {buttonLabel()}
             </Button>
           </div>
